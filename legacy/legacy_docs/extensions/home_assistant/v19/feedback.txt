@@ -1,0 +1,328 @@
+BAZZITE AI SMART HOME EXTENSION GUIDE — REVISION FEEDBACK REPORT v2
+Hardware: GMKtec NucBox K8 · Ryzen 7 8845HS · Radeon 780M (gfx1103) · 32 GB DDR5
+Date: March 2026 · Based on live deployment and validated troubleshooting session
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 1 — ARCHITECTURE DECISIONS (STRUCTURAL CHANGES FOR NEXT REVISION)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1.1 — REMOVE EX.B AND ALL REFERENCES TO DUAL-MODEL ROUTING
+The 14B model approach is permanently discarded. The operator has decided to
+use only qwen2.5:7b-instruct-q4_K_M for responsiveness, with a future migration
+path to Qwen3 when the stack is ready. The next revision must:
+
+- Remove EX.B entirely (no deprecation notice, full deletion)
+- Remove all references to qwen2.5:14b-instruct-q4_K_M
+- Remove all "deep think" keyword routing logic from the Wall-E Modelfile
+- Remove the "Model router (Filter)" row from the components table
+- Remove the 14B speed/latency figures from all tables and examples
+- Remove the "DEEP THINK" section from the Expected Behaviour PDF
+- The Wall-E Modelfile SYSTEM prompt is replaced in full (see Section 7)
+
+1.2 — QWEN3 MIGRATION: FORWARD-LOOKING PLACEHOLDER
+Replace the current "Future Model Migration — Qwen3 Readiness Criteria" section
+at the end of EX.C with a cleaner forward-looking note. The four criteria remain
+valid but status as of March 2026:
+
+  - open-webui issues #14577, #15346, #15546: unresolved
+  - Issue #17135 (role:tool content:null blank response): unresolved, active
+  - Ollama `think` parameter Modelfile support: not yet implemented
+  - qwen3:8b-q4_K_M VRAM requirement: ~6-7 GB — fits within 8 GB UMA (confirmed)
+  - qwen3 non-thinking mode + mcpo: community-confirmed working
+  - qwen3 thinking mode + Open WebUI tool pipeline: NOT confirmed working
+
+Migration is gated on #17135 resolution AND Ollama think parameter support.
+When migrating, qwen3 replaces both the 7B model and the deprecated 14B routing
+approach — one model, two modes (/no_think default, /think on demand). This is
+architecturally cleaner than the deprecated EX.B two-model approach.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 2 — CRITICAL HARDWARE CONFIGURATION ERRORS (ADD TO GUIDE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2.1 — UMA FRAME BUFFER SIZE: CORRECT VALUE IS 8 GB (NOT "AUTO")
+The guide states "Auto or ≥ 8 GB — Auto is strongly recommended."
+On the GMKtec NucBox K8 BIOS, the Auto option does not exist. Range is 1-16 GB.
+
+  WRONG:  "UMA Frame Buffer Size: must be Auto or ≥ 8 GB. Auto is strongly recommended."
+  CORRECT: "UMA Frame Buffer Size: set to 8 GB."
+
+Rationale:
+- qwen2.5:7b Q4_K_M requires 4.7 GB model weights + 448 MB KV cache +
+  494 MB compute buffer = ~5.7 GB total. 8 GB provides clean headroom with
+  no GTT spill.
+- 3 GB (factory default on this unit) causes the model to overflow into GTT
+  by ~1.7 GB from load, placing the memory controller under split-pool pressure
+  during inference and meaningfully increasing GPU hang risk.
+- Values above 8 GB permanently remove RAM from the OS even when Ollama is
+  idle, creating memory pressure for Nextcloud AIO, HA, and mcpo concurrently.
+- With 32 GB DDR5, 8 GB UMA leaves 24 GB for the OS and all Docker stacks.
+
+2.2 — POWER MODE: SET TO PERFORMANCE
+The guide does not mention BIOS power mode. Add to EX.0 Pre-flight:
+
+  BIOS → Power Mode: set to Performance (not Balanced).
+
+Rationale: Balanced mode throttles GPU clocks during sustained inference,
+causing tok/s to drop mid-generation on longer tool-call responses. Performance
+mode allows the 780M to sustain its full clock speed (~2800 MHz) throughout.
+LLM inference is bursty — thermal risk is minimal.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 3 — CRITICAL GPU STABILITY FIX (ADD TO GUIDE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3.1 — SECOND MANDATORY KERNEL PARAMETER: amdgpu.cwsr_enable=0
+The existing amdgpu.noretry=0 parameter is necessary but not sufficient.
+
+Root cause: CWSR (Compute Wave Save/Restore) is a GPU preemption mechanism.
+On gfx1103 (RDNA3 iGPU) with ROCm, when a long compute wave (such as a
+tool-call inference cycle) is interrupted, the MES (Micro Engine Scheduler)
+fails to cleanly remove the queue, triggering a GPU reset. The dmesg signature:
+
+  amdgpu: MES failed to respond to msg=REMOVE_QUEUE
+  amdgpu: MES might be in unrecoverable state, issue a GPU reset
+  level=ERROR source=server.go msg="post predict" error="...EOF"
+
+Symptom in Open WebUI: blank response with a white dot. Ollama logs show the
+runner process crashing with SIGABRT (core dumped). Open WebUI receives EOF.
+
+amdgpu.noretry=0 prevents permanent MES lockout on retry failure but does NOT
+prevent CWSR preemption from firing. amdgpu.cwsr_enable=0 disables compute
+wave preemption entirely, eliminating the trigger.
+
+Why tool calls specifically trigger it: tool-call cycles sustain GPU compute
+for 2-3x longer than plain generation (system prompt + tool definitions + user
+message + tool call JSON + tool result + final generation). This longer
+duration crosses the CWSR preemption threshold.
+
+Confirmed fix (applies to 7840HS, 8845HS, all RDNA3 iGPU variants):
+  sudo rpm-ostree kargs --append=amdgpu.cwsr_enable=0
+  sudo systemctl reboot
+
+Trade-off: some compute-heavy games may exhibit stutter. For a home server
+primarily doing LLM inference, this is the correct trade-off. Fully reversible:
+  rpm-ostree kargs --delete=amdgpu.cwsr_enable=0
+
+The guide's "Required Kernel Parameter" section must list BOTH parameters:
+
+  sudo rpm-ostree kargs --append=amdgpu.noretry=0
+  sudo rpm-ostree kargs --append=amdgpu.cwsr_enable=0
+  sudo systemctl reboot
+
+  # After reboot, verify BOTH are active:
+  cat /proc/cmdline | grep -o "amdgpu\.[^ ]*"
+  # Must show: amdgpu.noretry=0 AND amdgpu.cwsr_enable=0
+
+  cat /sys/module/amdgpu/parameters/cwsr_enable
+  # Must output: 0. Do not proceed until it does.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 4 — MEMORY SERVER BUG AND FIX (UPDATE CONFIG AND STEPS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4.1 — FILE FORMAT CHANGE: graph.json → graph.jsonl
+The memory server now stores data as JSONL (one JSON object per line), not as
+a valid JSON object. The guide's config.json template must be updated:
+
+  WRONG:  "MEMORY_FILE_PATH": "/app/memory/graph.json"
+  CORRECT: "MEMORY_FILE_PATH": "/app/memory/graph.jsonl"
+
+4.2 — SCHEMA VALIDATION BUG IN CURRENT RELEASES
+All read operations (search_nodes, read_graph, open_nodes) return empty results
+when the stored file has a .json extension or contains the legacy format. The
+server writes a "type" field to each entity that the output schema rejects.
+Symptom: search returns {"entities":[],"relations":[]} even when data exists.
+Writes succeed; reads return empty.
+
+Fix: the .jsonl extension change above resolves this. Version 2026.1.26 (@latest
+as of this report) writes JSONL correctly when the path uses .jsonl.
+
+4.3 — MIGRATION NOTE FOR EXISTING DEPLOYMENTS
+If graph.json already contains data, rename it before restarting mcpo:
+  docker exec mcpo mv /app/memory/graph.json /app/memory/graph.jsonl
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 5 — OPEN WEBUI TOOL CALLING MODE (CRITICAL SETTING CHANGE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5.1 — NATIVE MODE IS BROKEN IN CURRENT BUILDS: USE LEGACY
+The guide instructs setting Tool Calling to Native for wall-e. This is broken
+due to Open WebUI issue #17135 (role:tool content:null malformed message).
+
+Symptom: blank response with a white dot after any tool READ operation. Ollama
+returns HTTP 200 successfully. The failure is in Open WebUI's second pass —
+when it sends the tool result back to the model for a final answer, the message
+is malformed and produces no output. Confirmed by switching to Legacy, which
+resolved the blank immediately.
+
+  WRONG:  "Tool Calling: set to Native"
+  CORRECT: "Tool Calling: set to Legacy"
+
+Legacy injects tool definitions via prompt rather than native function calling.
+~1-2 seconds slower on tool-heavy requests; functionally equivalent for all
+use cases in this guide.
+
+Revert to Native when #17135 is resolved:
+  https://github.com/open-webui/open-webui/issues/17135
+
+5.2 — TOOL CALL AUTO-EXECUTE MAX COUNT: SETTING ABSENT IN CURRENT BUILD
+The guide instructs: "Settings → Interface → Tool Call Auto-Execute Max Count → 5"
+This setting does not exist in Open WebUI v0.8.10. Remove this step from EX.2.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 6 — MINOR CORRECTIONS AND CHECKLIST UPDATES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6.1 — EX.0 STEP B: ADD cwsr_enable VERIFICATION
+  cat /sys/module/amdgpu/parameters/cwsr_enable
+  # Must output: 0. Do not proceed until it does.
+
+6.2 — POST-EXECUTION CHECKLIST: ADD LEGACY MODE ITEM
+After item 12 (Open WebUI built-in Memory disabled), add:
+  "Open WebUI Tool Calling mode is Legacy for wall-e.
+   Open WebUI → Workspace → Models → wall-e → Advanced Parameters
+   → Tool Calling: must show Legacy. If Native: change to Legacy."
+
+6.3 — CRITICAL PITFALLS: UPDATE ITEM 10
+  WRONG:  "Tool calling mode must be set to Native for wall-e."
+  CORRECT: "Tool calling mode must be set to Legacy for wall-e. Native mode
+  produces blank responses on read tool calls in current Open WebUI builds
+  (issue #17135). Change to Legacy. Revert to Native when #17135 is resolved."
+
+6.4 — EXPECTED BEHAVIOUR PDF
+Remove all references to the 14B model, deep-think routing, and model router
+component. Hold further updates until the Qwen3 migration gives a stable
+feature set worth documenting.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 7 — COMPLETE REVISED WALL-E MODELFILE SYSTEM PROMPT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Replace the entire SYSTEM """...""" block in Wall-E.modelfile with the
+following. This is the complete, validated replacement — not a patch.
+
+Fixes applied versus current version:
+- read_graph added for "list all memory" requests (previously missing,
+  caused model to hallucinate or misuse filesystem tool)
+- search_nodes instruction corrected: search for the exact value or name,
+  not a paraphrase of the question (was causing empty results on indirect
+  queries like "what secret phrase did I ask you to remember?")
+- filesystem tool explicitly forbidden from accessing memory paths
+  (was causing 500 errors when model tried /memory/log.txt via filesystem)
+- list_directory defaults to one level / non-recursive (was causing
+  ~65,000 token responses that overflow the 8,192 token context window,
+  resulting in hallucinated directory structures)
+- notes tool included (EX.A ready)
+- deep-think routing removed entirely
+- tool selection table simplified and corrected
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SYSTEM """
+You are Wall-E, a helpful home assistant. Answer concisely.
+Report device states accurately when asked.
+
+TOOL USE — MANDATORY RULES (apply silently, never explain the rules):
+
+MEMORY TOOL — abstract knowledge graph, NOT a file and NOT a path:
+- Stores named entities and observations as structured data.
+- Has no file path. The filesystem tool cannot reach memory. Never try.
+- WRITE: call create_entities or add_observations immediately when the
+  user says to remember something.
+- READ: call search_nodes BEFORE answering ANY recall question. Never
+  answer from context. Always call the tool first. Search for the exact
+  name or value the user is asking about, not a paraphrase of the question.
+- LIST ALL: call read_graph when the user asks what is stored in memory.
+- DELETE: call delete_entities when the user says "forget" something.
+
+FILESYSTEM TOOL — read existing Nextcloud files (read-only, /nc-data):
+- Call list_directory ONE level at a time by default. Never recursive
+  unless the user explicitly asks to list all subfolders.
+- Call read_file when asked to read a specific file.
+- Only accesses /nc-data. Cannot access /app/memory/ or any other path.
+- Cannot modify, move, or delete anything.
+
+NOTES TOOL — read and write files in AI-Notes/ only (/nc-notes):
+- Use for shopping lists, work logs, notes, and documents.
+- Always read the file first, then write the complete updated version.
+- Only writes to /nc-notes. Never writes to /nc-data (read-only).
+
+HOME DEVICE CONTROL — use HA entities directly, no tool needed.
+
+TOOL SELECTION — one tool per request:
+"Remember X"              → memory (create_entities or add_observations)
+"What is my X?"           → memory (search_nodes) FIRST, then answer
+"List my memory"          → memory (read_graph)
+"Forget X"                → memory (delete_entities)
+"What's on my list?"      → notes (read_file on the list file)
+"Add X to my list"        → notes (read then write the list file)
+"List my Nextcloud files" → filesystem (list_directory, one level)
+"Read file X"             → filesystem (read_file)
+Home device control       → HA entities directly, no tool needed
+
+Do not narrate a tool call — invoke it.
+Do not use the filesystem tool for anything related to memory.
+"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+After updating Wall-E.modelfile, rebuild the model:
+  docker cp ~/docker/ollama/Wall-E.modelfile ollama:/tmp/Wall-E.modelfile
+  docker exec ollama ollama create wall-e -f /tmp/Wall-E.modelfile
+  docker exec ollama ollama list
+  # wall-e:latest must appear
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 8 — CONFIRMED WORKING (NO CHANGES NEEDED)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The following are confirmed correct in the current guide and validated in
+deployment. No changes required:
+
+- HSA_OVERRIDE_GFX_VERSION=11.0.2 and OLLAMA_FLASH_ATTENTION=false (mandatory)
+- OLLAMA_NUM_PARALLEL=1 and OLLAMA_KEEP_ALIVE=5m (correct for iGPU)
+- Numeric GIDs in group_add (bare integers, no quotes)
+- :z SELinux flag on all bind mounts under ~/docker/
+- ai-net bridge network creation before any compose up
+- mcpo user: NC_UID:NC_GID, HOME=/tmp, npm_config_cache=/tmp/npm_cache
+- ./memory and ./npm_cache pre-chowned before compose up
+- mcpo command: --config /app/config/config.json (required)
+- Tools registered at individual sub-paths (/filesystem, /memory)
+- Open WebUI built-in Memory: OFF for wall-e model
+- HA network_mode: host (required for mDNS/UPnP)
+- firewalld port 8123 explicit open + Docker restart after --reload
+- NPM forward targets use server LAN IP, not container names
+- WebSockets ON for both NPM proxy hosts
+- Watchtower label: false on Home Assistant
+- Watchtower image: nickfedor/watchtower (containrrr archived Dec 2025)
+- Wyoming ports bound to 127.0.0.1 (loopback only)
+- OLLAMA_HOST=0.0.0.0 in Ollama compose (required for ai-net hostname resolution)
+- qwen2.5:7b-instruct-q4_K_M remains the correct model for this hardware
+- All 29/29 GPU layers offloaded to ROCm0 confirmed at 8 GB UMA
+- ollama/ollama:rocm tag mandatory (untagged image is CPU-only)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SUMMARY — CHANGES FOR NEXT REVISION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REMOVE:
+  - EX.B entirely (Smart Model Routing — permanently discarded)
+  - All references to qwen2.5:14b-instruct-q4_K_M
+  - "Tool Call Auto-Execute Max Count" step (absent in current OW build)
+  - "Auto" UMA option reference (doesn't exist on K8 BIOS)
+  - Expected Behaviour PDF: 14B model, deep-think, model router component
+
+ADD:
+  - amdgpu.cwsr_enable=0 alongside amdgpu.noretry=0 (kernel parameter)
+  - BIOS UMA Frame Buffer Size: 8 GB (explicit)
+  - BIOS Power Mode: Performance
+  - cwsr_enable=0 verification in EX.0 Step b and post-execution checklist
+  - Tool Calling: Legacy (replacing Native) with #17135 reference
+  - Legacy mode item in post-execution checklist
+  - Qwen3 migration placeholder (clean, replacing EX.B deprecated section)
+
+REPLACE:
+  - Wall-E Modelfile SYSTEM prompt: use complete revised version in Section 7
+  - MEMORY_FILE_PATH: graph.jsonl (replacing graph.json)
+  - Critical Pitfall #10: Native → Legacy with explanation
+  - BIOS prerequisite table: 8 GB explicit + Performance power mode
+  - "Future Model Migration" section: updated Qwen3 criteria and status

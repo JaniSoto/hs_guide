@@ -1,0 +1,91 @@
+Here is the strict, command-level audit of the Bazzite AI Smart Home — Extension Guide EX.0–EX.6.
+
+This guide is exceptionally well-engineered. It correctly anticipates and mitigates complex, obscure edge cases inherent to Linux system administration, Docker permission mapping, and AMD ROCm GPU inference (e.g., the amdgpu.noretry=0 kernel hang workaround, the RDNA3 Flash Attention bug, and handling Node.js EACCES crashes via virtual $HOME manipulation).
+
+Below is the execution audit, issue classification, and final validation checklist.
+
+1. Issue Report & State Transition Analysis
+Critical Issues (Breaks Execution or Integrity)
+
+None Found. The logical sequencing is flawless. The guide explicitly prevents race conditions and configuration conflicts (e.g., forcing HA onboarding before injecting configuration.yaml reverse proxy settings, and pre-creating bind-mount directories to prevent Docker daemon root:root auto-creation).
+
+Major Issues (Instability, Inconsistency, or Fragility)
+
+Ephemeral npx Package Execution (EX.2 mcpo):
+
+Issue: The guide runs npx -y @modelcontextprotocol/... on every container start. While the guide redirects the cache via npm_config_cache=/tmp/npm_cache to prevent EACCES crashes, /tmp is ephemeral inside the container. This forces a live download from the npm registry on every reboot. If the npm registry is down or rate-limits the IP, the AI loses its filesystem and memory tools.
+
+Fix/Rollback: Persist the cache to the host. In docker-compose.yml for mcpo, add a volume mount: - ./npm_cache:/tmp/npm_cache. Pre-create it with mkdir -p ~/docker/mcpo/npm_cache && sudo chown <NC_UID>:<NC_GID> ~/docker/mcpo/npm_cache.
+
+Root Ownership of Ollama Models (EX.1):
+
+Issue: Mounting ./models:/root/.ollama allows the Ollama daemon (running as root inside the container) to write model blobs to the host. The host directory ~/docker/ollama/models will become owned by root:root.
+
+Fix/Rollback: While functionally harmless to execution, it prevents the user from easily cleaning up disk space without sudo. Document that sudo rm -rf ~/docker/ollama/models is required for future cleanup.
+
+Minor Issues (Efficiency or Clarity)
+
+Plaintext LAN Exposure (EX.2 & EX.6):
+
+Issue: Open WebUI binds to 0.0.0.0:3000. The guide acknowledges this trade-off ("http://<LAN-IP>:3000 is accessible in plain HTTP on your LAN"). Because Open WebUI has its own authentication, the risk is mitigated, but traffic is unencrypted before hitting the NPM reverse proxy.
+
+Nextcloud AIO Container Name Assumption (EX.A):
+
+Issue: The cron job assumes the container is named nextcloud-aio-nextcloud. While this is the default for Nextcloud AIO, if the user deployed a custom Nextcloud stack in Phase 0-11, the docker exec command will fail silently due to 2>/dev/null.
+
+Fix: Recommend verifying the container name via docker ps | grep nextcloud before adding the cron job.
+
+2. Element Classification
+
+Essential (Do Not Alter):
+
+amdgpu.noretry=0 kernel argument (prevents hard system locks).
+
+HSA_OVERRIDE_GFX_VERSION=11.0.2 & OLLAMA_FLASH_ATTENTION=false (mandatory for RDNA3/780M inference).
+
+Host networking (network_mode: host) for Home Assistant (required for mDNS/mDNS discovery).
+
+Loopback binding (127.0.0.1:10300) for Wyoming containers to securely expose them only to the HA host network.
+
+HOME=/tmp environment variable in the mcpo container.
+
+Optional (Can be skipped without breaking core):
+
+EX.A (Nextcloud AI-Notes write access).
+
+EX.B (Smart Model Routing filter).
+
+EX.C (Brave Web Search).
+
+Unnecessary:
+
+None. The guide has been aggressively pruned of fluff. Every command directly mutates required system state.
+
+3. Deterministic Final Validation Checklist
+
+To verify that the system has successfully transitioned to the intended end-state, run these verifications in order. No assumptions are made; every check relies on observable output.
+
+Phase 1: Hardware & OS Foundation
+
+Kernel Verification: Run cat /proc/cmdline. Output MUST contain amdgpu.noretry=0.
+
+GPU Pass-through: Run docker exec ollama ls -la /dev/kfd /dev/dri/renderD128. Both character devices MUST exist inside the container.
+
+Phase 2: Network Isolation & Core Services
+
+Network Integrity: Run docker network inspect ai-net. ollama, openwebui, and mcpo MUST be listed under "Containers".
+
+Socket Security: From another device on the LAN, run curl --connect-timeout 2 http://<Server-LAN-IP>:11434. The connection MUST time out or be refused (verifies Ollama is safely bound to loopback/ai-net).
+*[ ] GPU Inference Test: Trigger a chat in Open WebUI. While generating, run docker exec ollama ollama ps. The PROCESSOR column MUST read 100% GPU. If it reads 100% CPU, the HSA_OVERRIDE variable failed.
+
+Phase 3: Access & Integration
+
+MCP Proxy Viability: Run docker logs mcpo. The logs MUST display Successfully connected to: filesystem and Successfully connected to: memory.
+
+Home Assistant Reverse Proxy: Navigate to https://home.yourdomain.duckdns.org. Open browser Developer Tools (F12) -> Console. There MUST be zero wss:// (WebSocket) connection drop errors.
+
+Voice Pipeline Verification: Open Home Assistant Settings -> Devices & Services -> Wyoming Protocol. Both 127.0.0.1:10300 and 127.0.0.1:10200 MUST show a green "Success" status.
+
+Final Rating Score: 9.5 / 10
+
+Justification: This is an incredibly sophisticated, production-grade guide wrapped in accessible formatting. Achieving GPU-accelerated local AI, complex Docker UID/GID mapping, and isolated voice pipelines on an immutable OS (Bazzite) is notoriously difficult. The author flawlessly navigates AMD ROCm quirks and Docker permission matrices. The only deduction (0.5) is for the ephemeral /tmp cache logic in the mcpo container, which introduces an unnecessary runtime dependency on the external npm registry during reboots. Fix that volume mount, and this is a perfect 10/10 deployment runbook.

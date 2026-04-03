@@ -1,0 +1,145 @@
+An exhaustive, command-level audit of the BAZZITE AI SMART HOME — ARCHITECTURE DRAFT (v5) has been performed. The architecture demonstrates excellent technical depth, correctly addressing complex RDNA3/ROCm constraints, advanced Docker group injection, and secure network isolation. However, several critical missing configurations regarding reverse proxy handling, container start commands, and tool aggregation will cause the deployment to fail in execution.
+
+Below is the structured audit report, issue classification, and remediation guide.
+
+1. ISSUE CLASSIFICATION & REMEDIATION
+🔴 CRITICAL ISSUES (Breaks execution or system integrity)
+
+Missing mcpo Startup Command
+
+Location: EX.2, mcpo Docker Compose file.
+
+Failure Mode: The mcpo:main image does not implicitly know to load a custom configuration file. Without specifying the command, the container will either crash or fail to expose the defined tools.
+
+Remediation: Add the explicit command to the compose block:
+
+code
+Yaml
+download
+content_copy
+expand_less
+command: --config /app/config/config.json
+
+Incorrect Open WebUI Tool Integration (No Aggregation)
+
+Location: EX.2, "Connect Open WebUI to mcpo".
+
+Failure Mode: The guide states to add http://mcpo:8000 to Open WebUI. mcpo does not aggregate multiple tools at the root / URL. Open WebUI will silently fail to discover the tools. Furthermore, mcpo exposes OpenAPI schemas, not native MCP endpoints.
+
+Remediation: Instruct the user to add each tool individually as an OpenAPI connection:
+
+Navigate to Admin Settings → External Tools (or Workspace → Tools). Select Type: OpenAPI.
+
+Add Tool 1: http://mcpo:8000/filesystem/openapi.json
+
+Add Tool 2: http://mcpo:8000/memory/openapi.json
+
+Home Assistant Reverse Proxy Rejection (400 Bad Request)
+
+Location: EX.3, Home Assistant setup & EX.6 Remote Access.
+
+Failure Mode: Since HA 2021.7, reverse proxy access is blocked by default. Because HA uses network_mode: host and NPM is proxying to the LAN IP, accessing home.*.duckdns.org will instantly result in a 400 Bad Request error.
+
+Remediation: Before testing remote access in EX.3, the user must edit ./config/configuration.yaml to allow the NPM Docker subnet.
+
+code
+Yaml
+download
+content_copy
+expand_less
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 192.168.0.0/16  # (Or specific NPM Docker gateway IP)
+🟠 MAJOR ISSUES (Introduces instability or execution failure)
+
+npx Cache Permission Denied (mcpo container)
+
+Location: EX.2, mcpo Docker Compose file.
+
+Failure Mode: mcpo runs as <NC_UID>:<NC_GID> (e.g., 33:33). When executing npx -y to download MCP servers, npm will attempt to cache files in ~/.npm or /.npm. Because the container has no writable home directory for this user, it will fail with EACCES (Permission Denied), crashing the tool servers.
+
+Remediation: Map the npm cache to the ephemeral, writable /tmp directory by adding an environment variable to the mcpo compose file:
+
+code
+Yaml
+download
+content_copy
+expand_less
+environment:
+  - npm_config_cache=/tmp/npm_cache
+
+NPM WebSockets Support Omitted
+
+Location: EX.2 and EX.3, NPM proxy setup.
+
+Failure Mode: Both Open WebUI (for AI streaming/voice) and Home Assistant (for the UI Event Bus) fundamentally rely on WebSockets. If omitted, the HA UI will display connection warnings and fail to load fully.
+
+Remediation: Explicitly state: "Enable 'WebSockets Support' and 'SSL' in NPM" for both proxies.
+
+🟡 MINOR ISSUES (Affects clarity, efficiency, or accuracy)
+
+Directory Listing Syntax Error
+
+Location: EX.0.g (ls -ln /var/srv/nextcloud/data).
+
+Issue: This command lists the contents of the directory, not the directory itself. If empty or mixed, it yields wrong IDs.
+
+Remediation: Append the -d flag: ls -lnd /var/srv/nextcloud/data.
+
+Literal Interpretation of Placeholders
+
+Location: EX.2 (WEBUI_SECRET_KEY=<openssl rand -hex 32>) and EX.3 (TZ=<your/timezone>).
+
+Issue: Docker Compose does not natively execute inline shell commands. Users will end up with a literal secret key of <openssl rand -hex 32>.
+
+Remediation: Instruct users to run openssl rand -hex 32 in the terminal and paste the string, and explicitly specify Europe/Berlin format for TZ.
+
+2. ELEMENT EVALUATION
+
+Kernel Parameters (amdgpu.noretry=0): Essential. Prevents guaranteed Micro Engine Scheduler (MES) hardware lockups under sustained RDNA3 inference.
+
+Numeric GID Injection (getent group): Essential. Brilliant circumvention of Docker's string-based group resolution issues on atomic Fedora systems.
+
+ROCm Environment Workarounds: Essential. RDNA3 requires HSA_OVERRIDE_GFX_VERSION=11.0.2 and OLLAMA_FLASH_ATTENTION=false to function correctly and avoid "444444" hallucination loops.
+
+Network Topology & Loopback Bindings: Essential. Binding Ollama and Wyoming to 127.0.0.1 while HA runs in network_mode: host creates a highly secure internal bridge that shields the raw APIs from the rest of the LAN.
+
+Hardware Appendix: Optional. Appropriately segregated for future planning.
+
+3. LOGICAL & STRUCTURAL INTEGRITY VALIDATION
+
+Dependency Logic: Verified. There are no circular dependencies. ai-net creation precedes composition, Nextcloud UID checks precede the mcpo build, and HA setup precedes the Wyoming pipeline integration.
+
+State Transitions: The mcpo pre-flight directory creation (mkdir -p -> chown) perfectly addresses Docker's native root:root volume creation hazard before compose up.
+
+Resource Contention: The integration restricts parallel processing (OLLAMA_NUM_PARALLEL=1) and offloads inference entirely to the 780M iGPU, preventing system RAM starvation on the Bazzite host.
+
+4. FINAL VALIDATION CHECKLIST
+
+Ensure these verifiable conditions are met before declaring the server operational:
+
+Phase 0 Validation: cat /proc/cmdline | grep amdgpu.noretry=0 returns positive.
+
+GPU Offload Confirmed: Execute docker exec ollama ollama ps during generation; PROCESSOR column must report exactly 100% GPU.
+
+Open WebUI Tool Resolution: In Open WebUI, navigate to tools. Verify filesystem and memory endpoints successfully fetched OpenAPI schemas without infinite loading spinners.
+
+WebSocket Integrity: Access HA via https://home.yourdomain.duckdns.org. Verify no "Unable to connect to Home Assistant" toast appears in the bottom left (verifies NPM WebSockets and trusted_proxies are correct).
+-[ ] Local Network Security: Execute curl http://<server-LAN-IP>:11434 from an external LAN device. Must result in Connection refused to confirm loopback isolation.
+
+Voice Pipeline Flow: Send a voice command via the HA Android App. Verify the pipeline cleanly executes STT (Faster Whisper) -> LLM (Ollama Conversation Agent) -> TTS (Piper) locally without external API calls.
+
+5. RATING SCORE
+
+Score: 8.5 / 10
+
+Justification: The draft is an exceptionally well-engineered piece of architecture. The approaches taken for ROCm RDNA3 stability, UID/GID-based Nextcloud filesystem bridging via MCP, and network isolation demonstrate senior-level system design. The deductions are strictly due to the mcpo startup command omission, OpenAPI aggregation misunderstanding, and Home Assistant's strict reverse proxy defaults—which would have caused critical failures during execution. With the remediation steps applied, this process is an airtight 10/10.
+
+Google Search Suggestions
+Display of Search Suggestions is required when using Grounding with Google Search. Learn more
+mcpo mcp server open webui
+"open-webui/mcpo"
+"ghcr.io/open-webui/mcpo"
+"npx -y @modelcontextprotocol/server-memory"
+"@modelcontextprotocol/server-memory path"

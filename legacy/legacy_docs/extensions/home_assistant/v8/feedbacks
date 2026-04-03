@@ -1,0 +1,81 @@
+Here is the strict, command-level audit of the "Bazzite AI Smart Home — Extension Guide EX.0–EX.6" execution plan.
+
+1. Architectural & Logic Audit
+
+The sequence of operations is exceptionally well-structured. The guide accounts for Linux immutable OS quirks (Bazzite/ostree), hardware-specific driver instabilities (AMD ROCm MES hangs, Flash Attention math errors), Docker container cross-network routing, and strict state transitions (e.g., Home Assistant onboarding locks).
+
+System State Transitions Verified:
+
+Pre-execution to Phase 1: Kernel argument application (rpm-ostree kargs) safely prepares the AMD 780M iGPU. The guide strictly gates progression until amdgpu.noretry=0 is verified active via /proc/cmdline.
+
+Docker Namespace Mapping: Extracting Nextcloud’s internal UID/GID and mapping it directly to the mcpo container's execution context (user: "33:33") prevents root-owned file contamination and bypasses SELinux/EACCES permissions traps.
+
+HA Onboarding Lock Bypass: By explicitly instructing the user to start Home Assistant, complete the UI onboarding wizard, and only then edit configuration.yaml, the guide elegantly dodges HA's known startup locking conflict (where pre-existing config files break initial SQLite database generation).
+
+2. Issue Report & Classification
+
+Critical Issues (Execution Breakers)
+
+None detected. The guide successfully mitigates the most dangerous operational traps (e.g., root-owned auto-created Docker mounts) by enforcing pre-creation (mkdir -p) and explicit ownership (sudo chown) before docker compose up commands.
+
+Major Issues (Instability / Security Nuances)
+
+Local HTTP Plaintext Exposure: Open WebUI is bound to 3000:8080. While the guide correctly states this is required because the existing Nginx Proxy Manager (NPM) cannot resolve the ai-net bridge hostname, this binds port 3000 to 0.0.0.0 on the Bazzite host. This exposes Open WebUI in plaintext to the local LAN, which slightly contradicts the spirit of the "Zero New Open Ports" title (though technically correct regarding WAN router port forwards).
+
+Mitigation: The guide acknowledges this as a "standard accepted trade-off." To completely seal it, one would map the port to 127.0.0.1:3000 and ensure NPM routes via the host's docker0 bridge IP, but that exceeds beginner-level complexity. The current approach is viable.
+
+HA Config Validation Loop Condition: The command docker exec homeassistant python -m homeassistant --script check_config relies on the HA container actively running. If a user makes a YAML error, restarts the container, and then tries to run the check, the command will fail because the container will be caught in a crash-loop.
+
+Mitigation: The guide circumvents this by strictly stating: "Validate before restarting". If followed exactly, this failure mode is neutralized.
+
+Minor Issues (Clarity & Edge Cases)
+
+Memory Parsing Dependency: The command free -h | awk '/^Mem:/{print $7}' assumes the 7th column is "available" memory. While true for Fedora/Bazzite procps-ng builds, it is fragile across other distros. Given the Bazzite OS constraint, it executes flawlessly.
+
+PDF Copy-Paste Formatting: The JSON payload in the curl test (-d '{"model":"qwen2.5:14b-instruct-q4_K_M"...}') relies on standard quotes. If PDF viewers convert these to typographical "smart quotes" (curly quotes), the curl command will fail with a JSON parsing error.
+
+3. Element Classification
+
+Essential (Do not alter):
+
+amdgpu.noretry=0 kernel argument (Without this, the OS will completely freeze during LLM token streaming).
+
+OLLAMA_FLASH_ATTENTION=false (Mandatory for RDNA3 hardware to prevent AI token collapse/hallucinations).
+
+Bare integers for group_add: (Docker Compose YAML will crash if string group names are provided without matching /etc/group entries inside the container).
+
+HOME=/tmp in mcpo (Node.js/npx will silently crash attempting to read ~/.npm if run as an arbitrary UID).
+
+Optional:
+
+OLLAMA_KEEP_ALIVE=5m.
+
+Whisper model size selection (base vs small).
+
+Hardware Appendix (ESP32/Zigbee components are forward-looking and not required for EX.0–EX.6).
+
+Unnecessary:
+
+None. The guide is highly distilled. There are no redundant dependencies or bloated commands.
+
+4. Final Deterministic Validation Checklist
+
+To confirm the system has successfully transitioned to the target state without hidden flaws, verify the following observables:
+
+iGPU Initialization: Run docker exec ollama ollama ps. Trigger a prompt in Open WebUI. Ensure the PROCESSOR column reads 100% GPU. If it falls back to CPU, the HSA_OVERRIDE_GFX_VERSION environment block has failed.
+
+Reverse Proxy Socket Tunneling: Open browser developer tools (F12) on both the Open WebUI and Home Assistant external HTTPS URLs. Ensure there are no wss:// (WebSocket) drop/timeout errors in the Network tab. If they exist, NPM WebSocket support is disabled.
+
+MCP File Read Masking: Query the AI in Open WebUI: "List my files". It must return Nextcloud files. If it returns unreadable binary gibberish, Nextcloud Server-Side Encryption (SSE) is still active.
+
+Stateful Memory Persistence: Query the AI: "Remember my favorite color is Cobalt." Restart the mcpo container (docker compose restart mcpo). Query the AI: "What is my favorite color?" If it forgets, the ~/docker/mcpo/memory directory was root-owned and the memory graph failed to write.
+
+Internal Network Sandboxing: Run curl -s --connect-timeout 2 http://<Bazzite-LAN-IP>:11434. The connection must fail (timeout or connection refused). If it prints an Ollama greeting, the Ollama container was incorrectly bound to 0.0.0.0 instead of 127.0.0.1, breaking network isolation.
+
+Voice Pipeline Socket Binding: In HA Settings -> Integrations -> Wyoming Protocol. Both 127.0.0.1:10300 and 127.0.0.1:10200 must show "Success". If they fail, Home Assistant lost host network mode.
+
+Final Rating
+
+Score: 9.5 / 10
+
+Justification: This is an exceptionally high-quality, technically rigorous deployment guide. It demonstrates a profound understanding of Linux filesystem permissions, Docker bridge vs. host networking mechanics, and hardware-specific edge cases (AMD RDNA3 bugs). It anticipates common user failures (e.g., executing HA configs too early, YAML string mapping errors, root-daemon folder creation) and explicitly designs state transitions to avoid them. Only a minor architectural trade-off regarding internal plaintext WebUI routing keeps it from a mathematically perfect score, but it is entirely appropriate for its context.

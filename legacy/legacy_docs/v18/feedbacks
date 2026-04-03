@@ -1,0 +1,518 @@
+BAZZITE UNIFIED HOME SERVER + GAMING STATION GUIDE
+Feedback Report — March 2026
+Tested on: bazzite-deck, AMD GPU, Fedora Atomic base
+────────────────────────────────────────────────────────────────────────
+
+
+ISSUE 1 — Phase 10 Step 2: NPM SSL certificate never gets issued
+Severity: High
+
+The guide instructs the user to configure the proxy host but does not
+explicitly state that the Details tab, SSL tab, and Advanced tab must
+all be completed before the first Save. In practice, most users will
+fill in the Details tab and save, then reopen to add SSL — which causes
+NPM to silently reset the SSL tab to defaults (no certificate, Force SSL
+off, HTTP/2 off). The user ends up with a working proxy but no TLS,
+with no error message to indicate anything went wrong.
+
+Recommended fix: Add a clear warning before the proxy host instructions
+stating that all three tabs must be configured in a single save
+operation. Example wording:
+
+  "WARNING: Do not click Save until you have configured the Details,
+  SSL, and Advanced tabs in the same session. If you save before
+  visiting the SSL tab, NPM resets it to defaults on the next edit.
+  You must complete all three tabs and click Save once."
+
+
+ISSUE 2 — Phase 10 Step 2: HSTS not mentioned
+Severity: Low
+
+The guide covers Force SSL and HTTP/2 but does not mention HSTS
+(Strict-Transport-Security). HSTS is a meaningful security improvement
+that takes one toggle to enable and is a natural companion to Force SSL.
+It should be mentioned with a brief explanation and the caveat that it
+must only be enabled after the certificate is confirmed working.
+
+Recommended addition: After the SSL tab instructions, add a note:
+
+  "Once you have confirmed HTTPS is working, edit the proxy host again
+  and enable HSTS in the SSL tab. Leave 'Also apply to subdomains' and
+  'HSTS Preload' off unless you have a specific reason to use them."
+
+
+ISSUE 3 — systemd-remount-fs.service fails on every boot
+Severity: Low (cosmetic / confusing)
+
+On current Bazzite builds using composefs, systemd-remount-fs.service
+fails at boot with "overlay: No changes allowed in reconfigure." This
+is a known upstream systemd/composefs compatibility issue and has no
+effect on system operation. However it shows as a failed unit in
+systemctl --failed and causes confusion.
+
+Recommended addition: A note in Phase 1 Step 3 or Appendix A:
+
+  "On current Bazzite builds, systemd-remount-fs.service may show as
+  failed on every boot. This is a known harmless issue caused by
+  composefs preventing remount of the immutable root. Mask it to keep
+  a clean system state:
+
+    sudo systemctl mask systemd-remount-fs.service
+    sudo systemctl reset-failed"
+
+
+ISSUE 4 — No mention of fail2ban sudoers rule and /etc/udev/rules.d/99-server-health.rules for non-root monitoring
+Severity: Low
+
+fail2ban-client requires sudo to query jail status. Any monitoring
+script or dashboard run as a regular user will prompt for a password
+every time. A targeted passwordless sudoers rule is the correct fix
+and fits naturally alongside the other sudoers work in Phase 4 or 8.
+
+Recommended addition:
+
+  "To allow fail2ban status queries without a password prompt:
+
+    echo "$USER ALL=(ALL) NOPASSWD: /usr/bin/fail2ban-client" \
+      | sudo tee /etc/sudoers.d/fail2ban-health
+    sudo chmod 440 /etc/sudoers.d/fail2ban-health
+    sudo visudo -c -f /etc/sudoers.d/fail2ban-health"
+
+Also cpu and ram memory read need an udev rule like this one:
+
+# Allow reading Intel RAPL (CPU Power) energy counters
+SUBSYSTEM=="powercap", ACTION=="add", RUN+="/bin/chmod -R 444 /sys/class/powercap/intel-rapl:0/"
+
+# Allow reading GPU usage/freq if restricted
+SUBSYSTEM=="drm", ACTION=="add", RUN+="/bin/chmod -R 444 /sys/class/drm/card*/device/"
+
+Alternative to consider:
+
+{ sudo visudo -f /etc/sudoers.d/sddm-management
+
+# Allow sotohome to manage server health and display sessions without a password
+sotohome ALL=(ALL) NOPASSWD: /usr/local/bin/server-health
+sotohome ALL=(ALL) NOPASSWD: /usr/local/bin/start-kde.sh
+sotohome ALL=(ALL) NOPASSWD: /usr/local/bin/start-gaming.sh
+sotohome ALL=(ALL) NOPASSWD: /usr/local/bin/stop-session.sh }
+
+A suggested monitoring script (approved) would be following:
+
+sotohome@hs:~$ cat /usr/local/bin/server-health
+#!/bin/bash
+# server-health — Bazzite server status dashboard
+# Live mode: updates every few seconds · Ctrl+C to exit
+
+R=$'\033[0m'; DIM=$'\033[2;37m'; BLD=$'\033[1m'
+CYN=$'\033[1;36m'; BLU=$'\033[1;34m'; WHT=$'\033[1;37m'
+GRN=$'\033[1;32m'; YEL=$'\033[1;33m'; RED=$'\033[1;31m'
+
+THICK="${CYN}$(printf '━%.0s' {1..72})${R}"
+THIN="${DIM}$(printf '─%.0s' {1..72})${R}"
+REFRESH=2      # seconds between redraws
+SLOW_EVERY=4   # cycles between slow-data refresh (every 8 s at REFRESH=2)
+
+row()      { printf "  ${BLU}%-8s${R}  %b\n" "$1" "${*:2}"; }
+dot_ok()   { printf "${GRN}●${R}"; }
+dot_warn() { printf "${YEL}●${R}"; }
+dot_err()  { printf "${RED}●${R}"; }
+dot_dim()  { printf "${DIM}●${R}"; }
+
+# Colour-coded dot based on percentage thresholds
+pct_dot() {
+    local p=$1 warn=${2:-70} err=${3:-90}
+    if   (( p >= err  )); then dot_err
+    elif (( p >= warn )); then dot_warn
+    else dot_ok; fi
+}
+
+# ── Cleanup on exit ────────────────────────────────────────────────────────────
+trap 'tput cnorm; printf "\n"; exit 0' INT TERM
+[ -t 1 ] && tput civis   # hide cursor while live
+
+# ── GPU detection (AMD = 0x1002, Intel = 0x8086) ──────────────────────────────
+GPU_DEV=""
+for _card in /sys/class/drm/card*/; do
+    _vendor=$(cat "${_card}device/vendor" 2>/dev/null)
+    [[ "$_vendor" == "0x1002" || "$_vendor" == "0x8086" ]] && \
+        { GPU_DEV="${_card}device"; break; }
+done
+
+GPU_HWMON=""
+if [ -n "$GPU_DEV" ]; then
+    GPU_HWMON=$(find "${GPU_DEV}/hwmon" -maxdepth 2 -name "temp1_input" 2>/dev/null \
+        | head -1 | xargs -I{} dirname {} 2>/dev/null)
+fi
+
+# ── CPU baseline sample ────────────────────────────────────────────────────────
+_cpustat() { awk '/^cpu /{print $2,$3,$4,$5,$6,$7,$8; exit}' /proc/stat; }
+prev_cs=$(_cpustat)
+cpu_pct=0
+
+# ── CPU Power (RAPL) init ──────────────────────────────────────────────────────
+RAPL_FILE="/sys/class/powercap/intel-rapl:0/energy_uj"
+prev_energy=""
+prev_time=$(date +%s%3N)
+[ -r "$RAPL_FILE" ] && prev_energy=$(cat "$RAPL_FILE" 2>/dev/null)
+cpu_power="calc..."
+
+# ── Slow-cache defaults (shown until first background refresh) ─────────────────
+WAN_IP="–"; F2B="–"
+NPM_DOT=$(dot_dim); NPM_ST="–"
+NC_DOT=$(dot_dim);  NC_ST="–"
+CERT_DOT=$(dot_dim); CERT_ST="–"
+BK_DOT=$(dot_dim);  BK_ST="–"
+
+refresh_slow() {
+    # WAN IP
+    WAN_IP=$(curl -s --max-time 4 https://api.ipify.org 2>/dev/null)
+    [ -z "$WAN_IP" ] && WAN_IP="unreachable"
+
+    # Fail2ban
+    F2B=$(sudo fail2ban-client status sshd 2>/dev/null \
+        | grep 'Currently banned' | grep -oE '[0-9]+')
+    [ -z "$F2B" ] && F2B="?"
+
+    # NPM
+    _nc=$(curl -s -o /dev/null -w "%{http_code}" --max-time 2 http://localhost:81 2>/dev/null)
+    [ "${_nc:-000}" != "000" ] && { NPM_DOT=$(dot_ok); NPM_ST="ok"; } \
+                               || { NPM_DOT=$(dot_err); NPM_ST="down"; }
+
+    # Nextcloud maintenance mode
+    _nr=$(docker exec nextcloud-aio-nextcloud php occ maintenance:mode 2>/dev/null)
+    if   echo "$_nr" | grep -qi "disabled\|not enabled"; then NC_DOT=$(dot_ok);   NC_ST="live"
+    elif echo "$_nr" | grep -qi "enabled";               then NC_DOT=$(dot_warn); NC_ST="maintenance"
+    else NC_DOT=$(dot_dim); NC_ST="n/a"; fi
+
+    # SSL cert
+    _ce=$(docker exec nginx-proxy-manager openssl x509 -noout -enddate \
+        -in /etc/letsencrypt/live/npm-1/cert.pem 2>/dev/null | cut -d= -f2)
+    if [ -n "$_ce" ]; then
+        _cd=$(( ( $(date -d "$_ce" +%s) - $(date +%s) ) / 86400 ))
+        if   (( _cd <= 14 )); then CERT_DOT=$(dot_err);  CERT_ST="cert expires ${_cd}d"
+        elif (( _cd <= 30 )); then CERT_DOT=$(dot_warn); CERT_ST="cert expires ${_cd}d"
+        else                       CERT_DOT=$(dot_ok);   CERT_ST="cert valid ${_cd}d"
+        fi
+    else CERT_DOT=$(dot_warn); CERT_ST="cert pending"; fi
+
+    # Backup log
+    _bk=$(docker logs nextcloud-aio-mastercontainer 2>/dev/null \
+        | grep -i "Backup finished successfully" | tail -1 | awk '{print $1,$2}')
+    [ -n "$_bk" ] && { BK_DOT=$(dot_ok); BK_ST="$_bk"; } \
+                  || { BK_DOT=$(dot_dim); BK_ST="no record found"; }
+}
+
+# ── Container block ────────────────────────────────────────────────────────────
+print_containers() {
+    local out
+    out=$(docker ps -a --format '{{.Names}}#{{.Status}}' 2>/dev/null)
+    if [ -z "$out" ]; then
+        printf "  ${RED}Docker not running or no containers found.${R}\n"; return
+    fi
+    printf "%s\n" "$out" | awk -F'#' '{
+        name=$1; st=$2
+        if      (st~/healthy/)  { dot="\033[1;32m●\033[0m"; tag="healthy"  }
+        else if (st~/^Up/)      { dot="\033[1;32m●\033[0m"; tag="up"       }
+        else if (st~/starting/) { dot="\033[1;33m●\033[0m"; tag="starting" }
+        else if (st~/^Exited/)  { dot="\033[1;31m●\033[0m"; tag="stopped"  }
+        else                    { dot="\033[1;33m●\033[0m"; tag=substr(st,1,9) }
+        entry=sprintf("  %-36s %s %-9s", name, dot, tag)
+        if (NR%2==1) { row=entry }
+        else         { printf "%s    %s\n", row, entry; row="" }
+    } END { if (row!="") printf "%s\n", row }'
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Main loop
+# ══════════════════════════════════════════════════════════════════════════════
+CYCLE=0
+
+while true; do
+
+    # ── CPU Power (RAPL) ──────────────────────────────────────────────────────
+    cur_time=$(date +%s%3N)
+    elapsed_ms=$(( cur_time - prev_time ))
+
+    if [ -n "$prev_energy" ]; then
+        cur_energy=$(cat "$RAPL_FILE" 2>/dev/null)
+        delta_uj=$(( cur_energy - prev_energy ))
+        (( delta_uj < 0 )) && delta_uj=$(( cur_energy )) # fallback if counter resets
+
+        if (( elapsed_ms > 0 && delta_uj > 0 )); then
+            # Convert microjoules to Watts: W = µJ / (ms * 100)  [×10 fixed-point]
+            w_x10=$(( delta_uj / (elapsed_ms * 100) ))
+            cpu_power="$(( w_x10 / 10 )).$(( w_x10 % 10 ))W"
+        fi
+        prev_energy=$cur_energy
+    fi
+    prev_time=$cur_time
+
+    # ── CPU usage (delta since last sample) ───────────────────────────────────
+    cur_cs=$(_cpustat)
+    read -ra _p <<< "$prev_cs"
+    read -ra _c <<< "$cur_cs"
+    _pt=0; _ct=0
+    for v in "${_p[@]}"; do (( _pt += v )); done
+    for v in "${_c[@]}"; do (( _ct += v )); done
+    _dt=$(( _ct - _pt )); _di=$(( _c[3] - _p[3] ))
+    (( _dt > 0 )) && cpu_pct=$(( 100 * (_dt - _di) / _dt )) || cpu_pct=0
+    prev_cs="$cur_cs"
+
+    # ── CPU clock (average across all online cores) ───────────────────────────
+    _fsum=0; _fn=0
+    for _f in /sys/devices/system/cpu/cpufreq/policy*/scaling_cur_freq; do
+        [ -r "$_f" ] || continue
+        _fkhz=$(< "$_f")
+        (( _fsum += _fkhz, _fn++ ))
+    done
+    if (( _fn > 0 )); then
+        _mhz=$(( _fsum / _fn / 1000 ))
+        if (( _mhz >= 1000 )); then
+            cpu_freq="$(( _mhz / 1000 )).$(( (_mhz % 1000) / 100 ))GHz"
+        else
+            cpu_freq="${_mhz}MHz"
+        fi
+    else cpu_freq="n/a"; fi
+
+    # ── CPU temp ──────────────────────────────────────────────────────────────
+    CPU_TEMP=$(sensors 2>/dev/null \
+        | grep -E '(Tctl|Tdie|Package id 0)' | head -1 | awk '{print $2}')
+    [ -z "$CPU_TEMP" ] && \
+        CPU_TEMP=$(sensors 2>/dev/null | grep 'temp1' | head -1 | awk '{print $2}')
+    [ -z "$CPU_TEMP" ] && CPU_TEMP="n/a"
+
+    # ── Extra Temps (RAM & NVMe) ──────────────────────────────────────────────
+    RAM_TEMP=$(sensors 2>/dev/null | grep -A 2 'spd5118' | awk '/temp1/{print $2; exit}')
+    NVME_TEMP=$(sensors 2>/dev/null | grep -A 2 'nvme-pci' | awk '/Composite/{print $2; exit}')
+
+    # ── GPU ───────────────────────────────────────────────────────────────────
+    GPU_ROW=""
+    if [ -n "$GPU_DEV" ]; then
+        # Utilisation
+        _gbusy=$(cat "${GPU_DEV}/gpu_busy_percent" 2>/dev/null)
+        _gbusy=${_gbusy:-0}
+
+        # Core clock (Hz → MHz)
+        _gfhz=${GPU_HWMON:+$(cat "${GPU_HWMON}/freq1_input" 2>/dev/null)}
+        if [ -n "$_gfhz" ] && (( _gfhz > 0 )); then
+            gpu_freq="$(( _gfhz / 1000000 ))MHz"
+        else gpu_freq="n/a"; fi
+
+        # Edge temp (millidegrees → °C)
+        _gt=${GPU_HWMON:+$(cat "${GPU_HWMON}/temp1_input" 2>/dev/null)}
+        [ -n "$_gt" ] && gpu_temp="+$(( _gt / 1000 ))°C" || gpu_temp="n/a"
+
+        # VRAM (bytes → GiB, or MiB for small cards)
+        _vu=$(cat "${GPU_DEV}/mem_info_vram_used"  2>/dev/null)
+        _vt=$(cat "${GPU_DEV}/mem_info_vram_total" 2>/dev/null)
+        if [ -n "$_vu" ] && [ -n "$_vt" ] && (( _vt > 0 )); then
+            _vum=$(( _vu / 1048576 )); _vtm=$(( _vt / 1048576 ))
+            if (( _vtm >= 1024 )); then
+                _vui=$(( _vum / 1024 )); _vud=$(( (_vum % 1024) * 10 / 1024 ))
+                _vti=$(( _vtm / 1024 )); _vtd=$(( (_vtm % 1024) * 10 / 1024 ))
+                gpu_vram="${_vui}.${_vud}/${_vti}.${_vtd}GiB VRAM"
+            else
+                gpu_vram="${_vum}/${_vtm}MiB VRAM"
+            fi
+        else gpu_vram=""; fi
+
+        # GPU power draw (μW → W, one decimal place)
+        _gpw=${GPU_HWMON:+$(cat "${GPU_HWMON}/power1_average" 2>/dev/null)}
+        if [ -n "$_gpw" ] && (( _gpw > 0 )); then
+            gpu_power="$(( _gpw / 1000000 )).$(( (_gpw % 1000000) / 100000 ))W"
+        else gpu_power=""; fi
+
+        GPU_ROW="$(pct_dot "$_gbusy" 70 90) ${_gbusy}%  ${DIM}@${R}  ${gpu_freq}  ${DIM}·${R}  ${gpu_temp}"
+        [ -n "$gpu_vram"  ] && GPU_ROW+="  ${DIM}·${R}  ${gpu_vram}"
+        [ -n "$gpu_power" ] && GPU_ROW+="  ${DIM}·${R}  ${gpu_power}"
+    fi
+
+    # ── Memory ────────────────────────────────────────────────────────────────
+    RAM_USED=$(free -h | awk '/^Mem:/{print $3}')
+    RAM_TOT=$( free -h | awk '/^Mem:/{print $2}')
+    RAM_PCT=$( free    | awk '/^Mem:/{printf "%.0f",$3/$2*100}')
+    SWAP_USED=$(free -h | awk '/^Swap:/{print $3}')
+    SWAP_TOT=$( free -h | awk '/^Swap:/{print $2}')
+    RAM_PCT=${RAM_PCT:-0}
+
+    # ── Display ───────────────────────────────────────────────────────────────
+    SEAT0=$(loginctl list-sessions --no-legend 2>/dev/null | awk '$4=="seat0"{print $1;exit}')
+    if [ -n "$SEAT0" ]; then
+        CLS=$(loginctl show-session "$SEAT0" -p Class --value 2>/dev/null)
+        if [ "$CLS" = "greeter" ]; then
+            DISP_DOT=$(dot_ok); DISP_ST="idle  ${DIM}SDDM login screen${R}"
+        else
+            DSK=$(loginctl show-session "$SEAT0" -p Desktop --value 2>/dev/null)
+            DISP_DOT=$(dot_warn); DISP_ST="active  ${DIM}${DSK:-session}${R}"
+        fi
+    else
+        DISP_DOT=$(dot_ok); DISP_ST="idle  ${DIM}no display active${R}"
+    fi
+    if [ -f /etc/sddm.conf.d/zz-session-launch.conf ]; then
+        SDDM_DOT=$(dot_warn); SDDM_ST="launch conf present"
+    else
+        SDDM_DOT=$(dot_ok); SDDM_ST="clean"
+    fi
+
+    # ── Storage ───────────────────────────────────────────────────────────────
+    OS_S=$(df -h /var 2>/dev/null | awk 'NR==2{print $3" / "$2" ("$5")"}')
+    DAT_RAW=$(df -h /var/srv/nextcloud-data 2>/dev/null | awk 'NR==2{print $3" / "$2" ("$5")"}')
+    if [ -n "$DAT_RAW" ]; then DAT_DOT=$(dot_ok); DAT_ST="$DAT_RAW"
+    else DAT_DOT=$(dot_err); DAT_ST="not mounted"; fi
+
+    # ── Network (fast parts) ──────────────────────────────────────────────────
+    SSH_C=$(ss -tn state established 2>/dev/null | grep -c ":22022")
+
+    # ── Systemd ───────────────────────────────────────────────────────────────
+    FAIL_N=$(systemctl --failed --no-legend 2>/dev/null | grep -c '.' || true)
+    if [ "${FAIL_N:-0}" -gt 0 ]; then
+        FAIL_NAMES=$(systemctl --failed --no-legend 2>/dev/null | awk '{printf "%s  ",$2}')
+        SYS_DOT=$(dot_err); SYS_ST="${FAIL_N} failed  ${DIM}${FAIL_NAMES}${R}"
+    else
+        SYS_DOT=$(dot_ok); SYS_ST="healthy"
+    fi
+
+    # ── Slow refresh (network/docker — every SLOW_EVERY cycles) ──────────────
+    # Skipped on cycle 0 so the first frame renders instantly.
+    (( CYCLE > 0 && CYCLE % SLOW_EVERY == 0 )) && refresh_slow
+
+    # ── Timestamps ────────────────────────────────────────────────────────────
+    NOW=$(date '+%a %d %b %Y  %H:%M:%S')
+    HOST=$(hostname -s)
+    UP=$(uptime -p | sed 's/up //')
+    LOAD=$(awk '{print $1"  "$2"  "$3}' /proc/loadavg)
+
+    # ── Paint ─────────────────────────────────────────────────────────────────
+    printf '\033[H\033[2J'
+
+    printf "%s\n" "$THICK"
+    printf "  ${WHT}${BLD}BAZZITE  %-22s${R}  ${DIM}%s${R}\n" "$HOST" "$NOW"
+    printf "%s\n" "$THICK"
+
+    row "SYSTEM"   "up $UP  ${DIM}·${R}  load $LOAD"
+    row "CPU"      "$(pct_dot "$cpu_pct" 60 85) ${cpu_pct}%  ${DIM}@${R}  ${cpu_freq}  ${DIM}·${R}  ${CPU_TEMP}  ${DIM}·${R}  ${cpu_power}"
+    [ -n "$GPU_ROW" ] && \
+    row "GPU"      "$GPU_ROW"
+    row "MEMORY"   "$(pct_dot "$RAM_PCT" 75 90) RAM $RAM_USED / $RAM_TOT ${DIM}(${RAM_PCT}%)${R}  ${DIM}·${R}  swap $SWAP_USED / $SWAP_TOT${RAM_TEMP:+  ${DIM}·${R}  $RAM_TEMP}"
+    row "DISPLAY"  "$DISP_DOT $DISP_ST  ${DIM}·${R}  sddm $SDDM_DOT $SDDM_ST"
+    row "STORAGE"  "OS $OS_S  ${DIM}·${R}  data $DAT_DOT $DAT_ST${NVME_TEMP:+  ${DIM}·${R}  $NVME_TEMP}"
+    row "NETWORK"  "SSH ${SSH_C} conn  ${DIM}·${R}  F2B ${F2B} banned  ${DIM}·${R}  WAN $WAN_IP"
+    row "SYSTEMD"  "$SYS_DOT $SYS_ST"
+    row "SERVICES" "NPM $NPM_DOT $NPM_ST  ${DIM}·${R}  Nextcloud $NC_DOT $NC_ST  ${DIM}·${R}  $CERT_DOT $CERT_ST"
+    row "BACKUP"   "$BK_DOT $BK_ST"
+
+    printf "\n%s\n" "$THIN"
+    printf "  ${BLU}CONTAINERS${R}\n"
+    print_containers
+
+    printf "\n%s\n" "$THICK"
+    _ns=$(( (SLOW_EVERY - CYCLE % SLOW_EVERY) * REFRESH ))
+    printf "  ${DIM}refresh ${REFRESH}s  ·  slow data in ${_ns}s  ·  journalctl -u sshd -f  ·  Ctrl+C to exit${R}\n"
+    printf "%s\n" "$THICK"
+
+    CYCLE=$(( CYCLE + 1 ))
+    sleep "$REFRESH"
+
+done
+
+# If using i2c for RAM temperatures (spd5118)
+KERNEL=="i2c-[0-9]*", GROUP="video", MODE="0660"
+
+GENERAL NOTE — Setup was functional throughout
+
+Despite the SSL tab issue, the underlying setup produced by the guide
+was correct at every layer. DuckDNS, port forwarding, NPM, Nextcloud
+AIO, Docker networking, SELinux labels, and firewalld rules all worked
+exactly as described. The issues above are presentation and UX gaps,
+not architectural ones. The guide is solid.
+
+────────────────────────────────────────────────────────────────────────
+
+IMPORTANT:
+
+I do want to use my bazzite home server / gaming station for the best performative cloud gaming possible. in my understanding a wireguard mesh vpn is the safest way to achive that. Sunshine + Moonlight is my personal desire. I tried to keep it as tigth and safe as possible by only opening one port to the internet (wireguard) and keeping it encrypted.
+
+I want a complete rkdp replacement becase I will never use it.. if i were to install a rdp client i prefer just installing a wireguard client instead. RDP represents a bloaty redundancy for me that I wont accept.
+So i've personally prepared this feedback for you to double check. I set it up like that already and it works. I just still need you to sweep deeply over it and consider it skeptically to find any dangers, vulnerabilities or stability/compatibility risks with my whole setup because it should integrate seamlessly.
+
+This feedback identifies the finalized, production-ready implementation for replacing krdp (TCP) with Moonlight/Sunshine (UDP). This upgrade transitions the project from a "Remote Desktop" setup to a "Professional-Grade Gaming Cloud."
+
+1. The Argument for the Upgrade: "Zero-Latency"
+
+The legacy RDP approach relies on TCP, which causes "TCP Meltdown" (stuttering/freezing) during packet loss.
+
+Performance: Sunshine/Moonlight uses UDP with VA-API (AMD/Intel) hardware encoding, providing a 1:1, 4K/60FPS feel indistinguishable from a local monitor.
+
+Stealth Security: Using WireGuard (UDP) instead of SSH tunnels for video traffic is faster and more secure. WireGuard uses "Silent Drop," making your VPN port invisible to scanners.
+
+Automation: By using official Docker images and host-level module loading, the setup remains compatible with Watchtower for 100% automated security updates.
+
+2. Final Implementation: The "Golden Path"
+Phase A: Host OS Preparation (Bazzite)
+
+To support containerized VPN routing and hardware-accelerated streaming, run these on the server:
+
+# 1. Load legacy NAT modules (required for wg-easy + Watchtower compatibility)
+sudo modprobe iptable_nat iptable_mangle
+echo -e "iptable_nat\niptable_mangle" | sudo tee /etc/modules-load.d/iptables-legacy.conf
+
+# 2. Grant Hardware Permissions (Mouse/Keyboard/GPU)
+sudo usermod -aG input,video,render $(whoami)
+sudo ujust setup-sunshine
+
+# 3. Enable Session Persistence (Starts Sunshine/Audio at boot)
+sudo loginctl enable-linger $(whoami)
+Phase B: The Stealth VPN (WireGuard)
+
+Deploy wg-easy via Docker. This provides the secure "tunnel" into your home.
+
+Router: Forward only port 51820/udp.
+
+Server Firewall: Keep Sunshine ports open internally but never forward them on the router.
+
+# docker-compose.yml for wg-easy
+services:
+  wg-easy:
+    image: ghcr.io/wg-easy/wg-easy:latest
+    container_name: wg-easy
+    restart: unless-stopped
+    labels: ["com.centurylinklabs.watchtower.enable=true"]
+    environment:
+      - WG_HOST=yourname.duckdns.org
+      - PASSWORD_HASH=$$2a$$12$$... # Your Bcrypt hash
+    volumes: ["./data:/etc/wireguard:Z"]
+    ports:
+      - "51820:51820/udp"
+      - "127.0.0.1:51821:51821/tcp" # Admin UI (Internal only)
+    cap_add: [NET_ADMIN, SYS_MODULE]
+    sysctls:
+      - net.ipv4.ip_forward=1
+Phase C: The Streaming Layer (Sunshine)
+
+Start Service: systemctl --user enable --now sunshine
+
+Firewall: Open ports locally for the VPN to "see" them:
+sudo firewall-cmd --permanent --add-port={47984,47989,48010}/tcp
+sudo firewall-cmd --permanent --add-port={47998,47999,48000,48002,48010}/udp
+sudo firewall-cmd --reload && sudo systemctl restart docker
+
+3. New Remote Workflow (Client-Side)
+
+This replaces the old RDP/SSH tunnel instructions.
+
+Connect VPN: Use nmcli (Linux) or the WireGuard app to connect.
+
+Pro Tip: Set ipv4.never-default yes on the client for a "Split Tunnel" (Keep your local internet on while using the VPN).
+
+Launch Session: SSH to trigger the graphical session:
+ssh -p 22022 sotohome@jsotohome.duckdns.org 'sudo start-kde.sh'
+
+Stream: Open Moonlight and connect to the server's VPN IP (10.8.0.1).
+
+4. Critical Pitfalls to Include
+
+Pitfall: User Permissions. Group changes (usermod) and enable-linger require a sudo loginctl terminate-user $(whoami) or a full reboot to take effect.
+
+Pitfall: Dual Interfaces. Moonlight may struggle to find the server if the VPN is on. Always use the internal VPN IP (10.8.0.1) when connecting remotely.
+
+Pitfall: Headless Output. A $5 HDMI Dummy Plug is mandatory for headless servers to "wake" the GPU for KDE sessions.

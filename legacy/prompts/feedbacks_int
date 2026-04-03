@@ -1,0 +1,9 @@
+Incorporate feedback if annexed through strict validation, not aggregation. Evaluate each suggestion against the guide, other feedback, and current documentation. Accept only changes that are correct, necessary, up-to-date, and fully compatible. Reject anything redundant, conflicting, outdated, or introducing instability or unnecessary complexity.
+
+Ensure global coherence: no step may contradict or weaken another. Maintain correct dependency order, system state progression, and environment compatibility. Reliability, clarity, and determinism must not degrade.
+
+Integrate all accepted improvements into a single unified guide—no append-only additions.
+
+Perform a full end-to-end validation of the final result at command, system, and logical levels. Eliminate errors, inconsistencies, hidden assumptions, and edge-case failures. Confirm alignment with current documentation and real execution behavior. Ensure every command and action is fully up to date with the latest documentation through a final verification sweep.
+
+The final PDF guide must be compact, non-redundant, clear, technically precise, and complete. No unnecessary content. No unverifiable claims. No flaws. The format must remain beginner-friendly, visually structured, and easy to follow.”

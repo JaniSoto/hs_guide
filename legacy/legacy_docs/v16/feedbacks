@@ -1,0 +1,658 @@
+Here is the strict, command-level audit of the provided guide.
+
+Executive Summary
+
+This guide represents an exceptionally high standard of Linux system administration. It exhibits a profound understanding of the Fedora Atomic/ostree architecture (which Bazzite is built upon), systemd cgroup lifecycles, SELinux enforcing mechanics, and Docker networking. It anticipates edge cases that typically break beginner setups (e.g., blind mounts, SSH subshell terminations, Firewalld/Docker bypasses) and implements enterprise-grade mitigations.
+
+The entire process is deterministic, reproducible, and logically sound.
+
+Command-Level Audit & System State Transitions
+
+Phase 1: Headless Server Configuration
+
+Action: Disabling sleep targets and creating a zzz- prefixed SDDM override.
+
+Validation: Passed. Masking systemd sleep targets is the definitive way to prevent suspend on a headless system. SDDM merges configurations alphabetically; the zzz- prefix guarantees the empty User= and Session= fields will override the OS defaults.
+
+State Transition: The physical GPU is freed from the Wayland compositor at boot, allowing it to sit idle.
+
+Phase 3: Package Installation (rpm-ostree)
+
+Action: Installing native Docker CE, fail2ban, and SELinux tools via rpm-ostree override.
+
+Validation: Passed. The guide correctly notes that Nextcloud AIO’s mastercontainer requires native Docker socket orchestration, making rootless Podman insufficient. Removing the podman-docker shim atomically with the Docker CE install prevents filesystem conflicts.
+
+Dependency Check: policycoreutils-python-utils is installed here, which provides the semanage command strictly required for Phase 4. Order of operations is flawless.
+
+Phase 4: Security Hardening
+
+Action: Port transition, SSH keys, SELinux labelling, and Firewalld configuration.
+
+Validation: Passed.
+
+SELinux: Running semanage port -a -t ssh_port_t -p tcp 22022 before restarting sshd is critical. If reversed, sshd fails to bind, locking the user out. The guide enforces the correct order.
+
+Windows Key Transfer: Using scp instead of PowerShell's native pipe (>) prevents UTF-16LE encoding corruption in the authorized_keys file.
+
+Firewalld: The order of adding the new port, reloading, and then restarting SSH prevents session drops.
+
+Phase 6: Storage Setup (The "Blind Mount" Protection)
+
+Action: Formatting the drive, creating a mount point, applying chattr +i, configuring fstab, and applying SELinux contexts.
+
+Validation: Passed. (Exemplary)
+
+The awk pipeline successfully and dynamically extracts the new partition regardless of whether the target is an NVMe (nvme1n1p1) or SATA/SSD (sdb1).
+
+Applying chattr +i to the unmounted directory is an advanced sysadmin technique. If the drive fails to mount (allowed by nofail), Nextcloud will attempt to initialize a database in the empty rootfs directory. The immutable flag causes a "Permission Denied" crash, saving the host OS from filling up and protecting data integrity.
+
+Using semanage fcontext instead of chcon ensures SELinux labels survive rpm-ostree system upgrades.
+
+Phase 7 & 10: Docker Services & Networking
+
+Action: Deploying NPM and Nextcloud AIO.
+
+Validation: Passed.
+
+Docker completely bypasses Firewalld via nftables injection. The guide correctly warns the user about this.
+
+By binding Nextcloud AIO's Apache port to 127.0.0.1 (APACHE_IP_BINDING), the guide prevents attackers from bypassing the Nginx Proxy Manager by hitting port 11000 directly. NPM still successfully routes to it internally via the shared nextcloud-aio Docker network.
+
+Phase 8: Session Management (systemd-run Escape)
+
+Action: Launching KDE/Gaming mode via SSH.
+
+Validation: Passed. (Exemplary)
+
+Fedora/Bazzite sets KillUserProcesses=yes in logind.conf. Spawning a background process via a normal shell script (disown) over SSH means the process dies the moment the SSH session terminates.
+
+The guide solves this by wrapping the headless-restoration logic in systemd-run --collect. This schedules the task as a system-level transient service, escaping the SSH session's cgroup entirely.
+
+The sed auto-substitution using $(logname) safely handles privilege elevation contexts.
+
+Issue Classification Report
+
+Critical Issues (System-breaking, security flaws, lockouts):
+
+None found.
+
+Major Issues (Instability, broken dependencies, poor practices):
+
+None found.
+
+Minor Issues (Clarity, efficiency, strict edge-cases):
+
+Tooling Assumption: In Phase 11, the guide uses nslookup for the DNS test. Fedora Atomic distributions usually include bind-utils, but if a future Bazzite image drops it, this command will return command not found. Fallback: ping -c 1 yourname.duckdns.org would be a universally guaranteed alternative.
+
+Log Rotation Scope: Phase 5 sets Docker log rotation globally in daemon.json. While correct, Nextcloud AIO is highly verbose. 30MB total (3x 10MB) might roll over slightly too fast for deep debugging during a catastrophic Nextcloud failure. However, for a stable home server, it prevents disk exhaustion perfectly.
+
+Final Validation Checklist
+
+To confirm the system has successfully reached the intended state, the following must be physically and logically verifiable at the end of the guide:
+
+OS State: Running rpm-ostree status shows docker-ce and fail2ban listed under layered packages.
+
+Headless State: The physical monitor displays the SDDM login screen. loginctl list-sessions shows no active seat0 graphical sessions.
+
+Security Perimeter:
+
+Running ss -tlnp | grep sshd shows listening exclusively on *:22022.
+
+Running sudo firewall-cmd --list-all shows port 22022/tcp open, and ports 80, 443, 3389, and 22 strictly absent.
+
+Attempting to SSH with a password fails instantly (Permission denied (publickey)).
+
+Storage State: lsattr -d /srv/nextcloud-data outputs ----i--------- (confirming blind-mount protection is active on the underlying directory). ls -Zd /srv/nextcloud-data shows the container_file_t SELinux context.
+
+Service State: docker ps shows DuckDNS, Nginx Proxy Manager, and Nextcloud AIO containers running. Navigating to https://yourname.duckdns.org from an external cellular network loads the Nextcloud login screen with a valid Let's Encrypt SSL certificate.
+
+Session Management: Executing sudo start-kde.sh via SSH immediately launches the KDE Wayland session on the physical display. Executing exit on the SSH terminal does not kill the KDE session.
+
+Final Rating: 10 / 10
+
+It is exceedingly rare to audit a community/home-server guide with zero structural vulnerabilities. The author demonstrates an incredibly high level of Linux engineering. The use of chattr +i for mount protection, systemd-run for cgroup escaping, semanage fcontext for persistent ostree SELinux compliance, and APACHE_IP_BINDING=127.0.0.1 for defense-in-depth against Docker's firewalld bypass are all flawless, enterprise-tier practices translated perfectly for a beginner's deployment.
+
+Feedback Report: SELinux Labeling Path Conflict
+
+Location: Phase 6, Step 1 (SELinux Labeling).
+
+Issue: On Bazzite (Fedora Atomic), /srv is a symlink to /var/srv. Applying semanage fcontext to the /srv/ path results in the incorrect label (var_t).
+
+Correction: Update the semanage and restorecon commands to use the physical path: /var/srv/nextcloud-data(/.*)?.
+
+Reasoning: SELinux requires the real file system path to correctly map the container_file_t context on immutable/atomic systems.
+
+Feedback Report: RTC Local Time Warning
+
+Location: Phase 7, Step 1 (Timezone Check).
+
+Issue: RTC in local TZ: yes. This occurs if the system was previously dual-booted with Windows, causing log drift and DST errors.
+
+Correction: Add a check to confirm RTC in local TZ: no. If yes, run sudo timedatectl set-local-rtc 0.
+
+Reasoning: Ensures server-grade time reliability and prevents the "mode cannot be fully supported" system warning.
+
+Feedback Report: RTC Local Time Warning
+
+Location: Phase 7, Step 1 (Timezone Check).
+
+Issue: RTC in local TZ: yes. This occurs if the system was previously dual-booted with Windows, causing log drift and DST errors.
+
+Correction: Add a check to confirm RTC in local TZ: no. If yes, run sudo timedatectl set-local-rtc 0.
+
+Reasoning: Ensures server-grade time reliability and prevents the "mode cannot be fully supported" system warning.
+
+Feedback Report: Outdated Session Filename
+Location: Phase 8, Step 3 (start-gaming.sh script).
+Issue: The script expects gamescope-session-plus.desktop, but recent Bazzite-deck images have renamed this to gamescope-session-steam.desktop.
+Correction: Update the GAMING_SESSION variable in the script template to "gamescope-session-steam".
+Reasoning: Reflects upstream package changes in the gamescope-session stack to ensure out-of-the-box compatibility.
+
+## Phase 8 Revision Report
+
+### Findings & Changes
+
+**1. Gaming Mode session file renamed**
+`gamescope-session-plus.desktop` no longer exists in current Bazzite builds. The correct session file is `gamescope-session-steam.desktop`. Update the `GAMING_SESSION` variable in `start-gaming.sh` and the session file verification check.
+
+**2. Race condition — stale restore-headless timers**
+A timer left running from a previous `start-kde.sh` or `start-gaming.sh` call could fire mid-transition and overwrite the config of the session currently being launched. Fix: all three scripts now cancel any pending `restore-headless-*` timers at the top before doing anything else.
+
+**3. GPU/DRM lock not fully released after session termination**
+`loginctl terminate-session` kills the compositor process but leaves SDDM in a half-dead state. The next `systemctl restart sddm` in a start script would then race a GPU that hadn't completed its handover. This caused: KDE launching to a black screen with no signal, and Gaming Mode falling back to the SDDM login screen immediately. Fix: `stop-session.sh` now explicitly restarts SDDM after termination and polls loginctl until the SDDM greeter session appears on seat0 with `Class=greeter`. The greeter appearing is the hardware-level confirmation that SDDM holds DRM master and the GPU is in a clean state. The script blocks and does not return until this is confirmed, making the timing self-regulating rather than relying on fixed sleeps.
+
+**4. Post-greeter GPU drain for KDE**
+Even after the greeter appears, KDE's compositor (`kwin_wayland`) leaves behind GPU memory allocations that gamescope-session-steam cannot acquire DRM master over. Fix: a fixed `sleep 3` after greeter confirmation provides sufficient drain time. This adds ~3 seconds to every stop operation but eliminates the first-attempt Gaming Mode failure after KDE sessions.
+
+**Known limitation**
+If `start-gaming.sh` is invoked within ~1–2 seconds of `stop-session.sh` completing — before the physical display has fully settled — gamescope may still fail on the first attempt and require a second invocation. The script has done its job correctly in this case; the display hardware simply needs a moment. Wait for the SDDM login screen to be visible on the display before running `start-gaming.sh`.
+
+---
+
+### Final Working Scripts
+
+**`start-kde.sh`**
+```bash
+#!/bin/bash
+# start-kde.sh — Launch a KDE Wayland session on the physical display.
+# Refuses if a graphical user session is already active on seat0.
+# Location: /usr/local/bin/start-kde.sh (root-owned, not user-writable)
+# Usage: ssh -p 22022 user@host 'sudo start-kde.sh'
+
+SDDM_USER="PLACEHOLDER"
+KDE_SESSION="plasma"
+LAUNCH_CONF="/etc/sddm.conf.d/zz-session-launch.conf"
+HEADLESS_CONF="/etc/sddm.conf.d/zzz-headless-server.conf"
+
+log() { echo "[start-kde $(date '+%H:%M:%S')] $*"; }
+
+# --- 1. Cancel any pending restore-headless timers ---
+while IFS= read -r unit; do
+    log "Cancelling stale timer: $unit"
+    systemctl stop "$unit" 2>/dev/null
+done < <(systemctl list-units --type=timer --no-legend 2>/dev/null \
+         | awk '{print $1}' | grep '^restore-headless-')
+
+# --- 2. Guard: refuse if a seat0 user session is already active ---
+ACTIVE=$(loginctl list-sessions --no-legend 2>/dev/null \
+  | awk '{print $1}' \
+  | while read -r sid; do
+      seat=$(loginctl  show-session "$sid" -p Seat  --value 2>/dev/null) || continue
+      state=$(loginctl show-session "$sid" -p State --value 2>/dev/null) || continue
+      class=$(loginctl show-session "$sid" -p Class --value 2>/dev/null) || continue
+      [[ "$class" != "user" ]] && continue
+      [[ "$seat" == "seat0" ]] && \
+      [[ "$state" == "active" || "$state" == "online" ]] && \
+        { echo "$sid"; break; }
+    done)
+
+if [[ -n "$ACTIVE" ]]; then
+    log "ERROR: A graphical session ($ACTIVE) is already active on seat0."
+    log "Log out of the current session first, then re-run this script."
+    exit 1
+fi
+
+# --- 3. Write the one-shot autologin config ---
+rm -f "$HEADLESS_CONF"
+mkdir -p /etc/sddm.conf.d
+cat > "$LAUNCH_CONF" << EOF
+[Autologin]
+User=${SDDM_USER}
+Session=${KDE_SESSION}
+Relogin=false
+EOF
+log "SDDM autologin config written for KDE Wayland."
+
+# --- 4. Restart SDDM (synchronous — reads LAUNCH_CONF during startup) ---
+log "Restarting SDDM..."
+systemctl reset-failed sddm 2>/dev/null
+systemctl restart sddm
+log "KDE Wayland session launching on physical display."
+
+# --- 5. Schedule headless restoration as a system-level transient service ---
+# Runs outside the SSH session cgroup — immune to KillUserProcesses=yes.
+# --collect: garbage-collects the unit after it finishes.
+systemd-run --no-ask-password --collect \
+    --unit="restore-headless-$(date +%s)" \
+    --on-active=10 \
+    /bin/bash -c 'rm -f /etc/sddm.conf.d/zz-session-launch.conf && \
+      printf "[Autologin]\nUser=\nSession=\nRelogin=false\n" \
+      > /etc/sddm.conf.d/zzz-headless-server.conf'
+log "Headless config restoration scheduled in 10 s."
+```
+
+**`start-gaming.sh`**
+```bash
+#!/bin/bash
+# start-gaming.sh — Launch Gaming Mode on the physical display.
+# Refuses if a graphical user session is already active on seat0.
+# Location: /usr/local/bin/start-gaming.sh (root-owned, not user-writable)
+# Usage: ssh -p 22022 user@host 'sudo start-gaming.sh'
+
+SDDM_USER="PLACEHOLDER"
+GAMING_SESSION="gamescope-session-steam"
+LAUNCH_CONF="/etc/sddm.conf.d/zz-session-launch.conf"
+HEADLESS_CONF="/etc/sddm.conf.d/zzz-headless-server.conf"
+
+log() { echo "[start-gaming $(date '+%H:%M:%S')] $*"; }
+
+# --- 1. Cancel any pending restore-headless timers ---
+while IFS= read -r unit; do
+    log "Cancelling stale timer: $unit"
+    systemctl stop "$unit" 2>/dev/null
+done < <(systemctl list-units --type=timer --no-legend 2>/dev/null \
+         | awk '{print $1}' | grep '^restore-headless-')
+
+# --- 2. Guard: refuse if a seat0 user session is already active ---
+ACTIVE=$(loginctl list-sessions --no-legend 2>/dev/null \
+  | awk '{print $1}' \
+  | while read -r sid; do
+      seat=$(loginctl  show-session "$sid" -p Seat  --value 2>/dev/null) || continue
+      state=$(loginctl show-session "$sid" -p State --value 2>/dev/null) || continue
+      class=$(loginctl show-session "$sid" -p Class --value 2>/dev/null) || continue
+      [[ "$class" != "user" ]] && continue
+      [[ "$seat" == "seat0" ]] && \
+      [[ "$state" == "active" || "$state" == "online" ]] && \
+        { echo "$sid"; break; }
+    done)
+
+if [[ -n "$ACTIVE" ]]; then
+    log "ERROR: A session ($ACTIVE) is already active on seat0."
+    log "Log out using the session's own logout button, then re-run this script."
+    exit 1
+fi
+
+# --- 3. Verify the Gaming Mode session file exists ---
+SESSION_FILE="/usr/share/wayland-sessions/${GAMING_SESSION}.desktop"
+if [[ ! -f "$SESSION_FILE" ]]; then
+    log "ERROR: Session file not found: $SESSION_FILE"
+    log "Available sessions:"
+    ls /usr/share/wayland-sessions/ | sed 's/^/  /'
+    log "Update GAMING_SESSION in this script to match the correct filename (without .desktop)."
+    exit 1
+fi
+
+# --- 4. Write the one-shot autologin config ---
+rm -f "$HEADLESS_CONF"
+mkdir -p /etc/sddm.conf.d
+cat > "$LAUNCH_CONF" << EOF
+[Autologin]
+User=${SDDM_USER}
+Session=${GAMING_SESSION}
+Relogin=false
+EOF
+log "SDDM autologin config written for Gaming Mode."
+
+# --- 5. Restart SDDM ---
+log "Restarting SDDM..."
+systemctl reset-failed sddm 2>/dev/null
+systemctl restart sddm
+log "Gaming Mode launching on physical display."
+
+# --- 6. Schedule headless restoration ---
+systemd-run --no-ask-password --collect \
+    --unit="restore-headless-$(date +%s)" \
+    --on-active=10 \
+    /bin/bash -c 'rm -f /etc/sddm.conf.d/zz-session-launch.conf && \
+      printf "[Autologin]\nUser=\nSession=\nRelogin=false\n" \
+      > /etc/sddm.conf.d/zzz-headless-server.conf'
+log "Headless config restoration scheduled in 10 s."
+```
+
+**`stop-session.sh`**
+```bash
+#!/bin/bash
+# stop-session.sh — Terminate the active seat0 session and return to headless idle.
+# Normal use: log out via KDE's logout button or Steam's Power menu.
+# Location: /usr/local/bin/stop-session.sh (root-owned, not user-writable)
+# Usage: ssh -p 22022 user@host 'sudo stop-session.sh'
+
+LAUNCH_CONF="/etc/sddm.conf.d/zz-session-launch.conf"
+HEADLESS_CONF="/etc/sddm.conf.d/zzz-headless-server.conf"
+
+log() { echo "[stop-session $(date '+%H:%M:%S')] $*"; }
+
+# --- 1. Cancel any pending restore-headless timers ---
+while IFS= read -r unit; do
+    log "Cancelling stale timer: $unit"
+    systemctl stop "$unit" 2>/dev/null
+done < <(systemctl list-units --type=timer --no-legend 2>/dev/null \
+         | awk '{print $1}' | grep '^restore-headless-')
+
+# --- 2. Write the headless config immediately ---
+rm -f "$LAUNCH_CONF"
+printf '[Autologin]\nUser=\nSession=\nRelogin=false\n' > "$HEADLESS_CONF"
+log "SDDM configs confirmed in headless state."
+
+# --- 3. Find and terminate the active seat0 user session ---
+ACTIVE=$(loginctl list-sessions --no-legend 2>/dev/null \
+  | awk '{print $1}' \
+  | while read -r sid; do
+      seat=$(loginctl  show-session "$sid" -p Seat  --value 2>/dev/null) || continue
+      state=$(loginctl show-session "$sid" -p State --value 2>/dev/null) || continue
+      class=$(loginctl show-session "$sid" -p Class --value 2>/dev/null) || continue
+      [[ "$class" != "user" ]] && continue
+      [[ "$seat" == "seat0" ]] && \
+      [[ "$state" == "active" || "$state" == "online" ]] && \
+        { echo "$sid"; break; }
+    done)
+
+if [[ -n "$ACTIVE" ]]; then
+    log "Terminating session $ACTIVE on seat0..."
+    log "WARNING: All unsaved work in the terminated session is lost."
+    loginctl terminate-session "$ACTIVE"
+    # Brief pause for the session cgroup to begin unwinding before
+    # restarting SDDM.
+    sleep 3
+else
+    log "No active seat0 user session found. Nothing to terminate."
+fi
+
+# --- 4. Restart SDDM to release the DRM master lock ---
+log "Restarting SDDM to release GPU/DRM lock..."
+systemctl reset-failed sddm 2>/dev/null
+systemctl restart sddm
+
+# --- 5. Wait for the SDDM greeter to appear on seat0 ---
+# When the greeter session (Class=greeter) appears on seat0, SDDM holds
+# DRM master — confirming the GPU handover from the previous session is
+# complete. The script blocks here and does not return until confirmed.
+# This makes timing self-regulating rather than relying on fixed sleeps.
+# The additional sleep 3 after confirmation provides a post-greeter GPU
+# drain buffer, particularly needed after KDE sessions where kwin_wayland
+# releases GPU allocations asynchronously.
+log "Waiting for SDDM greeter to initialize (GPU/DRM settle)..."
+GREETER_READY=false
+for i in $(seq 1 25); do
+    sleep 1
+    GREETER=$(loginctl list-sessions --no-legend 2>/dev/null \
+      | awk '{print $1}' \
+      | while read -r sid; do
+          seat=$(loginctl  show-session "$sid" -p Seat  --value 2>/dev/null) || continue
+          class=$(loginctl show-session "$sid" -p Class --value 2>/dev/null) || continue
+          [[ "$class" == "greeter" && "$seat" == "seat0" ]] && \
+            { echo "$sid"; break; }
+        done)
+    if [[ -n "$GREETER" ]]; then
+        log "SDDM greeter ready after ${i}s. GPU/DRM fully released."
+        GREETER_READY=true
+        sleep 3
+        break
+    fi
+done
+
+if [[ "$GREETER_READY" != "true" ]]; then
+    log "Warning: SDDM greeter not detected within 25s. GPU state uncertain — proceed with caution."
+fi
+
+log "Done. SDDM login screen should be on the physical display."
+```
+
+---
+
+### Guide Updates Required (Phase 8)
+
+Two notes to add to the guide's **Critical Pitfalls** and the **Phase 8 session file verification step**:
+
+**New Pitfall** — The `gamescope-session-plus.desktop` session file was renamed to `gamescope-session-steam.desktop` in current Bazzite builds. The `start-gaming.sh` script now auto-lists available sessions in its error output if the configured name is not found, making this self-diagnosing on any future rename.
+
+**Updated workflow note** — After `stop-session.sh` reports "Done", wait until the SDDM login screen is physically visible on the display before running `start-gaming.sh`. The script guarantees the GPU has been handed back to SDDM, but gamescope requires the display signal itself to be fully re-established before it can take DRM master. This is a display hardware settling behaviour, not a script deficiency.
+
+
+Feedback & Audit Report: Bazzite Home Server Guide
+
+This report identifies critical UX and technical gaps discovered during the live implementation of Phase 7 (Deploying Services). These issues directly caused a "Connection Refused" state and YAML syntax failures.
+
+1. Structural Logic: Command vs. Configuration
+
+Issue: The guide places the docker compose up -d command inside the dark-shaded code blocks intended for the docker-compose.yml file content.
+
+Consequence: Beginners are copy-pasting the shell command into the YAML file. This causes the "services must be a mapping" error because the file ends with a non-YAML string.
+
+Fix: Move all terminal commands (like docker compose up -d) into separate, clearly labeled blocks or use a different font style to distinguish them from file contents.
+
+2. Missing "Contextual Navigation" (Working Directories)
+
+Issue: The guide assumes the user is still inside the specific service directory (e.g., ~/docker/npm) when running the up -d command.
+
+Consequence: Users running the command from the home directory (~) receive a no configuration file provided error.
+
+Fix: Prepend every docker compose command with an explicit cd command (e.g., cd ~/docker/npm && docker compose up -d).
+
+3. YAML Fragility & Terminal Formatting
+
+Issue: The guide relies on nano for file creation. Copy-pasting into a terminal-based editor frequently strips leading spaces or converts them to tabs.
+
+Consequence: YAML is indentation-sensitive. Even a single missing space at the "services" level breaks the entire deployment.
+
+Fix: Use "Heredoc" blocks (e.g., cat << 'EOF' > filename) in the guide. This allows the user to copy one large block that creates the directory, the file, and the correct indentation in one deterministic step, bypassing the human error of manual editing.
+
+4. Permission Race Condition
+
+Issue: If a user runs docker compose up -d before manually creating the data or letsencrypt folders, Docker creates them as root.
+
+Consequence: The NPM container (running as a non-root user internally) cannot write to its own database, leading to a silent crash loop.
+
+Fix: Add an explicit sudo chown -R $USER:$USER ~/docker command after the directory creation steps to ensure the user has ownership before the container starts.
+
+Final Validation Checklist (The "End State")
+
+To confirm the guide was successful, the user must be able to verify these three outputs:
+
+Process Check: docker ps shows nginx-proxy-manager, duckdns, and nextcloud-aio-mastercontainer as "Up".
+
+Socket Check: ss -tlnp | grep 81 (on the server) shows a listener on 127.0.0.1:81.
+
+Tunnel Check: http://localhost:8081 on the client PC loads the NPM login screen (proving the SSH tunnel is successfully traversing to the container).
+
+This is a targeted feedback report for the Bazzite Unified Home Server Guide. It identifies logical gaps and UX "friction points" encountered during the live transition from Phase 7 (Deployment) to Phase 10 (Initialisation).
+
+Audit Feedback Report: Phase 7–10 Integration
+1. Structural Ambiguity: Commands vs. Configurations
+
+Issue: The guide places the docker compose up -d command inside the same shaded code block as the YAML configuration.
+
+Impact: Critical. Users are copy-pasting the shell command into the docker-compose.yml file, causing immediate "mapping" syntax errors.
+
+Revision: Move all terminal execution commands into a separate, distinct code block style to clearly separate File Content from Terminal Action.
+
+2. Missing Working Directory Context
+
+Issue: The guide assumes the user remains in the specific sub-folder (e.g., ~/docker/npm) for execution.
+
+Impact: Major. Running docker compose from the home directory results in a configuration file not found error.
+
+Revision: Prepend every deployment command with a directory change (e.g., cd ~/docker/npm && docker compose up -d) to ensure deterministic execution regardless of the user's current shell state.
+
+3. YAML Indentation Fragility
+
+Issue: Creating files via nano leads to "left-aligned" text if the user's terminal clipboard handles spaces poorly.
+
+Impact: Major. YAML requires exact 2-space indentation; without it, all services fail to start.
+
+Revision: Replace manual nano instructions with Heredoc blocks (e.g., cat << 'EOF' > docker-compose.yml ... EOF). This allows a single copy-paste to create the directory, the file, and the correct indentation simultaneously.
+
+4. The "Nextcloud AIO Wizard" Gap
+
+Issue: The guide effectively ends at "Click Start Containers," but the Nextcloud UI presents four technical configuration choices (Hub Version, Fulltextsearch, HaRP, Whiteboard).
+
+Impact: Minor/Clarity. Users feel "abandoned" at a critical decision point.
+
+Revision: Add a "Recommended AIO Settings" table to Phase 10, Step 4:
+
+Hub Version: Always choose the latest (e.g., Hub 26+).
+
+Fulltextsearch: Recommended only for 16GB+ RAM systems.
+
+HaRP: Select as the modern replacement for the socket proxy.
+
+5. NAT Loopback / Hairpinning Logic
+
+Issue: Home routers (like Fritz!Box or ISP-locked units) often block the internal domain validation check.
+
+Impact: Major. This is the #1 reason Nextcloud AIO setups fail at the "Domain" step.
+
+Revision: Add a "Troubleshooting: Domain Validation" box. Specifically include the - SKIP_DOMAIN_VALIDATION=true environment variable as a documented "Plan B" for users with restricted routers.
+
+6. Docker Internal DNS Logic
+
+Issue: The guide correctly identifies the hostname as nextcloud-aio-apache, but this container does not exist until the AIO wizard downloads it.
+
+Impact: Minor. Users see a "502 Bad Gateway" in NPM and assume they failed.
+
+Revision: Add a note: "Expect a 502 error in your browser until the Nextcloud Mastercontainer finishes downloading the Apache container in the final step."
+
+Final Validation State
+
+Once these revisions are applied, the setup becomes idempotent (it works every time regardless of the starting state).
+
+Current Status: The user has successfully bypassed these gaps, and the server is now in a "Healthy" state with containers running. Proceed to Phase 11 (Testing & Backups).
+
+This is the second Audit Feedback Report for the Bazzite Home Server Guide. It focuses on "Conceptual Friction"—the gap between a user running commands successfully and actually understanding what the system is doing with their hardware.
+
+Audit Feedback Report #2: Conceptual Gaps & Wizard Navigation
+1. The "Borg" Definition Gap
+
+Issue: The guide introduces "Borg" in Phase 11 and Appendix F but fails to define what it is or where the data goes.
+
+Impact: Major (Psychological). Users fear they are signing up for a paid subscription or a "Cloud for their Cloud."
+
+Revision: Add a "Backup 101" info box:
+
+Definition: Borg is Free, Local Software.
+
+Hardware: It requires a second physical disk (USB/SATA) to be useful.
+
+Cost: $0 (No subscriptions).
+
+2. "Storage vs. Backup" Logical Separation
+
+Issue: Users are unclear if their files go to the SSD first or only through the backup.
+
+Impact: Major. Users are hesitant to upload files because they don't know if the /srv/nextcloud-data mount is actually "active."
+
+Revision: Add a "Data Flow" diagram or clear text block:
+
+Live Data: Your SSD (/srv/nextcloud-data) = Where your photos live "Live."
+
+Backup Data: Your 2nd Drive (Borg) = A "Safety Snapshot" of the SSD.
+
+Validation: Provide a command to verify storage usage: df -h /srv/nextcloud-data.
+
+3. The "Nextcloud AIO Wizard" Decision Table
+
+Issue: The Nextcloud UI presents four technical checkboxes (Hub 26, Fulltextsearch, etc.) that the guide does not mention.
+
+Impact: Minor (Stalling). Users stop to ask for advice because they fear "breaking" the install.
+
+Revision: Add a "Recommended Wizard Settings" table to Phase 10:
+
+Hub Version: Always select the latest (Hub 26+).
+
+Fulltextsearch: Mark as "Optional: Requires 16GB+ RAM."
+
+Imaginary/Whiteboard: Mark as "Optional: Low Impact."
+
+4. The "Initial Setup Wall" (The Backup Skip)
+
+Issue: Nextcloud AIO forces users to face the "Borg" setup before they can even log in for the first time.
+
+Impact: Major. Users feel "stuck" if they don't have a second drive ready immediately.
+
+Revision: Explicitly document the "Setup without a backup solution" link. Explain that this is a temporary "Emergency Exit" to get the server running today, with a warning to come back later once a second drive is purchased.
+
+5. Appendix E: Over-Engineering for Beginners
+
+Issue: The "Storage Roadmap" jumps straight to SnapRAID and MergerFS.
+
+Impact: Minor (Conceptual Overload). This makes users think they must do a RAID-style setup for a simple 2-drive system.
+
+Revision: Introduce a "Tiered Roadmap":
+
+Tier 1 (Beginner): 1 Live Drive + 1 Borg Backup Drive. (Simple, safe, no complex software).
+
+Tier 2 (Advanced): MergerFS + SnapRAID (Appendix E) only once you have 3 or more drives.
+
+Final Validation of Current State
+
+The user has successfully deduced the logic: 1 Live Drive (Files) + 1 Borg Drive (Safety) = Total Data Security.
+
+Next Steps for the User:
+
+Log in to the Cloud at your DuckDNS URL.
+
+Use it "Live" on your SSD.
+
+When you have a second drive, use Borg to "Point" at it for daily snapshots.
+
+Next Steps for the Guide Revison:
+Integrate these "plain English" definitions to prevent users from thinking they are entering a paid ecosystem or a complex RAID trap.
+
+Feedback Report: Guide Improvements for Next Release
+
+Based on the troubleshooting of the Hardware Acceleration (VA-API) integration and Appendix D, here are the required updates to ensure compatibility with Bazzite's security model:
+
+1. Phase 10 Expansion: Enabling Hardware Acceleration (AMD/Intel)
+
+The Problem: Enabling GPU passthrough triggers an internal AIO script that re-manages GIDs and folder ownership. This is blocked by the Immutable Guard and SELinux by default.
+
+The Fix:
+
+Add NEXTCLOUD_ENABLE_DRI_DEVICE=true to the environment section of the Mastercontainer.
+
+Add /dev/dri:/dev/dri to the devices section.
+
+Mandatory Warning: Users must run sudo chattr -i /srv/nextcloud-data before starting containers for the first time after this change to allow the container to initialize ownership, then re-apply sudo chattr +i once the containers are Green.
+
+2. Appendix D: Watchtower Compose Correction
+
+The Problem: The current Watchtower snippet is missing the network definition, causing it to fail to start because it cannot find the nextcloud-aio network.
+
+The Fix: Update the Compose file to include:
+
+code
+Yaml
+download
+content_copy
+expand_less
+networks:
+  nextcloud-aio:
+    external: true
+
+And add the networks: block to the watchtower service definition.
+
+3. Critical Security Clarification (Phase 4 & Phase 10)
+
+The Requirement: Emphasize that security_opt: - label:disable is not optional for the Mastercontainer.
+
+Reason: Without this, even with correct host-side SELinux labels, the Mastercontainer is denied the groupadd and usermod syscalls required to grant the www-data user access to the GPU (/dev/dri/renderD128).
+
+4. Handling Pitfall 13 (Phase 18)
+
+Refinement: Update the instructions for the Immutable Guard.
+
+Instruction: "Always apply chattr +i to the mount point while the drive is unmounted. If applied while mounted, it locks the physical drive instead of the OS folder, which will break Nextcloud’s ability to write data."
+
+Status: All steps verified on Bazzite (Fedora 40/41) with Radeon 780M. Ready for integration.
+
+REMOVE APENDIXES C, E AND F COMPLETLY. They are going to be implemented later on another separate guide. Just dont mention it.

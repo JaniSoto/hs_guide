@@ -1,0 +1,84 @@
+Here is the strict, command-level audit of the "Bazzite Unified Home Server + Gaming Station Guide".
+
+Executive Summary
+
+This guide is exceptionally rigorous, highly accurate, and demonstrates a master-level understanding of modern immutable Linux administration (Fedora Atomic/Bazzite). It correctly implements advanced techniques such as systemd cgroup escapes, immutable blind-mount protection, and explicit SELinux policy management. The sequence is logical, deterministic, and eliminates almost all fragile "one-shot" execution risks.
+
+However, a strict technical audit reveals one major architectural edge-case and a few minor procedural risks that require correction to achieve 100% enterprise-grade reliability.
+
+Issue Audit & Corrections
+🔴 Critical Issues (Breaks execution or system integrity)
+
+None found. The guide successfully anticipates and mitigates every major beginner trap (e.g., SELinux socket denial, rootfs filling on mount failure, subshell death via KillUserProcesses=yes).
+
+🟠 Major Issues (Introduces instability or edge-case failures)
+
+Ephemeral Port Conflict (Phase 4, Step 1-3)
+
+The Issue: The guide selects port 53222 for the hardened SSH daemon. On modern Linux kernels, the default IPv4 ephemeral port range (used dynamically for outbound connections) is 32768–60999. If Docker containers (like Nextcloud AIO) or system updates open many outbound connections, the kernel may temporarily assign 53222 to a client socket. If sshd is restarted at that exact moment, the bind will fail, and SSH will crash, causing a permanent remote lockout.
+
+Correction: The chosen static port must be moved outside the ephemeral range. Change all instances of 53222 to a port below 32768 but above 1024 (e.g., 22022 or 2222).
+
+🟡 Minor Issues (Clarity, efficiency, or potential user-error traps)
+
+The $USER Variable Root Trap (Phase 8, Step 1 & 5)
+
+The Issue: The guide uses sudo sed -i "s/yourusername/$USER/" ... to auto-populate the username. While the guide explicitly warns the user not to run this as root, users who routinely elevate to a root shell (sudo -i or sudo su) before running commands will inject root into the script instead of their actual username, breaking the SDDM autologin.
+
+Correction: Replace $USER with $(logname) in the sed commands. logname reliably returns the original unprivileged username even if the command is executed within a sudo -i root shell.
+
+Revised Command: sudo sed -i "s/yourusername/$(logname)/" /usr/local/bin/start-kde.sh
+
+Missing version in Docker Compose (Phase 7)
+
+Observation: The docker-compose.yml files omit the version: directive.
+
+Validation: This is actually correct. The Compose Specification (V2) has deprecated the version field. Adding it causes modern Docker clients to throw a warning. The guide is perfectly up-to-date here, and no change is needed—noted only to confirm it was audited.
+
+Firewalld Docker Conflict Warning (Appendix B)
+
+Observation: The guide correctly identifies that firewall-cmd --reload wipes Docker's nftables rules, dropping container access, and provides the fix (sudo systemctl restart docker).
+
+Addition: It should be noted that restarting Docker forcefully terminates active database transactions in Nextcloud. A safer recovery command (if iptables package is present) is dockerd reloading its rules, but systemctl restart docker is the most deterministic fix.
+
+System State & Logical Integrity Analysis
+
+The guide maintains strict structural integrity. Transition states are handled perfectly:
+
+Dependency Ordering: rpm-ostree package installation (Phase 3) is correctly placed before Security Hardening (Phase 4). fail2ban and semanage (policycoreutils) cannot be configured until their packages survive the atomic reboot.
+
+SELinux Transitions: The guide strictly orders semanage port before restarting sshd. Reversing this order would trigger an access denial and lock the user out.
+
+Mount Protections: Using chattr +i on an empty mount directory (Phase 6) is a brilliantly applied sysadmin technique. If the data drive fails to mount (even with nofail preventing an emergency shell drop), Docker attempts to initialize Nextcloud in the empty /srv/nextcloud-data directory. Because the directory is immutable, Docker is denied write access and crashes safely, preventing the system's root partition from filling up and protecting database integrity.
+
+Cgroup Escape: Terminating a graphical session via SSH usually sends SIGTERM to the entire session cgroup, killing any background scripts attempting to restore the headless config. Using systemd-run --collect to spawn a transient system-level service is the academically correct solution to this problem.
+
+Final Validation Checklist
+
+To prove the system has successfully reached the deterministic end-state without assumptions, run this sequence from your personal computer:
+
+[ ] SSH Perimeter Verification:
+ssh -p 22 username@your-server-ip -> Must time out or return connection refused.
+ssh -p <NEW_PORT> username@your-server-ip -> Must authenticate via SSH key only (no password prompt).
+
+[ ] Headless Idle Verification:
+loginctl list-sessions -> Must return no active seat0 sessions.
+ls /etc/sddm.conf.d/ -> Must only contain zzz-headless-server.conf.
+
+[ ] Storage & Mount Safety Verification:
+lsattr -d /srv/nextcloud-data -> Must output ----i--------- (Immutable flag active).
+ls -Zd /srv/nextcloud-data -> Must output system_u:object_r:container_file_t:s0.
+
+[ ] Network & Routing Verification:
+docker exec nginx-proxy-manager curl -sI http://nextcloud-aio-apache:11000 -> Must return HTTP 200 or 302/303 redirect (verifies internal Docker DNS and AIO backend).
+
+[ ] State Transition Verification:
+Execute sudo start-gaming.sh. Wait 15 seconds.
+loginctl list-sessions -> Must show an active seat0 session.
+Execute sudo stop-session.sh. Wait 15 seconds.
+loginctl list-sessions -> Must show no seat0 sessions. The system has safely returned to idle headless state.
+
+Final Rating: 9.5 / 10
+
+Verdict: Exceptional.
+This is one of the most technically sound, well-architected Linux guides available. It does not rely on GUI crutches, perfectly navigates the complexities of an immutable OS, and applies enterprise-grade security concepts (SELinux targeting, ephemeral blind-mounts, systemd transient units) in a digestible way. The 0.5 deduction is solely for the minor risk associated with choosing an SSH port inside the Linux default ephemeral range.

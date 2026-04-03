@@ -1,0 +1,57 @@
+sotohome@hs:~$ loginctl list-sessions
+SESSION  UID USER     SEAT  LEADER CLASS         TTY   IDLE SINCE
+      1 1000 sotohome -     1667   manager       -     no   -
+      2  969 sddm     -     1705   manager-early -     no   -
+      3 1000 sotohome -     6751   user          pts/0 no   -
+     c1  969 sddm     seat0 1690   greeter       tty1  no   -
+
+4 sessions listed.
+sotohome@hs:~$ sudo start-kde.sh
+[start-kde] User          : sotohome (UID 1000)
+[start-kde] Session       : plasma.desktop
+[start-kde] Sunshine svc  : sunshine
+[start-kde] No active graphical session found — safe to proceed.
+[start-kde] Configuring SDDM autologin → plasma.desktop ...
+[start-kde] Clearing any previous SDDM failure state...
+[start-kde] Restarting SDDM (this will trigger autologin into KDE) ...
+[start-kde] Waiting for KDE session to become active (timeout: 90s) ...
+[start-kde] WARNING: KDE session not confirmed active after 90s — continuing anyway.
+[start-kde] Giving the KDE compositor 6s to finish initializing ...
+[start-kde] Clearing any Sunshine failure state ...
+[start-kde] Restarting Sunshine (sunshine) ...
+
+✓ [start-kde] KDE Plasma session is running and Sunshine is streaming.
+  Reconnect Moonlight to view the KDE desktop.
+sotohome@hs:~$ loginctl list-sessions
+SESSION  UID USER     SEAT  LEADER CLASS         TTY   IDLE SINCE
+      1 1000 sotohome -     1667   manager       -     no   -
+      2  969 sddm     -     1705   manager-early -     no   -
+      3 1000 sotohome -     6751   user          pts/0 no   -
+     c3  969 sddm     seat0 29852  greeter       tty1  no   -
+
+4 sessions listed.
+sotohome@hs:~$ sudo start-gaming.sh
+[start-gaming] User          : sotohome (UID 1000)
+[start-gaming] Session       : gamescope-session.desktop
+[start-gaming] Sunshine svc  : sunshine
+[start-gaming] No active graphical session found — safe to proceed.
+[start-gaming] Configuring SDDM autologin → gamescope-session.desktop ...
+[start-gaming] Clearing any previous SDDM failure state...
+[start-gaming] Restarting SDDM (this will trigger autologin into Gaming Mode) ...
+[start-gaming] Waiting for Gaming Mode session to appear (timeout: 180s) ...
+[start-gaming] WARNING: Gaming Mode session did not appear after 180s — continuing anyway.
+[start-gaming] Giving Gamescope/Steam 15s to finish loading ...
+[start-gaming] Clearing any Sunshine failure state ...
+[start-gaming] Restarting Sunshine (sunshine) ...
+
+✓ [start-gaming] Gaming Mode session is running and Sunshine is streaming.
+  Reconnect Moonlight to view the Steam Gaming Mode interface.
+sotohome@hs:~$ loginctl list-sessions
+SESSION  UID USER     SEAT  LEADER CLASS         TTY   IDLE SINCE
+      1 1000 sotohome -     1667   manager       -     no   -
+      2  969 sddm     -     1705   manager-early -     no   -
+      3 1000 sotohome -     6751   user          pts/0 no   -
+     c5  969 sddm     seat0 32042  greeter       tty1  no   -
+
+4 sessions listed.
+sotohome@hs:~$

@@ -1,0 +1,413 @@
+BAZZITE AI SMART HOME — ARCHITECTURE DRAFT (v3)
+Extension of the Bazzite Unified Home Server + Gaming Station Guide
+Hardware: GMKtec NucBox K8 · Ryzen 7 8845HS · Radeon 780M (gfx1103) · 32GB DDR5 4800
+Updated: 2026-03-21
+────────────────────────────────────────────────────────────────────────────────
+
+
+ROCm / IGPU — REVISED ASSESSMENT
+──────────────────────────────────
+
+Previous assessment was wrong. The 780M IS usable for GPU inference on this
+specific hardware and OS combination, with caveats.
+
+Why it works here:
+  Bazzite is based on Fedora 42, which ships ROCm packages built with gfx1103
+  (780M) support. The driver stack is already present on the system.
+  Ollama can use the 780M but requires one environment variable to be set:
+    HSA_OVERRIDE_GFX_VERSION=11.0.2
+  Without it, Ollama ignores the iGPU and falls back to CPU silently.
+
+Expected performance gain:
+  CPU-only (8845HS, 8 threads): ~3–6 tokens/sec for a 7B Q4 model.
+  With 780M GPU offload:        ~15–20 tokens/sec for the same model.
+  Roughly a 4–5x speedup. Voice response perceived latency drops from ~30s
+  to roughly 8–12s. This is the difference between "tolerable" and "natural".
+
+Why DDR5 4800 specifically helps:
+  The iGPU has no dedicated VRAM — it uses system RAM as its memory pool.
+  DDR5 4800 has approximately 30% higher bandwidth than DDR4 3200. More
+  memory bandwidth directly translates to faster matrix multiply, which is
+  the bottleneck for LLM inference. This is the best-case scenario for an
+  iGPU-based inference setup.
+
+Known issues that must be mitigated:
+  1. MES hang / GPU reset: the iGPU can lock up without a kernel parameter.
+     Fix: add amdgpu.noretry=0 to kernel boot arguments (persistent via
+     rpm-ostree kargs). Without this, long inference sessions may crash.
+  2. Flash Attention numerical instability: RDNA3 has a known bug in Flash
+     Attention that causes model output to collapse into repeated tokens.
+     Fix: set OLLAMA_FLASH_ATTENTION=false in the Ollama container environment.
+  3. The HSA_OVERRIDE_GFX_VERSION env var must be set for the Ollama container,
+     not just the shell. Set it as an environment variable in docker-compose.yml.
+  4. /dev/kfd and /dev/dri devices must be passed into the Ollama container.
+     SELinux label on /dev/kfd may need: setsebool -P container_use_devices=1
+     (already covered in the main guide's SELinux setup).
+
+Architecture change from draft v2:
+  Ollama now uses the 780M iGPU for all inference.
+  Recommended model upgrades to mistral:7b-instruct-q4_K_M or
+  qwen2.5:14b-instruct-q4_K_M (14B now fits comfortably with GPU inference
+  at ~9GB, leaving ample RAM for other services).
+
+eGPU forward note:
+  When you add an eGPU via the OCuLink port, Ollama will auto-detect it as a
+  higher-priority device and use it instead of the iGPU with no config change,
+  provided the eGPU is ROCm-supported (any RX 6000 or RX 7000 series card).
+  Set ROCR_VISIBLE_DEVICES to control which GPU Ollama uses if needed.
+  No architectural changes to the stack are required at that point.
+
+
+ESP32 BOARDS — WHAT YOU HAVE IS ENOUGH FOR NOW
+───────────────────────────────────────────────
+
+Original ESP32 (WROOM / DEVKIT): works as a voice satellite via ESPHome, but
+wake word detection runs on the server (Home Assistant's openWakeWord pipeline),
+not on-device. Audio streams continuously from the ESP32 to HA over LAN until
+the wake word fires. Fully functional, slightly higher idle bandwidth and server
+CPU usage compared to S3 nodes.
+
+ESP32-S3 (with PSRAM, N8R8 or N16R8 variant): supports on-device microWakeWord
+detection — no audio leaves the device until the wake word triggers. Better
+privacy, lower server load, more reliable in noisy environments.
+
+Decision: build the core system (EX.0–EX.7) first using existing ESP32 boards
+as phone/laptop/browser clients (no voice satellite hardware needed at all for
+the core). When adding voice satellites (EX.8, future), start with your existing
+ESP32 boards using server-side wake word detection. Upgrade specific rooms to
+ESP32-S3 nodes later if on-device detection proves necessary. The ESPHome config
+difference is a single flag — no rewiring required.
+
+
+════════════════════════════════════════════════════════════════════
+SYSTEM ARCHITECTURE
+════════════════════════════════════════════════════════════════════
+
+COMPONENTS
+──────────
+
+  Component           Image                                        Folder
+  ─────────────────── ──────────────────────────────────────────── ──────────────────────
+  Ollama (GPU)        ollama/ollama:rocm                           ~/docker/ollama
+  Open WebUI          ghcr.io/open-webui/open-webui:main           ~/docker/openwebui
+  mcpo                ghcr.io/open-webui/mcpo:main                 ~/docker/mcpo
+  Home Assistant      lscr.io/linuxserver/homeassistant:latest     ~/docker/homeassistant
+  wyoming-whisper     rhasspy/wyoming-whisper:latest               ~/docker/wyoming
+  wyoming-piper       rhasspy/wyoming-piper:latest                 ~/docker/wyoming
+  Mosquitto (future)  eclipse-mosquitto:latest                     ~/docker/zigbee
+  Zigbee2MQTT (future)ghcr.io/koenkk/zigbee2mqtt:latest           ~/docker/zigbee
+
+  Voice satellite nodes (per room, future, EX.8):
+    Existing ESP32 WROOM boards + INMP441 mic + MAX98357A amp + speaker
+    Firmware: ESPHome with voice_assistant component
+    Wake word: server-side (openWakeWord in HA, no on-device model needed)
+    Optional upgrade path: swap to ESP32-S3 N8R8 for on-device microWakeWord
+
+  Echo devices: REMOVED from architecture entirely.
+  Matter Hub: REMOVED. Echo smart home control is not included.
+
+DATA FLOW
+─────────
+
+  Android / Linux laptop / browser
+    ↓ HTTPS via DuckDNS + NPM (existing, no changes)
+  Open WebUI  ←→  mcpo  ←→  MCP servers (filesystem read-only, memory r/w)
+    ↓ OpenAI-compatible API (localhost:11434)
+  Ollama  [780M iGPU via ROCm · mistral or qwen2.5 7–14B Q4]
+    ↑ native Ollama integration (HA 2024.4+)
+  Home Assistant  ←→  wyoming-whisper (STT)  ·  wyoming-piper (TTS)
+    ↕ ESPHome voice_assistant over Wi-Fi (future, EX.8)
+  ESP32 nodes: wake word detection in HA · audio streamed on trigger
+    ↓ USB + Zigbee2MQTT → MQTT → HA (future, EX.9)
+  Zigbee devices: bulbs, sensors, plugs
+
+PORT REGISTRY
+─────────────
+
+  Port          Service                   External access
+  ───────────── ───────────────────────── ─────────────────────────────────────
+  22022         SSH                       Yes (router)
+  80 / 443      NPM HTTP/HTTPS            Yes (router)
+  3478          Nextcloud Talk            Yes (router)
+  11434         Ollama API                No — LAN/Docker internal
+  3000          Open WebUI                Via NPM → ai.yourdomain.duckdns.org
+  8000          mcpo                      No — Docker internal
+  8123          Home Assistant            Via NPM → home.yourdomain.duckdns.org
+  10300         wyoming-whisper STT       No — LAN internal
+  10200         wyoming-piper TTS         No — LAN internal
+  1883 (future) Mosquitto MQTT            No — Docker internal
+  8282 (future) Zigbee2MQTT UI            No — LAN internal
+
+  No new router port forwards required.
+  HA Matter Hub removed — no longer in the stack.
+
+
+════════════════════════════════════════════════════════════════════
+COMPONENT SELECTION RATIONALE
+════════════════════════════════════════════════════════════════════
+
+OLLAMA (with ROCm GPU offload)
+  Image: ollama/ollama:rocm (not the standard CPU image).
+  Additional docker-compose.yml settings vs draft v2:
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    environment:
+      HSA_OVERRIDE_GFX_VERSION: "11.0.2"
+      OLLAMA_FLASH_ATTENTION: "false"
+      OLLAMA_KEEP_ALIVE: "5m"
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_HOST: "0.0.0.0"
+    group_add:
+      - video    (GID for /dev/dri access)
+      - render   (GID for /dev/kfd access)
+
+  Kernel boot argument (set once, persistent):
+    sudo rpm-ostree kargs --append=amdgpu.noretry=0
+    (prevents iGPU MES hang / GPU reset during long inference sessions)
+
+  Recommended model: qwen2.5:14b-instruct-q4_K_M
+    ~9 GB, 14B parameters. Significantly better than 7B for complex queries,
+    structured tool use, and multi-step reasoning. Fits entirely in the 780M's
+    accessible memory pool. ~15–18 tokens/sec expected.
+    Fallback: mistral:7b-instruct-q4_K_M (~5 GB) if RAM pressure becomes an
+    issue when all other services are loaded.
+
+  Verify GPU is being used after deployment:
+    docker exec ollama ollama ps
+    Should show: PROCESSOR = 100% GPU (not CPU)
+    Also check: docker exec ollama rocm-smi (shows GPU utilisation during query)
+
+OPEN WEBUI + mcpo
+  Unchanged from draft v2. Two MCP servers:
+    @modelcontextprotocol/server-filesystem  (read-only Nextcloud path)
+    @modelcontextprotocol/server-memory       (writable, isolated memory store)
+
+  Open WebUI connects to Ollama natively via OLLAMA_BASE_URL=http://ollama:11434.
+  mcpo is on the same Docker network; Open WebUI tool server URL = http://mcpo:8000.
+
+  Persistent memory: works immediately after EX.2. Ask the AI to "remember that
+  my ID number is X" and it stores it. "What is my ID number?" retrieves it.
+  File access: the AI can list the Nextcloud directory tree and read any file by
+  path. Ask "read the first chapter of /nc-data/Books/mybook.epub" — it works
+  if the file exists at that path in the Nextcloud data folder.
+
+HOME ASSISTANT CONTAINER
+  Unchanged from draft v2.
+  network_mode: host (required — removes ports: block entirely).
+  com.centurylinklabs.watchtower.enable: "false" (prevents auto-restart).
+  Access at http://<LAN-IP>:8123. NPM proxy → home.*.duckdns.org over HTTPS.
+
+  HA add-ons do not exist in Container mode. All integrations use standalone
+  Docker containers + integrations (Wyoming, MQTT, ESPHome, Ollama).
+
+VOICE PIPELINE: WHISPER + PIPER
+  wyoming-whisper: model base, language en. Port 10300.
+    With 780M GPU inference, the CPU is mostly free during LLM inference,
+    so Whisper on CPU is not a bottleneck. Base model accuracy is adequate.
+    Upgrade to small model later if accuracy is poor.
+  wyoming-piper: voice en_US-lessac-high. Port 10200.
+    Natural-sounding TTS. ~0.5s synthesis per sentence on CPU. Not a bottleneck.
+    HA streams Piper output so the first words are spoken before the full
+    response is generated.
+
+  With iGPU acceleration, end-to-end latency (wake word → first spoken word):
+    ~8–12s for a typical short command. Substantially better than draft v2's
+    estimate of 15–40s.
+
+REMOTE CLIENTS — NO EXTRA SETUP REQUIRED
+  Open WebUI at ai.*.duckdns.org:
+    Android: Chrome browser or PWA (pin to home screen from Chrome → "Add to
+    Home Screen"). Responsive layout. Voice input via browser mic permission.
+    Linux laptop: browser, no setup.
+  Home Assistant at home.*.duckdns.org:
+    Android: HA Companion App (Google Play). Install, log in with external URL.
+    Enable microWakeWord in the Companion App settings to turn the phone into
+    a local voice satellite — no hardware required, works over the phone mic.
+    Linux laptop: browser.
+
+  All access is via HTTPS on port 443 through the existing NPM proxy.
+  No additional port forwards, no VPN required.
+
+ESP32 VOICE SATELLITES (future, EX.8)
+  Using existing ESP32 WROOM boards:
+    ESPHome firmware with voice_assistant component.
+    Wake word detection: server-side (openWakeWord running in HA).
+    Audio streams from ESP32 → HA over Wi-Fi when triggered by wake word.
+    Components needed per node: INMP441 I2S mic (~€3), MAX98357A amp (~€3),
+    small 4Ω speaker (~€5). Solder four wires each.
+
+  Wake word for server-side openWakeWord:
+    "okay nabu" and "hey jarvis" are available immediately, no training.
+    Custom "Wall-E" model: train using the openWakeWord training pipeline on
+    the server (uses Piper TTS to generate synthetic audio → fine-tunes a
+    TFLite model). 2–4 hours training time. Described as advanced.
+    Practical approach: deploy with "hey jarvis" first to validate the full
+    pipeline, then replace with the custom model when ready.
+
+  Upgrade path to on-device wake word (optional, no rewiring):
+    Replace ESP32 WROOM board with ESP32-S3 N8R8 (~€8).
+    Add psram + micro_wake_word component to ESPHome YAML.
+    Deploy "Wall-E" .tflite model to the device.
+    Everything else (mic, amp, speaker, wiring) stays identical.
+
+SMART HOME DEVICE COMPATIBILITY
+  ESPHome / voice satellite nodes are entirely independent of smart home devices.
+  Smart home devices are managed by Home Assistant directly via integrations.
+  Any device HA supports (Zigbee, Z-Wave, Matter, Wi-Fi devices, etc.) works
+  regardless of what voice satellites you use or which wake word is configured.
+  Existing smart market devices: if they are Wi-Fi based and have a HA
+  integration (Tuya, TP-Link Tapo, Shelly, Philips Hue, IKEA TRÅDFRI, etc.),
+  they can be added to HA without any additional hardware. Zigbee devices
+  require a USB coordinator dongle (EX.9).
+
+ZIGBEE (future, EX.9)
+  Unchanged from draft v2.
+  Hardware: HA Connect ZBT-2 (~€30, Zigbee + Thread) or Sonoff ZBDongle-E
+  (~€20, Zigbee only). USB 2.0 extension cable (20–30 cm), always.
+  Stack: Mosquitto + Zigbee2MQTT in ~/docker/zigbee/.
+  Pass dongle by /dev/serial/by-id/ path, never /dev/ttyUSB0.
+
+SYSTEM COMMAND TOOLS (future, EX.10)
+  Open WebUI custom Python tool with subprocess whitelist.
+  shell=True never used. All executions logged.
+  Whitelist: df -h, free -h, docker ps, uptime, sensors,
+  docker compose restart <service>, docker logs --tail 50 <container>,
+  systemctl reboot (with confirmation), Nextcloud WebDAV file read.
+
+
+════════════════════════════════════════════════════════════════════
+IMPLEMENTATION PHASES
+════════════════════════════════════════════════════════════════════
+
+EX.0  Pre-flight (~20 min)
+  Verify existing containers healthy. Check free RAM (need ≥18 GB with
+  services loaded). Verify kernel parameter applied (amdgpu.noretry=0).
+  Check /dev/kfd and /dev/dri exist and have correct group ownership.
+  Confirm video and render group GIDs (getent group video render).
+
+EX.1  Ollama with iGPU (~45 min, most time is model download)
+  Deploy ~/docker/ollama using ollama/ollama:rocm image.
+  Pass /dev/kfd + /dev/dri devices, set HSA_OVERRIDE_GFX_VERSION,
+  OLLAMA_FLASH_ATTENTION=false, video/render group_add.
+  Pull qwen2.5:14b-instruct-q4_K_M (~8.9 GB download).
+  Verify: docker exec ollama ollama ps → "100% GPU".
+  Fallback to mistral:7b if RAM pressure observed.
+
+EX.2  Open WebUI + mcpo (~45 min)
+  Deploy ~/docker/openwebui (port 3000) on same network as Ollama.
+  Deploy ~/docker/mcpo (port 8000) with filesystem (ro) + memory servers.
+  Connect Open WebUI to mcpo via tool server. Create NPM proxy host for
+  ai.*.duckdns.org. Test: list Nextcloud files, store and recall a memory.
+
+EX.3  Home Assistant Container (~60 min)
+  Deploy ~/docker/homeassistant with network_mode: host. No ports: block.
+  Onboarding at http://<LAN-IP>:8123. Install HACS.
+  Create NPM proxy host for home.*.duckdns.org. Set external URL in HA.
+
+EX.4  Voice Pipeline (~30 min)
+  Deploy ~/docker/wyoming (whisper base + piper en_US-lessac-high).
+  Add Wyoming Protocol integrations in HA for both containers.
+  Create "Wall-E" Assist pipeline. Verify STT transcription with mic test.
+
+EX.5  HA → Ollama Conversation Agent (~20 min)
+  Add Ollama integration in HA (URL: http://<LAN-IP>:11434).
+  Select qwen2.5:14b-instruct-q4_K_M. Enable device control.
+  Assign as conversation agent for Wall-E pipeline. Set system prompt.
+  Test end-to-end typed command in HA Assist. Verify voice response.
+
+EX.6  Remote Access & Clients (~20 min)
+  Verify HTTPS from Android + Linux laptop (Open WebUI + HA).
+  Install HA Companion App on Android. Enable microWakeWord in app.
+  Phone is now a working voice satellite — test hands-free command.
+
+EX.7  (Renumbered, was EX.7 before) — core build complete.
+  At this point the system is fully functional:
+    Chat via browser on any device.
+    Voice via Android Companion App.
+    Persistent memory and Nextcloud file access working.
+    HA Assist pipeline with Ollama conversation agent working.
+    All existing containers (Nextcloud, DuckDNS, NPM) unaffected.
+
+EX.8  ESP32 Voice Satellites (future, per room)
+  Flash ESPHome firmware onto existing ESP32 WROOM boards.
+  Wire INMP441 mic + MAX98357A amp + speaker per node.
+  Configure voice_assistant component in ESPHome YAML.
+  Enable openWakeWord in HA with "hey jarvis" (or custom trained model).
+  Node appears in HA as a device. Assign to Wall-E pipeline.
+  Optionally train custom "Wall-E" wake word model (advanced, 2–4 hours).
+
+EX.9  Zigbee Devices (future)
+  Purchase ZBT-2 or ZBDongle-E + USB extension cable.
+  Deploy ~/docker/zigbee (Mosquitto + Zigbee2MQTT).
+  Pass dongle via /dev/serial/by-id/ path. Add MQTT integration in HA.
+
+EX.10  System Command Tools (future)
+  Write Open WebUI Python tool with subprocess whitelist.
+  Load as custom tool. Test each whitelisted operation.
+
+
+════════════════════════════════════════════════════════════════════
+CRITICAL PITFALLS
+════════════════════════════════════════════════════════════════════
+
+1.  amdgpu.noretry=0 kernel parameter must be set BEFORE deploying Ollama.
+    Without it, the 780M iGPU may reset during long inference sessions.
+    Set via: sudo rpm-ostree kargs --append=amdgpu.noretry=0 then reboot.
+
+2.  OLLAMA_FLASH_ATTENTION=false is mandatory for gfx1103.
+    With Flash Attention enabled, model output may collapse to repeated
+    tokens ("444444...") due to a known RDNA3 NaN bug in Flash Attention.
+
+3.  HSA_OVERRIDE_GFX_VERSION=11.0.2 must be set in the container environment
+    in docker-compose.yml. Setting it in the shell has no effect on the container.
+
+4.  /dev/kfd group ownership: on Bazzite, /dev/kfd may be owned by group
+    "render". Confirm: ls -la /dev/kfd /dev/dri/renderD128
+    Add the correct GIDs to group_add in docker-compose.yml.
+    Or use devices + privileged: true as a fallback (less secure but simpler).
+
+5.  HA network_mode: host — remove ports: block entirely.
+    HA add-ons do not exist in Container mode.
+
+6.  Watchtower must be disabled on the HA container.
+    Set com.centurylinklabs.watchtower.enable: "false".
+
+7.  Ollama :rocm image vs standard image: these are different tags.
+    The standard ollama/ollama image runs CPU only.
+    The GPU image is ollama/ollama:rocm. Use the correct tag.
+
+8.  Open WebUI internal port 8080. Map to host 3000:8080.
+    If Zigbee2MQTT is added later, map it to 8282:8080 — not 8080:8080.
+
+9.  mcpo filesystem mount must be read-only (:ro).
+    Never mount home directory or root filesystem as writable.
+
+10. ESP32 WROOM boards with server-side wake word: audio streams constantly
+    to HA while idle (low-level, ~16kHz mono). On a LAN this is negligible.
+    If many nodes are deployed, monitor HA CPU usage from openWakeWord.
+    Upgrade specific nodes to ESP32-S3 if load becomes an issue.
+
+
+════════════════════════════════════════════════════════════════════
+HARDWARE SHOPPING LIST
+════════════════════════════════════════════════════════════════════
+
+EX.0 through EX.7: no new hardware required.
+
+EX.8 (per voice satellite, using existing ESP32 WROOM boards):
+  INMP441 I2S microphone breakout — ~€3 each
+  MAX98357A I2S amplifier breakout — ~€3 each
+  Small 4Ω passive speaker — ~€5 each
+  USB-C power supply (any phone charger) — €0
+  Total per node: ~€10 + time to solder
+
+  Optional upgrade (on-device wake word):
+  ESP32-S3 N8R8 module — ~€8 each (replaces the WROOM board only,
+  all other components and wiring stay identical)
+
+EX.9 (Zigbee):
+  HA Connect ZBT-2 (Zigbee + Thread) — ~€30  [recommended]
+  OR Sonoff ZBDongle-E (Zigbee only)  — ~€20  [budget option]
+  USB 2.0 extension cable, 20–30 cm   — ~€3   [always required]
+

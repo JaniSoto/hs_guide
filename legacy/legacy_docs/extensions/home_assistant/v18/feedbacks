@@ -1,0 +1,306 @@
+================================================================================
+BAZZITE AI SMART HOME EXTENSION GUIDE — FEEDBACK REPORT
+For integration into the next guide revision
+Date: March 2026
+Hardware: GMKtec NucBox K8 · Ryzen 7 8845HS · Radeon 780M (gfx1103) · 32 GB DDR5
+Tested stack: Ollama :rocm · Open WebUI :main · mcpo :main · Home Assistant :stable
+================================================================================
+
+
+EXECUTIVE SUMMARY
+-----------------
+The guide's March 2026 update migrated the recommended model from qwen2.5:7b-instruct-q4_K_M
+to qwen3:8b-q4_K_M. This migration introduced a critical regression: Qwen3's hybrid
+thinking architecture is fundamentally incompatible with Open WebUI's tool-call response
+pipeline as of March 2026. The result is a broken user experience for the primary use
+cases this guide is designed for — memory recall, filesystem access, and notes management.
+
+The recommendation is to revert EX.1 to qwen2.5:7b-instard-q4_K_M as the primary model
+until the Open WebUI / Ollama Qwen3 tool-call pipeline is stabilised upstream, or until
+a verified workaround is documented and tested.
+
+
+================================================================================
+ISSUE 1 — CRITICAL: Qwen3 tool-call responses silently empty in Open WebUI
+================================================================================
+
+SYMPTOM
+-------
+When a tool (filesystem, memory, or notes via mcpo) is invoked in Open WebUI:
+- The tool call executes correctly (mcpo logs confirm 200 OK responses).
+- Ollama processes the tool response correctly (logs confirm 200 OK, ~3–28 s response times).
+- Open WebUI renders NOTHING after the tool result arrives. The response area shows
+  a spinning indicator and then goes blank. No text. No error.
+
+In some sessions the model enters an infinite tool-call loop, calling list_directory or
+search_nodes every ~4 seconds indefinitely, never producing a final answer.
+
+REPRODUCTION
+------------
+Reliably reproduced on:
+  - Open WebUI :main (March 2026)
+  - Ollama 0.9.x with qwen3:8b-q4_K_M
+  - mcpo :main with filesystem + memory servers
+  - Function Calling: Native (as required by Qwen3 architecture)
+  - think (Ollama) toggle: both On and Off trigger the issue (see Issue 2)
+
+ROOT CAUSE — CONFIRMED BY UPSTREAM ISSUES
+------------------------------------------
+This is a known, actively reported bug across multiple Open WebUI GitHub issues:
+
+  [open-webui/open-webui #14577] "Tool calling BROKEN" (June 2025)
+  — Qwen3:30b-a3b calls tool, makes the tool call, but never answers.
+  Confirmed on Ollama 0.9.0 + Open WebUI v0.6.13 with mcpo + native tool calling.
+
+  [open-webui/open-webui #15346] "Error parsing tool call arguments" (June 2025)
+  — Qwen3:4b + Open WebUI native tool calling causes argument parse errors:
+    "Error parsing tool call arguments: {...}{...} - {}"
+  The model concatenates multiple JSON objects without a separator, breaking
+  Open WebUI's parser.
+
+  [open-webui/open-webui #15546] "OWUI cannot parse tool call parameters when LLM
+  makes multiple tool calls at once" (July 2025)
+  — Confirmed on Qwen3:8b-q4_K_M and Qwen3:14b. Raw API response shows <think>
+  tokens interleaved with tool call JSON, which Open WebUI cannot parse correctly.
+  Quote from thread: "Local models are not reliable for tool calling especially at
+  <14b size." The issue persists even at 14b+ for Qwen3.
+
+  [open-webui/open-webui #17135] "sending malformed role:tool messages" (Sept 2025)
+  — Open WebUI sends `"content": null` in tool role messages, which is non-compliant
+  with the OpenAI schema. This causes downstream LLMs (including Qwen3) to receive
+  a malformed tool result and either loop or produce empty responses.
+
+ADDITIONAL FACTOR: think (Ollama) toggle interaction
+- When think=Off: Qwen3 generates zero content tokens after receiving a tool result.
+  The model appears to require thinking tokens to reason about tool responses before
+  producing output. Disabling think suppresses this internal chain and leaves the
+  model with no pathway to generate a final answer.
+- When think=On (Default): Qwen3 runs the full reasoning trace (~36 seconds observed)
+  then also produces empty final content. Open WebUI's reasoning tag parser intercepts
+  the <think>...</think> block and then finds nothing left to render.
+
+Both states are broken. This is not a configuration issue — it is a fundamental
+incompatibility between Qwen3's hybrid thinking architecture and Open WebUI's current
+tool-call pipeline.
+
+PARAMETER think=false — NOT AVAILABLE IN MODELFILE
+---------------------------------------------------
+The guide instructs using PARAMETER think false in the Modelfile to disable thinking.
+This parameter does NOT exist in Ollama's Modelfile spec as of March 2026:
+
+  $ docker exec ollama ollama create wall-e -f /tmp/Wall-E.modelfile
+  Error: unknown parameter 'think'
+
+The think field is only available as a per-request API parameter (not a Modelfile
+PARAMETER). It cannot be baked into a custom model definition. The /no_think system
+prompt token is the only Modelfile-level approach, but it is insufficient to prevent
+Open WebUI from sending think=true in its API requests, which overrides the system
+prompt token for Qwen3's thinking mode.
+
+
+================================================================================
+ISSUE 2 — MODERATE: PARAMETER think false does not exist in Ollama Modelfile spec
+================================================================================
+
+SYMPTOM
+-------
+EX.1 Step 4 instructs adding "PARAMETER think false" to the Wall-E Modelfile.
+This causes ollama create to fail with "Error: unknown parameter 'think'".
+
+ROOT CAUSE
+----------
+The think field is an API-level parameter per Ollama's official documentation
+(https://docs.ollama.com/capabilities/thinking), not a Modelfile PARAMETER.
+Supported Modelfile PARAMETERs are: num_ctx, temperature, top_p, top_k,
+repeat_penalty, stop, seed, num_predict, and a small number of others.
+"think" is not in this list.
+
+IMPACT
+------
+Any user who follows the guide update and attempts to add PARAMETER think false
+will get a hard error and be unable to build the wall-e model at all until they
+manually remove the line.
+
+RECOMMENDATION
+--------------
+Remove PARAMETER think false from the Modelfile example entirely.
+The /no_think system prompt token (already in the guide's SYSTEM block) is the
+correct Modelfile-level approach. Document that Open WebUI may override this via
+its own think (Ollama) toggle, which must be set to Default (not Off) in the model's
+Advanced Parameters to avoid the empty-response regression.
+
+
+================================================================================
+ISSUE 3 — MODERATE: Qwen3 infinite tool-call loop behaviour
+================================================================================
+
+SYMPTOM
+-------
+When thinking mode is active (think=Default or On), and the model is asked a question
+requiring tool recall (e.g. "List files in /nc-data"), the model enters a loop:
+- Calls list_directory → receives result → calls list_directory again → repeat.
+- Loop runs until the user manually stops the generation.
+- mcpo logs confirm the tool is called every ~4 seconds indefinitely.
+- Ollama returns 200 OK for every call — the issue is in the model's post-tool reasoning.
+
+ROOT CAUSE
+----------
+With thinking mode active, Qwen3 8b treats each tool result as insufficient and
+re-invokes the tool to "verify". This is a known behaviour of smaller Qwen3 variants
+(<14b) when thinking mode is enabled alongside tool calling. The model's chain-of-thought
+reasoning loop does not converge when tool results are short or list-like.
+
+RECOMMENDATION
+--------------
+Document the loop risk for Qwen3 8b + thinking mode + mcpo. Until upstream is fixed,
+add an Open WebUI setting note: Settings → Interface → "Tool Call Auto-Execute Max
+Count" → set to 5. This caps loop depth even if it does not fix the underlying issue.
+
+
+================================================================================
+ISSUE 4 — INFORMATIONAL: Open WebUI built-in Memory conflicts with mcpo memory tool
+================================================================================
+
+SYMPTOM
+-------
+Open WebUI has its own built-in "Memory" capability (visible under model settings →
+Builtin Tools). When both the built-in Memory and the mcpo memory tool server are
+active simultaneously, the model receives duplicate memory tool definitions and may
+call the wrong one or become confused about which to use.
+
+RECOMMENDATION
+--------------
+Add a note in EX.2 (Open WebUI initial setup) to disable the built-in Memory builtin
+tool for the wall-e model:
+  Open WebUI → Workspace → Models → wall-e → (edit) → Builtin Tools → Memory: OFF
+The mcpo memory tool (graph.json knowledge graph) is the persistent, cross-restart
+memory store. The built-in Open WebUI memory is session-scoped and separate.
+
+
+================================================================================
+RECOMMENDED ACTION FOR NEXT GUIDE REVISION
+================================================================================
+
+PRIMARY RECOMMENDATION: Revert to qwen2.5:7b-instruct-q4_K_M
+--------------------------------------------------------------
+The original model used in the guide before the March 2026 update is the correct
+choice for this stack. Rationale:
+
+  COMPATIBILITY: qwen2.5:7b has no hybrid thinking architecture. It does not produce
+  <think> tokens. Open WebUI's tool-call pipeline handles its responses correctly.
+  Tool calls invoke, return, and produce a final answer reliably.
+
+  STACK ALIGNMENT: The entire guide (mcpo config, Wall-E Modelfile system prompt,
+  Open WebUI Native tool calling mode, HA Ollama integration) was designed and tested
+  with qwen2.5 series models. The March 2026 migration to qwen3 was premature.
+
+  PERFORMANCE: qwen2.5:7b-instruct-q4_K_M runs at 18–22 tok/s on the 780M iGPU.
+  This is within the guide's documented target range and delivers 3–5 second voice
+  latency for standard commands — exactly the expected behaviour in the summary doc.
+
+  SIZE: ~4.7 GB vs qwen3:8b's ~5.5 GB. The smaller footprint leaves more GTT headroom
+  on the iGPU and reduces first-load latency.
+
+  NO THINKING MODE COMPLICATIONS: No /no_think required. No think toggle in Open WebUI.
+  No Modelfile workaround needed. The model behaves as a standard instruction-following
+  model with clean tool call / tool response / final answer cycles.
+
+SECONDARY RECOMMENDATION: Monitor Qwen3 upstream fixes before re-migration
+---------------------------------------------------------------------------
+Qwen3 has superior benchmark scores and will likely become the correct choice once
+the Open WebUI tool-call pipeline issues are resolved. The guide should re-evaluate
+migration when the following conditions are met:
+
+  1. open-webui/open-webui #14577 and related issues are closed with a confirmed fix.
+  2. Ollama adds native Modelfile support for think=false (tracked in Ollama roadmap).
+  3. The Open WebUI "role:tool content:null" malformed message bug (#17135) is resolved.
+  4. Verified end-to-end test: memory write + recall across sessions works without
+     empty responses or loops on qwen3:8b-q4_K_M + mcpo + Open WebUI :main.
+
+TERTIARY RECOMMENDATION: If keeping Qwen3, document required workarounds
+-------------------------------------------------------------------------
+If the guide author wishes to keep qwen3:8b as the recommended model despite current
+issues, the following must be explicitly documented:
+
+  a) PARAMETER think false does not work — remove from Modelfile example.
+  b) think (Ollama) in Open WebUI Advanced Parameters must be set to Default, not Off.
+  c) Tool responses after memory/filesystem calls will frequently produce no output.
+     Users must regenerate or rephrase. This is a known upstream bug, not misconfiguration.
+  d) Infinite tool-call loops are possible. Set Tool Call Auto-Execute Max Count to 5.
+  e) Disable Open WebUI built-in Memory for wall-e model to avoid tool disambiguation
+     failures.
+  f) The /no_think system prompt token works in terminal (ollama run) but is overridden
+     by Open WebUI's think API parameter. Terminal and Open WebUI behaviour will differ.
+
+These are not minor caveats — they fundamentally break the memory and filesystem
+features that are central to the guide's value proposition.
+
+
+================================================================================
+MODELFILE CORRECTION (if staying with qwen3:8b)
+================================================================================
+
+Remove this line from the Modelfile PARAMETERs block:
+  PARAMETER think false          ← does not exist, causes hard build error
+
+Keep /no_think in the SYSTEM block (it works for terminal use, partial mitigation):
+  SYSTEM """
+  /no_think
+  ...
+  """
+
+In Open WebUI Advanced Parameters for wall-e:
+  think (Ollama): Default   ← NOT Off. Off causes empty responses after tool calls.
+
+
+================================================================================
+MODELFILE RECOMMENDATION (if reverting to qwen2.5:7b)
+================================================================================
+
+FROM qwen2.5:7b-instruct-q4_K_M
+
+PARAMETER num_ctx 8192
+PARAMETER temperature 0.6
+PARAMETER top_p 0.95
+PARAMETER top_k 20
+PARAMETER repeat_penalty 1.1
+
+SYSTEM """
+You are Wall-E, a helpful home assistant. Answer concisely.
+Report device states accurately when asked.
+
+[... full tool rules as currently in guide, minus all /no_think references ...]
+"""
+
+Remove entirely:
+  - /no_think from SYSTEM block (not applicable to qwen2.5)
+  - PARAMETER think false (invalid parameter)
+  - All guide notes about thinking mode, /think prefix, think toggling
+
+
+================================================================================
+UPSTREAM ISSUES FOR GUIDE AUTHOR REFERENCE
+================================================================================
+
+open-webui/open-webui #14577  Tool calling broken with Qwen3 + mcpo (June 2025)
+  https://github.com/open-webui/open-webui/issues/14577
+
+open-webui/open-webui #15346  Error parsing tool call arguments Qwen3 (June 2025)
+  https://github.com/open-webui/open-webui/issues/15346
+
+open-webui/open-webui #15546  Cannot parse multiple tool calls at once (July 2025)
+  https://github.com/open-webui/open-webui/discussions/15546
+
+open-webui/open-webui #17135  Malformed role:tool messages to endpoints (Sept 2025)
+  https://github.com/open-webui/open-webui/issues/17135
+
+open-webui/open-webui #13314  enable_thinking parameter not supported for Qwen3
+  https://github.com/open-webui/open-webui/issues/13314
+
+Ollama thinking docs (think is API-level, not Modelfile PARAMETER):
+  https://docs.ollama.com/capabilities/thinking
+
+
+================================================================================
+END OF REPORT
+================================================================================

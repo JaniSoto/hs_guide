@@ -1,0 +1,200 @@
+BAZZITE AI SMART HOME — GOALS & EXPECTED BEHAVIOUR
+GMKtec NucBox K8 · Ryzen 7 8845HS · Radeon 780M · 32 GB DDR5
+Updated March 2026
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WHAT THIS IS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+A private, fully local AI assistant and home controller running on a personal
+server. No subscriptions, no cloud dependency, no data leaving the house
+except for optional web searches via the Brave API.
+
+Accessible from anywhere via HTTPS, controllable by voice or text, in English
+or Spanish. Responses are brief by design — the model is instructed to be
+concise, and that directly reduces waiting time on local hardware.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HOW I INTERACT WITH IT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+From any browser on any device, anywhere in the world over HTTPS via Open
+WebUI at ai.jsotohome.duckdns.org — typed or browser-mic interactions.
+
+From the Android HA Companion App with hands-free wake word, exactly like
+Alexa but fully local and private.
+
+From ESP32 satellite nodes placed in rooms around the house (future hardware,
+same assistant and pipeline).
+
+All interfaces share the same assistant, the same memory, and the same device
+access. Natural speech in English or Spanish — no robotic phrasing required.
+
+Expected wait times:
+  Simple HA command (turn on a light)    2–4 s
+  Memory recall                          3–6 s
+  Notes read + update                    4–8 s
+  Web search + answer                    5–12 s
+  Voice end-to-end (STT + AI + TTS)      3–8 s for short commands
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MEMORY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+I tell it to remember something once. It stores it permanently in a knowledge
+graph (graph.jsonl) and recalls it in any future session, from any interface,
+after any reboot. I never repeat myself. I can ask what it has stored, update
+a fact, or tell it to forget.
+
+  "Remember that my guest WiFi password is XYZ"
+  "¿Cuál es la contraseña del WiFi de invitados?" → answers correctly
+  "What do you have stored in memory?" → lists all stored facts
+  "Forget the guest WiFi password" → gone permanently
+
+Memory is for facts I dictate explicitly. It does not learn passively from
+conversation.
+
+How it works: the assistant always calls the memory tool before answering any
+recall question — it never guesses from conversation context. Stored data
+survives container restarts, OS reboots, and Watchtower updates.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NOTES AND LISTS  (requires EX.A installed)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+I tell it to add something to a list or create a note. It writes or updates
+the file immediately in the AI-Notes/ folder inside my Nextcloud. The file
+appears in my Nextcloud app on my phone within minutes (5-minute cron scan).
+I can ask it to read the list back, update it, or reset it.
+
+  "Add milk, eggs, and coffee to the shopping list"
+  "I went shopping — reset the list and add flour for next time"
+  "What's on my shopping list?" → reads and replies
+  "I worked from 9 to 5 today" → appends to work log
+  "Make a note: we decided to go with option B"
+
+Notes are for documents and lists I actively manage. One-off facts go to
+memory instead.
+
+Scope: the AI can only write to AI-Notes/ — no other Nextcloud folder is
+accessible or modifiable.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HOME AUTOMATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+I control smart home devices through the same interface I use for everything
+else — no separate app, no mode switching. I speak or type a command and it
+executes. I ask about device states and it tells me. Concatenated commands
+work reliably.
+
+  "Turn off all the lights"
+  "¿Está cerrada la puerta principal?"
+  "Set the bedroom to 20 degrees"
+  "Turn on the fan and dim the living room lights to 40%"
+  "What's currently on?"
+
+Works with any device Home Assistant supports. Wi-Fi devices connect
+directly. Zigbee requires a USB dongle on the server (future hardware).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SERVER SESSION CONTROL VIA VOICE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+I can launch and stop server sessions — KDE desktop or Gaming Mode — using
+the same voice or chat interface as everything else. Wall-E instructs Home
+Assistant to trigger a pre-defined script, which SSHes into the host and runs
+the appropriate session management command. All existing safety logic is fully
+preserved: sessions refuse to launch if one is already active, headless state
+is restored automatically.
+
+  "Wall-E, launch gaming mode"     → Gaming Mode appears on the display
+  "Pon el modo escritorio"         → KDE Plasma launches on the display
+  "Para la sesión"                 → Active session stopped, server returns
+                                     to headless idle
+  "¿Hay alguna sesión activa?"     → HA reports current session state
+
+Works from any interface — ESP32 room node, Android app, or browser.
+Only three pre-defined, whitelisted scripts can be triggered. No arbitrary
+commands are possible.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WEB SEARCH  (requires EX.C installed)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When I ask about something current — prices, news, recent releases, business
+hours — it searches the web via the Brave Search API and synthesises an
+answer. It only searches when the query genuinely requires current data.
+Simple or factual questions it answers from training directly without
+searching.
+
+  "What's the current price of a Raspberry Pi 5?" → searches, answers
+  "What is the capital of France?" → answers directly, no search
+
+Search queries go to Brave's API over HTTPS. Not fully offline when
+searching. Free tier: 2,000 queries/month. No credit card required.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VOICE PIPELINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+I speak → server transcribes locally (Whisper) → AI responds (Ollama/Wall-E)
+→ server speaks the answer (Piper). Everything runs on the server. No audio
+leaves the house. Responses are brief and natural-sounding.
+
+Three voice entry points, all sharing the same pipeline:
+  Android HA Companion App — hands-free wake word, Alexa-style
+  Open WebUI browser mic   — tap to speak, any device, any browser
+  ESP32 room nodes         — wake word "Wall-E" (future hardware)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+THE MODEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+qwen2.5:7b-instruct-q4_K_M running under the wall-e:latest custom Modelfile.
+
+This is the only viable model for this hardware and this stack as of March
+2026. Every realistic alternative was evaluated and eliminated: phi4-mini on
+broken tool call formatting, gemma3 on MCP multi-turn failure, mistral on
+conversation ordering rejection, qwen3:4b on unreliable concatenated commands
+and thinking mode contamination, qwen3:8b on no non-thinking variant existing
+and being slower than qwen2.5:7b on this iGPU.
+
+qwen2.5:7b was designed specifically for the three capabilities this stack
+depends on: reliable structured JSON output, multilingual instruction
+following (Spanish first-class), and resilience to diverse system prompts.
+
+Expected performance: 18–22 tok/s on the 780M iGPU. All 29/29 model layers
+offloaded to GPU with 8 GB UMA allocation.
+
+The system prompt is intentionally terse (~132 tokens). Brevity is the first
+instruction in the Modelfile — it directly reduces output token count, which
+is the dominant latency factor on memory-bandwidth-bound iGPU inference.
+
+Migration path: a future qwen3 non-thinking instruct variant when open-webui
+issue #17135 is resolved and Ollama adds Modelfile-level think=false support.
+No viable migration target exists as of March 2026.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HARD LIMITS — WHAT IT WILL NEVER DO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Browse or read arbitrary Nextcloud files — there is no filesystem browse
+  tool. The only Nextcloud access is writing to AI-Notes/ (EX.A).
+- Learn passively from conversation without an explicit remember instruction.
+- Modify Nextcloud files outside the AI-Notes/ folder.
+- Execute arbitrary system commands — only three pre-defined, whitelisted
+  session scripts can be triggered via HA.
+- Respond instantly — minimum 2–3 seconds is a hardware constraint, not
+  a bug.
+- Think silently before answering — the model has no thinking mode. Responses
+  are direct.

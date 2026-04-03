@@ -1,0 +1,80 @@
+Here is the strict, command-level audit of the Bazzite AI Smart Home — Extension Guide EX.0–EX.6.
+
+This guide exhibits an exceptionally high level of technical engineering. It preemptively resolves complex, undocumented edge cases that typically break Linux home servers, such as Docker/firewalld nftables race conditions, root-owned Docker daemon bind-mounts causing EACCES errors for non-root containers, and RDNA3 (780M) GPU micro-engine scheduler hangs.
+
+System State & Hidden Assumptions
+
+Static IP Assumption: The guide assumes the host machine has a static LAN IP. Because NPM forwards external traffic to <server-LAN-IP>:3000 and <server-LAN-IP>:8123, a DHCP lease renewal changing the host IP will instantly break all external remote access.
+
+Host Network DNS: Home Assistant uses network_mode: host. The guide correctly identifies that HA cannot use Docker DNS to reach ollama. The workaround (using 127.0.0.1:11434 via mapped ports) is logically flawless.
+
+SELinux Contexts: The guide bypasses the need for the :z flag on the /var/srv/nextcloud-data mount by relying on the underlying container_file_t policy applied in the prerequisite phase. This prevents catastrophic SELinux relabeling conflicts with Nextcloud's main database.
+
+Issue Classification Report
+🔴 Critical Issues (Execution / Integrity)
+
+None. The guide successfully eliminates standard critical failure paths. The commands provided are deterministic, syntactically correct, and execute exactly as described. The explicit instruction to use unquoted EOF in EX.3 to allow ${TZ_VALUE} expansion, versus quoted 'EOF' in EX.1/EX.2 to prevent premature variable expansion, is correct and highly secure.
+
+🟠 Major Issues (Instability / Security)
+
+Plaintext Credentials over LAN: Open WebUI is bound to 0.0.0.0:3000 and accessed via plain http://<server-LAN-IP>:3000 on the local network. While external traffic is encrypted via NPM, internal LAN traffic is unencrypted. Anyone sniffing the local network can capture the Open WebUI admin password during login.
+
+Recovery/Fix: Ensure local access is either done strictly via the HTTPS DuckDNS domain (hairpin NAT/local DNS) or enforce an isolated management VLAN.
+
+Docker Log Exhaustion: None of the docker-compose.yml files configure logging. The mcpo container (which proxies AI data) and homeassistant (which logs state changes) will grow their JSON log files indefinitely, eventually leading to host disk exhaustion.
+
+Recovery/Fix: Add logging: driver: "json-file" options: max-size: "10m" max-file: "3" to the compose files.
+
+🟡 Minor Issues (Clarity / Efficiency)
+
+Nextcloud occ Cron Job Frequency: (EX.A, Step 5) Running php occ files:scan every 5 minutes inside the container spins up the PHP engine repeatedly. While lightweight, it creates an unnecessary baseline CPU/IO load.
+
+Optimization: Use Nextcloud's in-built occ files:scan --unscanned or trigger it via an API webhook from the AI tool only when a file is actually written.
+
+API Key Exposure: (EX.C, Step 2) The Brave Search API key is stored in plaintext in config.json. While acceptable for a single-user bare-metal server, it violates secret-management best practices.
+
+Element Evaluation
+
+ESSENTIAL:
+
+amdgpu.noretry=0 kernel argument (Without this, the OS will fatally hang during inference).
+
+mkdir -p and chown 33:33 prior to docker compose up for mcpo. (Without this, Docker creates directories as root, causing silent MCP server failures).
+
+sleep 15 && docker ps after firewalld --reload. (Firewalld flushes Docker's iptables/nftables chains; restarting Docker is the only reliable programmatic recovery).
+
+HOME=/tmp in mcpo. (npx attempts to write to the home directory of the UID executing it; UID 33 has no home in /etc/passwd, causing fatal crashes without this virtual home).
+
+OPTIONAL:
+
+EX.A (Write Access), EX.B (Smart Routing), EX.C (Web Search).
+
+UNNECESSARY:
+
+No redundant commands were found. Every command serves a strict prerequisite or validation function.
+
+Final Validation Checklist
+
+Ensure the system has reached the intended end state without implicit gaps. Execute these verifications directly on the host:
+
+Kernel Verification: Run cat /proc/cmdline. Ensure amdgpu.noretry=0 is present.
+
+GPU Passthrough: Run docker exec ollama ls -la /dev/kfd /dev/dri. The devices must exist inside the container.
+
+Ollama Inference: Run curl -s http://127.0.0.1:11434/api/generate -d '{"model":"qwen2.5:14b-instruct-q4_K_M","prompt":"hi","stream":false}'. Must return a valid JSON response, proving the GPU stack is active.
+
+Network Isolation: Run curl -m 2 http://<server-LAN-IP>:11434. This command must time out or fail (Connection refused). If it returns data, the Ollama API is dangerously exposed to the network.
+
+File Permissions: Run ls -ld ~/docker/mcpo/memory. The owner must be 33 (or the equivalent Nextcloud UID), not root.
+
+HA Configuration Integrity: Run docker exec homeassistant python -m homeassistant --script check_config --config /config. Must return Configuration is valid!.
+
+Wyoming Loopback: Run ss -tlnp | grep -E '10300|10200'. Must show the ports bound strictly to 127.0.0.1.
+
+External Proxy Validation: Disconnect your phone from Wi-Fi (use 5G/LTE). Navigate to https://ai.yourdomain.duckdns.org and https://home.yourdomain.duckdns.org. Both must load with valid SSL certificates and no WebSocket disconnection toasts.
+
+Rating Score
+
+9.5 / 10
+
+This is an exceptionally rigorous, production-grade guide. It demonstrates a deep, expert-level understanding of Linux systems, Docker networking, SELinux policies, and AMD ROCm hardware quirks. The only deductions are for the lack of Docker log rotation and the plaintext transmission of local WebUI credentials over the LAN, both of which are easily remediable.

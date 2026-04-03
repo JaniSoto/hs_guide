@@ -1,0 +1,631 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+#  SESSION MANAGEMENT SCRIPTS FOR BAZZITE-DECK HTPC + SUNSHINE/MOONLIGHT
+#  start-kde.sh  │  start-gaming.sh  │  stop-session.sh
+#
+#  QUICK START
+#  ───────────
+#  1. Paste all three blocks below into your terminal (SSH or local).
+#  2. After pasting, run:   systemctl list-units --type=service | grep -i sunshine
+#     If your Sunshine service name is NOT one of the auto-detected ones
+#     (sunshine, sunshine-kms, sunshine-headless), open the installed script
+#     and set SUNSHINE_SERVICE_OVERRIDE="<your-service-name>" at the top.
+#  3. Test: sudo start-kde.sh   →  reconnect Moonlight  →  sudo stop-session.sh
+#
+#  USAGE CYCLE
+#  ───────────
+#  Boot → SDDM greeter (streaming via Sunshine)
+#  sudo start-kde.sh     → KDE session (streaming via Sunshine)
+#  sudo stop-session.sh  → back to SDDM greeter
+#  sudo start-gaming.sh  → Gaming Mode (streaming via Sunshine)
+#  sudo stop-session.sh  → back to SDDM greeter
+#  (repeat any combination — always works like the first time)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  SCRIPT 1 — start-kde.sh
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+sudo tee /usr/local/bin/start-kde.sh << 'ENDOFSCRIPT'
+#!/usr/bin/env bash
+# =============================================================================
+# /usr/local/bin/start-kde.sh
+#
+# Starts a KDE Plasma (Wayland) session via SDDM autologin, then restarts
+# Sunshine so it acquires the new KMS output for reliable streaming.
+#
+# Requirements : Must be run as root (sudo).
+#                No active user session may be present.
+# Usage        : sudo start-kde.sh
+# =============================================================================
+set -euo pipefail
+
+# ── ★ CONFIGURATION — adjust if your setup differs ────────────────────────────
+
+# UID of the normal user (UID 1000 is standard on Bazzite)
+readonly USER_UID=1000
+
+# SDDM override config managed by Bazzite session scripts
+readonly AUTOLOGIN_CONF="/etc/sddm.conf.d/zz-steamos-autologin.conf"
+
+# Session desktop filename for KDE Plasma
+# Must match a file under /usr/share/wayland-sessions/
+readonly SESSION_NAME="plasma.desktop"
+
+# Override the Sunshine service name if auto-detection fails.
+# Leave blank to let the script find it automatically.
+# Run:  systemctl list-units --type=service | grep -i sunshine
+readonly SUNSHINE_SERVICE_OVERRIDE=""
+
+# Seconds to wait for the KDE session to become active
+readonly SESSION_WAIT_TIMEOUT=90
+
+# Extra seconds after the session is active, before restarting Sunshine.
+# KWin needs a moment to fully initialize its rendering pipeline.
+readonly SUNSHINE_SETTLE_SECS=6
+
+# =============================================================================
+
+# ── Internal helpers ──────────────────────────────────────────────────────────
+
+log()  { printf '[start-kde] %s\n'         "$*"; }
+warn() { printf '[start-kde] WARNING: %s\n' "$*" >&2; }
+die()  { printf '[start-kde] ERROR: %s\n'   "$*" >&2; exit 1; }
+
+as_user() {
+    runuser -u "${USERNAME}" -- \
+        env XDG_RUNTIME_DIR="/run/user/${USER_UID}" \
+            DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${USER_UID}/bus" \
+        "$@"
+}
+
+detect_sunshine_service() {
+    if [[ -n "${SUNSHINE_SERVICE_OVERRIDE}" ]]; then
+        echo "${SUNSHINE_SERVICE_OVERRIDE}"
+        return 0
+    fi
+    local name
+    for name in sunshine-kms sunshine sunshine-headless; do
+        if systemctl is-active  --quiet "${name}" 2>/dev/null \
+        || systemctl is-enabled --quiet "${name}" 2>/dev/null; then
+            echo "${name}"
+            return 0
+        fi
+    done
+    local found
+    found=$(
+        systemctl list-units --type=service --no-legend 2>/dev/null \
+        | awk '$1 ~ /sunshine/ { print $1 }' \
+        | head -1 \
+        | sed 's/\.service$//'
+    )
+    if [[ -n "${found}" ]]; then
+        echo "${found}"
+        return 0
+    fi
+    return 1
+}
+
+active_user_sessions() {
+    loginctl list-sessions --no-legend \
+    | awk -v uid="${USER_UID}" '$2 == uid { printf "%s ", $1 }' \
+    || true
+}
+
+# ── Preflight checks ──────────────────────────────────────────────────────────
+
+[[ "${EUID}" -eq 0 ]] || die "Must be run as root — use: sudo start-kde.sh"
+
+USERNAME="$(id -nu "${USER_UID}")" \
+    || die "Cannot resolve username for UID ${USER_UID}"
+[[ -n "${USERNAME}" ]] || die "Empty username returned for UID ${USER_UID}"
+
+SUNSHINE_SERVICE="$(detect_sunshine_service)" \
+    || die "Cannot find a Sunshine system service.
+  Hint: run 'systemctl list-units --type=service | grep -i sunshine'
+  then set SUNSHINE_SERVICE_OVERRIDE at the top of this script."
+
+log "User          : ${USERNAME} (UID ${USER_UID})"
+log "Session       : ${SESSION_NAME}"
+log "Sunshine svc  : ${SUNSHINE_SERVICE}"
+
+# ── Guard: refuse to start if a user session is already active ────────────────
+
+sessions="$(active_user_sessions)"
+sessions="${sessions% }"
+
+if [[ -n "${sessions}" ]]; then
+    die "User session(s) already active: [${sessions}]
+  Stop the existing session first:  sudo stop-session.sh"
+fi
+
+log "No active user session found — safe to proceed."
+
+# ── Write SDDM autologin config pointing at KDE ───────────────────────────────
+
+log "Configuring SDDM autologin → ${SESSION_NAME} ..."
+mkdir -p "$(dirname "${AUTOLOGIN_CONF}")"
+cat > "${AUTOLOGIN_CONF}" <<EOF
+# Managed by start-kde.sh — $(date -u '+%Y-%m-%dT%H:%M:%SZ')
+[Autologin]
+User=${USERNAME}
+Session=${SESSION_NAME}
+Relogin=false
+EOF
+
+# ── Restart SDDM to trigger autologin ────────────────────────────────────────
+
+log "Clearing any previous SDDM failure state..."
+systemctl reset-failed sddm 2>/dev/null || true
+
+log "Restarting SDDM (this will trigger autologin into KDE) ..."
+systemctl restart sddm
+
+sleep 2
+systemctl is-active --quiet sddm \
+    || warn "SDDM does not appear to be running. Check: journalctl -u sddm"
+
+# ── Wait for the KDE session to become active ─────────────────────────────────
+
+log "Waiting for KDE session to become active (timeout: ${SESSION_WAIT_TIMEOUT}s) ..."
+elapsed=0
+session_id=""
+confirmed=false
+
+while (( elapsed < SESSION_WAIT_TIMEOUT )); do
+    session_id="$(
+        loginctl list-sessions --no-legend \
+        | awk -v uid="${USER_UID}" '$2 == uid { print $1 }' \
+        | head -1 \
+        || true
+    )"
+    if [[ -n "${session_id}" ]]; then
+        state="$(loginctl show-session "${session_id}" -p State --value 2>/dev/null || true)"
+        if [[ "${state}" == "active" ]]; then
+            log "Session ${session_id} is active after ${elapsed}s."
+            confirmed=true
+            break
+        fi
+    fi
+    sleep 2
+    elapsed=$(( elapsed + 2 ))
+done
+
+"${confirmed}" \
+    || warn "KDE session not confirmed active after ${SESSION_WAIT_TIMEOUT}s — continuing anyway."
+
+# ── Let KWin finish initializing ─────────────────────────────────────────────
+
+log "Giving the KDE compositor ${SUNSHINE_SETTLE_SECS}s to finish initializing ..."
+sleep "${SUNSHINE_SETTLE_SECS}"
+
+# ── Restart Sunshine to acquire the new KMS/DRM output ───────────────────────
+
+log "Clearing any Sunshine failure state ..."
+systemctl reset-failed "${SUNSHINE_SERVICE}" 2>/dev/null || true
+
+log "Restarting Sunshine (${SUNSHINE_SERVICE}) ..."
+systemctl restart "${SUNSHINE_SERVICE}"
+sleep 1
+
+systemctl is-active --quiet "${SUNSHINE_SERVICE}" \
+    || warn "Sunshine may not have started cleanly. Check: journalctl -u ${SUNSHINE_SERVICE}"
+
+echo ""
+echo "✓ [start-kde] KDE Plasma session is running and Sunshine is streaming."
+echo "  Reconnect Moonlight to view the KDE desktop."
+ENDOFSCRIPT
+sudo chmod +x /usr/local/bin/start-kde.sh
+echo "✓ start-kde.sh installed"
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  SCRIPT 2 — start-gaming.sh
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+sudo tee /usr/local/bin/start-gaming.sh << 'ENDOFSCRIPT'
+#!/usr/bin/env bash
+# =============================================================================
+# /usr/local/bin/start-gaming.sh
+#
+# Starts a Gamescope/Steam gaming session via SDDM autologin, then restarts
+# Sunshine so it acquires the new KMS output for reliable streaming.
+#
+# Requirements : Must be run as root (sudo).
+#                No active user session may be present.
+# Usage        : sudo start-gaming.sh
+# =============================================================================
+set -euo pipefail
+
+# ── ★ CONFIGURATION — adjust if your setup differs ────────────────────────────
+
+readonly USER_UID=1000
+readonly AUTOLOGIN_CONF="/etc/sddm.conf.d/zz-steamos-autologin.conf"
+
+# Must match a file under /usr/share/wayland-sessions/
+# Using the same value as Bazzite's own return-to-gamemode script.
+readonly SESSION_NAME="gamescope-session.desktop"
+
+readonly SUNSHINE_SERVICE_OVERRIDE=""
+
+# Gaming mode (Steam + Gamescope) starts much more slowly than KDE.
+readonly SESSION_WAIT_TIMEOUT=180
+
+# Gamescope needs time to set up its rendering pipeline and for Steam to load.
+readonly SUNSHINE_SETTLE_SECS=15
+
+# =============================================================================
+
+log()  { printf '[start-gaming] %s\n'         "$*"; }
+warn() { printf '[start-gaming] WARNING: %s\n' "$*" >&2; }
+die()  { printf '[start-gaming] ERROR: %s\n'   "$*" >&2; exit 1; }
+
+as_user() {
+    runuser -u "${USERNAME}" -- \
+        env XDG_RUNTIME_DIR="/run/user/${USER_UID}" \
+            DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${USER_UID}/bus" \
+        "$@"
+}
+
+detect_sunshine_service() {
+    if [[ -n "${SUNSHINE_SERVICE_OVERRIDE}" ]]; then
+        echo "${SUNSHINE_SERVICE_OVERRIDE}"
+        return 0
+    fi
+    local name
+    for name in sunshine-kms sunshine sunshine-headless; do
+        if systemctl is-active  --quiet "${name}" 2>/dev/null \
+        || systemctl is-enabled --quiet "${name}" 2>/dev/null; then
+            echo "${name}"
+            return 0
+        fi
+    done
+    local found
+    found=$(
+        systemctl list-units --type=service --no-legend 2>/dev/null \
+        | awk '$1 ~ /sunshine/ { print $1 }' \
+        | head -1 \
+        | sed 's/\.service$//'
+    )
+    if [[ -n "${found}" ]]; then
+        echo "${found}"
+        return 0
+    fi
+    return 1
+}
+
+active_user_sessions() {
+    loginctl list-sessions --no-legend \
+    | awk -v uid="${USER_UID}" '$2 == uid { printf "%s ", $1 }' \
+    || true
+}
+
+[[ "${EUID}" -eq 0 ]] || die "Must be run as root — use: sudo start-gaming.sh"
+
+USERNAME="$(id -nu "${USER_UID}")" \
+    || die "Cannot resolve username for UID ${USER_UID}"
+[[ -n "${USERNAME}" ]] || die "Empty username returned for UID ${USER_UID}"
+
+SUNSHINE_SERVICE="$(detect_sunshine_service)" \
+    || die "Cannot find a Sunshine system service.
+  Hint: run 'systemctl list-units --type=service | grep -i sunshine'
+  then set SUNSHINE_SERVICE_OVERRIDE at the top of this script."
+
+log "User          : ${USERNAME} (UID ${USER_UID})"
+log "Session       : ${SESSION_NAME}"
+log "Sunshine svc  : ${SUNSHINE_SERVICE}"
+
+sessions="$(active_user_sessions)"
+sessions="${sessions% }"
+
+if [[ -n "${sessions}" ]]; then
+    die "User session(s) already active: [${sessions}]
+  Stop the existing session first:  sudo stop-session.sh"
+fi
+
+log "No active user session found — safe to proceed."
+
+log "Configuring SDDM autologin → ${SESSION_NAME} ..."
+mkdir -p "$(dirname "${AUTOLOGIN_CONF}")"
+cat > "${AUTOLOGIN_CONF}" <<EOF
+# Managed by start-gaming.sh — $(date -u '+%Y-%m-%dT%H:%M:%SZ')
+[Autologin]
+User=${USERNAME}
+Session=${SESSION_NAME}
+Relogin=false
+EOF
+
+log "Clearing any previous SDDM failure state..."
+systemctl reset-failed sddm 2>/dev/null || true
+
+log "Restarting SDDM (this will trigger autologin into Gaming Mode) ..."
+systemctl restart sddm
+
+sleep 2
+systemctl is-active --quiet sddm \
+    || warn "SDDM does not appear to be running. Check: journalctl -u sddm"
+
+# For gaming mode, we wait for the session to appear (any state) rather than
+# waiting for "active" — gamescope/steam sessions can take longer to be
+# classified "active" by logind than a Wayland desktop like KDE.
+log "Waiting for Gaming Mode session to appear (timeout: ${SESSION_WAIT_TIMEOUT}s) ..."
+elapsed=0
+session_id=""
+confirmed=false
+
+while (( elapsed < SESSION_WAIT_TIMEOUT )); do
+    session_id="$(
+        loginctl list-sessions --no-legend \
+        | awk -v uid="${USER_UID}" '$2 == uid { print $1 }' \
+        | head -1 \
+        || true
+    )"
+    if [[ -n "${session_id}" ]]; then
+        log "Gaming Mode session ${session_id} appeared after ${elapsed}s."
+        confirmed=true
+        break
+    fi
+    sleep 3
+    elapsed=$(( elapsed + 3 ))
+done
+
+"${confirmed}" \
+    || warn "Gaming Mode session did not appear after ${SESSION_WAIT_TIMEOUT}s — continuing anyway."
+
+log "Giving Gamescope/Steam ${SUNSHINE_SETTLE_SECS}s to finish loading ..."
+sleep "${SUNSHINE_SETTLE_SECS}"
+
+log "Clearing any Sunshine failure state ..."
+systemctl reset-failed "${SUNSHINE_SERVICE}" 2>/dev/null || true
+
+log "Restarting Sunshine (${SUNSHINE_SERVICE}) ..."
+systemctl restart "${SUNSHINE_SERVICE}"
+sleep 1
+
+systemctl is-active --quiet "${SUNSHINE_SERVICE}" \
+    || warn "Sunshine may not have started cleanly. Check: journalctl -u ${SUNSHINE_SERVICE}"
+
+echo ""
+echo "✓ [start-gaming] Gaming Mode session is running and Sunshine is streaming."
+echo "  Reconnect Moonlight to view the Steam Gaming Mode interface."
+ENDOFSCRIPT
+sudo chmod +x /usr/local/bin/start-gaming.sh
+echo "✓ start-gaming.sh installed"
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  SCRIPT 3 — stop-session.sh
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+sudo tee /usr/local/bin/stop-session.sh << 'ENDOFSCRIPT'
+#!/usr/bin/env bash
+# =============================================================================
+# /usr/local/bin/stop-session.sh
+#
+# Cleanly stops the active KDE or Gamescope/Steam session.
+# The logout is triggered in the same way as clicking the native "Log Out"
+# button in KDE or the "Exit" option in Steam Gaming Mode — no abrupt kills,
+# no dirty state left behind.
+#
+# After the session exits, SDDM autologin is disabled (SDDM returns to the
+# greeter), and Sunshine is restarted to stream the greeter via KMS.
+#
+# Requirements : Must be run as root (sudo).
+#                A user session must be present.
+# Usage        : sudo stop-session.sh
+# =============================================================================
+set -euo pipefail
+
+# ── ★ CONFIGURATION — adjust if your setup differs ────────────────────────────
+
+readonly USER_UID=1000
+readonly AUTOLOGIN_CONF="/etc/sddm.conf.d/zz-steamos-autologin.conf"
+readonly SUNSHINE_SERVICE_OVERRIDE=""
+
+# Seconds to wait for a clean exit before forcing termination
+readonly SESSION_STOP_TIMEOUT=45
+
+# Seconds after the session terminates before restarting Sunshine
+readonly SUNSHINE_SETTLE_SECS=4
+
+# =============================================================================
+
+log()  { printf '[stop-session] %s\n'         "$*"; }
+warn() { printf '[stop-session] WARNING: %s\n' "$*" >&2; }
+die()  { printf '[stop-session] ERROR: %s\n'   "$*" >&2; exit 1; }
+
+as_user() {
+    runuser -u "${USERNAME}" -- \
+        env XDG_RUNTIME_DIR="/run/user/${USER_UID}" \
+            DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${USER_UID}/bus" \
+        "$@"
+}
+
+detect_sunshine_service() {
+    if [[ -n "${SUNSHINE_SERVICE_OVERRIDE}" ]]; then
+        echo "${SUNSHINE_SERVICE_OVERRIDE}"
+        return 0
+    fi
+    local name
+    for name in sunshine-kms sunshine sunshine-headless; do
+        if systemctl is-active  --quiet "${name}" 2>/dev/null \
+        || systemctl is-enabled --quiet "${name}" 2>/dev/null; then
+            echo "${name}"
+            return 0
+        fi
+    done
+    local found
+    found=$(
+        systemctl list-units --type=service --no-legend 2>/dev/null \
+        | awk '$1 ~ /sunshine/ { print $1 }' \
+        | head -1 \
+        | sed 's/\.service$//'
+    )
+    if [[ -n "${found}" ]]; then
+        echo "${found}"
+        return 0
+    fi
+    return 1
+}
+
+first_user_session() {
+    loginctl list-sessions --no-legend \
+    | awk -v uid="${USER_UID}" '$2 == uid { print $1 }' \
+    | head -1 \
+    || true
+}
+
+# ── Preflight ─────────────────────────────────────────────────────────────────
+
+[[ "${EUID}" -eq 0 ]] || die "Must be run as root — use: sudo stop-session.sh"
+
+USERNAME="$(id -nu "${USER_UID}")" \
+    || die "Cannot resolve username for UID ${USER_UID}"
+[[ -n "${USERNAME}" ]] || die "Empty username returned for UID ${USER_UID}"
+
+SUNSHINE_SERVICE="$(detect_sunshine_service)" \
+    || die "Cannot find a Sunshine system service.
+  Hint: run 'systemctl list-units --type=service | grep -i sunshine'
+  then set SUNSHINE_SERVICE_OVERRIDE at the top of this script."
+
+log "User          : ${USERNAME} (UID ${USER_UID})"
+log "Sunshine svc  : ${SUNSHINE_SERVICE}"
+
+# ── Require an active session ─────────────────────────────────────────────────
+
+session_id="$(first_user_session)"
+[[ -n "${session_id}" ]] \
+    || die "No active user session found — nothing to stop."
+
+log "Active session: ${session_id}"
+
+# ── Detect session type ───────────────────────────────────────────────────────
+
+is_gaming=false
+
+if as_user systemctl --user is-active --quiet \
+       gamescope-session-plus@steam.service 2>/dev/null; then
+    is_gaming=true
+elif pgrep -u "${USER_UID}" -x gamescope &>/dev/null; then
+    log "(gamescope process detected — treating as gaming session)"
+    is_gaming=true
+fi
+
+# ── Send the native, clean logout signal ─────────────────────────────────────
+
+if "${is_gaming}"; then
+    # Stopping this service is the programmatic equivalent of "Exit" in Steam.
+    # The service's ExecStop and the session's trap handler orchestrate a clean
+    # teardown: Steam exits → gamescope exits → PAM session ends → SDDM resumes.
+    log "Detected: Gamescope/Steam Gaming Mode."
+    log "Stopping gamescope-session-plus@steam.service (native gaming-mode exit) ..."
+    as_user systemctl --user stop gamescope-session-plus@steam.service
+
+else
+    # org.kde.Shutdown.logout is the exact D-Bus call the KDE "Log Out" button
+    # makes. It saves the session, asks apps to close, KWin exits cleanly,
+    # and the PAM session ends — identical behaviour to the desktop button.
+    log "Detected: KDE Plasma."
+    log "Sending D-Bus logout to KDE (org.kde.Shutdown.logout) ..."
+
+    kde_logout_sent=false
+
+    for dbus_tool in qdbus qdbus6; do
+        if command -v "${dbus_tool}" &>/dev/null; then
+            if as_user "${dbus_tool}" \
+                    org.kde.Shutdown /Shutdown org.kde.Shutdown.logout \
+                    2>/dev/null; then
+                kde_logout_sent=true
+                break
+            fi
+        fi
+    done
+
+    if ! "${kde_logout_sent}"; then
+        log "qdbus/qdbus6 not found or returned an error — trying dbus-send ..."
+        as_user dbus-send \
+            --session \
+            --type=method_call \
+            --dest=org.kde.Shutdown \
+            /Shutdown \
+            org.kde.Shutdown.logout \
+        || die "All D-Bus logout methods failed.
+  Is KDE running? Check: loginctl show-session ${session_id}"
+    fi
+fi
+
+# ── Wait for clean termination ────────────────────────────────────────────────
+
+log "Waiting for session ${session_id} to terminate (timeout: ${SESSION_STOP_TIMEOUT}s) ..."
+elapsed=0
+session_gone=false
+
+while (( elapsed < SESSION_STOP_TIMEOUT )); do
+    remaining="$(first_user_session)"
+    if [[ -z "${remaining}" ]]; then
+        log "Session terminated cleanly after ${elapsed}s."
+        session_gone=true
+        break
+    fi
+    sleep 1
+    elapsed=$(( elapsed + 1 ))
+done
+
+# ── Safety net: force-terminate if clean logout timed out ────────────────────
+
+if ! "${session_gone}"; then
+    warn "Session did not exit within ${SESSION_STOP_TIMEOUT}s — forcing termination ..."
+    loginctl terminate-session "${session_id}" 2>/dev/null || true
+    sleep 3
+    remaining="$(first_user_session)"
+    if [[ -n "${remaining}" ]]; then
+        warn "Session ${remaining} still present after forced termination."
+        warn "A reboot may be needed before the next start script will work."
+    else
+        log "Session force-terminated successfully."
+    fi
+fi
+
+# ── Disable SDDM autologin — return to greeter ───────────────────────────────
+# We BLANK (not delete) the override file. Deleting files in /etc on OSTree/
+# Atomic Fedora can misbehave with OverlayFS across updates. A blank file
+# safely neutralises any [Autologin] section without risking FS edge cases.
+
+log "Blanking SDDM autologin override (SDDM will show the greeter) ..."
+mkdir -p "$(dirname "${AUTOLOGIN_CONF}")"
+cat > "${AUTOLOGIN_CONF}" <<'DISABLED'
+# Autologin intentionally disabled by stop-session.sh.
+# SDDM will display the login greeter.
+# Run  sudo start-kde.sh     to start a KDE session.
+# Run  sudo start-gaming.sh  to start a Gaming Mode session.
+DISABLED
+
+# ── Let SDDM draw the greeter ─────────────────────────────────────────────────
+
+log "Waiting ${SUNSHINE_SETTLE_SECS}s for SDDM to initialize the greeter ..."
+sleep "${SUNSHINE_SETTLE_SECS}"
+
+# ── Restart Sunshine to capture the SDDM greeter via KMS ─────────────────────
+
+log "Clearing any Sunshine failure state ..."
+systemctl reset-failed "${SUNSHINE_SERVICE}" 2>/dev/null || true
+
+log "Restarting Sunshine (${SUNSHINE_SERVICE}) ..."
+systemctl restart "${SUNSHINE_SERVICE}"
+sleep 1
+
+systemctl is-active --quiet "${SUNSHINE_SERVICE}" \
+    || warn "Sunshine may not have started cleanly. Check: journalctl -u ${SUNSHINE_SERVICE}"
+
+echo ""
+echo "✓ [stop-session] Done. Session ended. SDDM greeter is streaming."
+echo "  Reconnect Moonlight to view the SDDM greeter."
+echo "  Run 'sudo start-kde.sh'     to launch KDE."
+echo "  Run 'sudo start-gaming.sh'  to launch Gaming Mode."
+ENDOFSCRIPT
+sudo chmod +x /usr/local/bin/stop-session.sh
+echo "✓ stop-session.sh installed"
+
+echo ""
+echo "═══════════════════════════════════════════════════════════"
+echo " All three scripts installed in /usr/local/bin/"
+echo " Verify Sunshine service detection with:"
+echo "   systemctl list-units --type=service | grep -i sunshine"
+echo "═══════════════════════════════════════════════════════════"

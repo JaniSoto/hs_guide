@@ -1,0 +1,121 @@
+This is a remarkably well-engineered and deeply rigorous guide. It demonstrates an advanced understanding of Fedora Atomic Desktop’s immutable architecture (rpm-ostree), Wayland DRM constraints, systemd process behavior, and SELinux file contexts. The architectural decision to manipulate SDDM’s alphabetical configuration parsing—combined with a backgrounded 7-second delayed restore—is a highly elegant, native solution to bypassing Wayland’s hardware constraints without requiring heavy daemonization or custom system services.
+
+However, a strict command-level execution audit reveals a few mechanical flaws that impact remote execution fluidity and edge-case reliability.
+
+Here is the comprehensive audit and validation report.
+
+🔴 CRITICAL ISSUES (Breaks execution or system integrity)
+
+No critical structural or security failures were found. The security model, specifically utilizing root-owned scripts in /usr/local/bin/ to prevent privilege escalation via NOPASSWD sudoers rules, is flawless and explicitly closes standard attack vectors.
+
+🟠 MAJOR ISSUES (Introduces instability or execution disruption)
+
+1. SSH File Descriptor Leak (Client Hang in Session Scripts)
+
+Location: Phase 8 (Step 2 and Step 3) – start-kde.sh and start-gaming.sh
+
+Issue: The guide backgrounds a subshell to restore the headless SDDM config ( sleep 7; ... ) & disown $!. While disown detaches the process from the shell job control, it does not close standard output (stdout) and standard error (stderr). When a user runs ssh user@ip 'sudo start-kde.sh', the SSH daemon on the server will not terminate the client connection until all processes holding the original stdout/stderr file descriptors exit.
+
+Impact: The session launches successfully on the TV, but the user's remote SSH terminal will hang unresponsive for 7 seconds until the sleep command finishes and the subshell dies. This breaks the "seamless single command" UX.
+
+Fix / Resolution: Redirect the subshell’s stdout and stderr to /dev/null. Modify the subshell block in all scripts to:
+
+code
+Bash
+download
+content_copy
+expand_less
+(
+sleep 7
+rm -f "$LAUNCH_CONF"
+cat > "$HEADLESS_CONF" << EOF
+[Autologin]
+User=
+Session=
+Relogin=false
+EOF
+) >/dev/null 2>&1 &
+disown $!
+
+(Note: The internal echo statement inside the subshell must be removed or redirected, as it currently attempts to print to a terminal that will no longer be attached).
+
+2. Missing Directory Creation for SSH Keygen
+
+Location: Appendix C (Step 1) – Home Assistant Integration
+
+Issue: The command ssh-keygen -t ed25519 -f ~/docker/ai-home/homeassistant-data/.ssh/id_ed25519_ha -N '' assumes the target directory structure already exists. If the user has not yet initialized the Home Assistant container or manually created this path, ssh-keygen will fail with a No such file or directory error.
+
+Fix / Resolution: Prepend a directory creation command:
+
+code
+Bash
+download
+content_copy
+expand_less
+mkdir -p ~/docker/ai-home/homeassistant-data/.ssh
+ssh-keygen -t ed25519 ...
+🟡 MINOR ISSUES (Affects clarity, efficiency, or operational risk)
+
+1. Local Network Lockout Risk (Fail2ban)
+
+Location: Phase 4 (Step 5) – Fail2ban Configuration
+
+Issue: The MaxAuthTries 3 SSH rule combined with fail2ban creates a strict perimeter. If the user fat-fingers their SSH key passphrase or attempts to log in from a new local laptop without copying the key first, their local LAN IP will be banned, severing all SSH access to their own server.
+
+Fix / Resolution: It is highly recommended to whitelist local subnets in /etc/fail2ban/jail.local to prevent accidental lockouts from the local network:
+
+code
+Ini
+download
+content_copy
+expand_less
+[sshd]
+enabled = true
+port = 53222
+ignoreip = 127.0.0.1/8 192.168.0.0/16 10.0.0.0/8
+
+2. Legacy Watchtower Labeling
+
+Location: Phase 7 (Step 1 & 2) – DuckDNS and NPM Docker Compose
+
+Issue: The guide utilizes the label com.centurylinklabs.watchtower.enable=true. While functional for backward compatibility, CenturyLink Labs no longer maintains Watchtower; it is now maintained by containrrr.
+
+Fix / Resolution: While optional, updating the label to the modern standard ensures future-proofing, though the current configuration executes perfectly.
+
+🛡️ SYSTEM STATE & LOGICAL FLOW VERIFICATION
+
+Atomic Package Management: The execution of rpm-ostree override remove podman-docker --install docker-ce... (Phase 3) is executed perfectly as a single atomic transaction. This prevents dependency resolution conflicts that occur if a user tries to layer Docker CE while the Bazzite Podman shim is actively present.
+
+SELinux Bootstrapping: The guide correctly identifies that semanage (via policycoreutils-python-utils) must be layered and rebooted before SSH is configured (Phase 4), otherwise the sshd bind to 53222 will be silently murdered by the kernel. The logic here is sequentially flawless.
+
+Storage Labeling Integrity: The warning in Phase 6 regarding mount order vs. restorecon execution is a masterclass in SELinux extended attribute (xattr) behavior. Restoring context on an empty directory, mounting over it, and subsequently getting permission denied errors is a notorious container trap. The guide perfectly navigates this.
+
+Docker Network Isolation: Setting APACHE_IP_BINDING=127.0.0.1 inside a container while allowing NPM to route via the nextcloud-aio internal bridge network is functionally correct. It isolates the Nextcloud UI from host-level network exposure while allowing container-to-container routing via Docker's embedded DNS.
+
+Session Management Logic: The validation pipeline using loginctl show-session -p Seat inside an awk loop reliably isolates the physical display (seat0) status. This prevents the scripts from misidentifying the user's virtual TTY SSH session as a graphical blocker.
+
+✅ FINAL VALIDATION CHECKLIST
+
+To prove the system has reached the intended end state deterministically, the following verifiable outputs must be achieved:
+
+System Boot State: Power cycling the server results in a black screen or SDDM idle login screen. loginctl list-sessions returns empty or only virtual SSH TTYs.
+
+Network Security: Running ss -tlnp | grep sshd on the server returns listening status only on port 53222. Port 22 connections must time out.
+
+Session Transitions:
+
+Executing ssh -p 53222 user@ip 'sudo start-kde.sh' causes the physical display to output the KDE Plasma desktop within 5 seconds.
+
+Executing ssh -p 53222 user@ip 'sudo start-gaming.sh' while KDE is running returns ERROR: A graphical session is already active and aborts safely.
+
+Logging out via the physical KDE desktop interface correctly returns the system to the headless SDDM idle state (verified by ls /etc/sddm.conf.d/ showing only zzz-headless-server.conf).
+
+Data Isolation: ls -Z /srv/nextcloud-data outputs system_u:object_r:container_file_t:s0, proving the SELinux policy allows confined Docker containers to read/write the host directory.
+
+Remote Desktop Integrity: RDP connection to the server's LAN IP on port 3389 fails (blocked by firewalld), but succeeds when connecting to localhost:3389 while the SSH tunnel is active.
+
+🏆 RATING
+
+9.5 / 10
+
+This document is an exceptionally high-tier engineering guide. It successfully bridges complex, conflicting technologies (immutable OS, Wayland compositor locks, Docker/SELinux interplay) into a highly stable, reproducible architecture. Subtracting 0.5 solely for the SSH subshell standard output leak which disrupts the remote execution experience, and the minor missing mkdir step in the appendix. With those mechanical adjustments applied, this is a masterfully crafted deployment protocol.
