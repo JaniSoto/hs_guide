@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#auto-update-containers-watchtower" class="md-skip">
+        <a href="#appendix-d-os-updates-containers" class="md-skip">
           Skip to content
         </a>
       
@@ -803,6 +803,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -845,12 +847,25 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#os-updates-rollbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OS Updates &amp; Rollbacks
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#auto-update-containers-watchtower" class="md-nav__link">
@@ -962,12 +977,25 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#os-updates-rollbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OS Updates &amp; Rollbacks
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#auto-update-containers-watchtower" class="md-nav__link">
@@ -1008,19 +1036,14 @@
 
 
 
-  <h1>D: Updates & Rollbacks</h1>
-
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Appendix D: OS Updates &amp; Containers</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gu">### OS Updates &amp; Rollbacks</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Bazzite stages OS updates silently in the background. Applying them requires a reboot. All containers come back up automatically.
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>```bash
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gh"># Roll back to the previous OS image instantly:</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>rpm-ostree rollback &amp;&amp; systemctl reboot
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gh"># List all available stable builds:</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>skopeo list-tags docker://ghcr.io/ublue-os/bazzite-deck | grep -- &#39;stable-&#39; | sort -rV
+<h1 id="appendix-d-os-updates-containers">Appendix D: OS Updates &amp; Containers</h1>
+<h3 id="os-updates-rollbacks">OS Updates &amp; Rollbacks</h3>
+<p>Bazzite stages OS updates silently in the background. Applying them requires a reboot. All containers come back up automatically.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Roll back to the previous OS image instantly:</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>rpm-ostree<span class="w"> </span>rollback<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>systemctl<span class="w"> </span>reboot
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># List all available stable builds:</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>skopeo<span class="w"> </span>list-tags<span class="w"> </span>docker://ghcr.io/ublue-os/bazzite-deck<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>--<span class="w"> </span><span class="s1">&#39;stable-&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-rV
 </code></pre></div>
 <h3 id="auto-update-containers-watchtower">Auto-update Containers (Watchtower)</h3>
 <p>Watchtower watches your containers for new image versions and updates them automatically.</p>
@@ -1042,8 +1065,7 @@
 <a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
 </code></pre></div>
 <h3 id="nextcloud-aio-manual-update-procedure">Nextcloud AIO — Manual Update Procedure</h3>
-<p>Nextcloud AIO child containers must be updated through the AIO admin panel (<code>https://localhost:9443</code> over SSH tunnel) to ensure database migrations happen correctly.
-```</p>
+<p>Nextcloud AIO child containers must be updated through the AIO admin panel (<code>https://localhost:9443</code> over SSH tunnel) to ensure database migrations happen correctly.</p>
 
 
 
