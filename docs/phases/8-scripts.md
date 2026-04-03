@@ -1,4 +1,3 @@
-```markdown
 # Phase 8: Session Management Scripts
 
 These scripts act as the brains of the remote server. They allow you to swap between headless mode, KDE Plasma, and Gaming Mode securely.
@@ -340,4 +339,3 @@ sudo chmod 440 /etc/sudoers.d/session-scripts
 sudo visudo -c -f /etc/sudoers.d/session-scripts
 ```
 *(Ensure the last command outputs: `parsed OK`)*
-```

@@ -1,4 +1,3 @@
-```markdown
 # Phases 4 - 6: Security & Drives
 
 ## Phase 4: Ironclad Security
@@ -127,5 +126,4 @@ sudo mount -a
 ```bash
 sudo semanage fcontext -a -t container_file_t "/var/srv/nextcloud-data(/.*)?"
 sudo restorecon -Rv /var/srv/nextcloud-data
-```
 ```

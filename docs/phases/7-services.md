@@ -1,4 +1,3 @@
-```markdown
 # Phase 7: Deploying Services
 
 !!! concept "What is a Docker Compose file?"
@@ -123,5 +122,4 @@ networks:
 EOF
 
 docker compose up -d
-```
 ```

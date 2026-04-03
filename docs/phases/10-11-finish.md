@@ -1,4 +1,3 @@
-```markdown
 # Phases 10 & 11: Initialization & Backups
 
 ## Phase 10: Link & Initialise Nextcloud
@@ -76,4 +75,3 @@ sudo firewall-cmd --list-all
     Borg is free, open-source backup software integrated directly into the AIO panel. It creates compressed, deduplicated snapshots of your live SSD data onto a second physical drive.
 
 Inside the AIO setup panel (`https://localhost:9443` via SSH tunnel): find the **Borg Backup** section. Set a destination path on your second drive (e.g., `/mnt/backup-drive`) and schedule daily backups.
-```

@@ -1,4 +1,3 @@
-```markdown
 # Phase 12: Seamless Remote Client Integration
 
 This guide provides a seamless, "one-click" solution to launch remote gaming sessions on a Bazzite-Deck host from any KDE Plasma client (like a laptop or Steam Deck in Desktop mode). 
@@ -226,4 +225,3 @@ Terminal=false
 ```
 
 **Final Step:** Open your Application Menu, search for *Play SotoHome*, and launch. The system will now handle the VPN, check for session conflicts, launch Moonlight, and manage the server state automatically!
-```

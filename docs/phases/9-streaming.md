@@ -1,4 +1,3 @@
-```markdown
 # Phase 9: WireGuard VPN + Sunshine Streaming
 
 !!! concept "Why WireGuard + Sunshine instead of RDP?"
@@ -104,4 +103,3 @@ systemctl --user enable --now sunshine
 3. **Open Moonlight:** Click "+ Add Host" and enter `10.8.0.1`.
 4. **Stream:** Select "Desktop" or "Steam Big Picture".
 5. **Stop:** Close Moonlight. Run `sudo stop-session.sh` over SSH to return to headless mode.
-```
