@@ -1,57 +1,110 @@
-site_name: Bazzite Unified Home Server
-site_description: A self-contained guide building a headless home server with KDE Plasma and Gaming Mode.
-site_author: Janiel Soto
+site_name: Bazzite Home Server Guide
+site_description: >-
+  Turn a single PC into a 24/7 home server and on-demand gaming station.
+  Self-hosted Nextcloud, WireGuard VPN, GPU game streaming, and Docker — all
+  hardened, headless, and beginner-friendly.
+site_url: https://janisoto.github.io/hs_guide/
+repo_url: https://github.com/JaniSoto/hs_guide
+repo_name: JaniSoto/hs_guide
+edit_uri: edit/main/docs/
+
+copyright: Personal home-server guide — built with MkDocs Material
 
 theme:
   name: material
   palette:
-    # Light mode toggle
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: white
-      accent: blue
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
-    # Dark mode toggle
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: blue
+      primary: custom
+      accent: custom
       toggle:
-        icon: material/brightness-4
+        icon: material/weather-sunny
         name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - navigation.top
-    - search.suggest
+    - navigation.instant
+    - navigation.instant.progress
     - search.highlight
+    - search.suggest
+    - search.share
     - content.code.copy
+    - content.code.annotate
+    - toc.follow
+  font:
+    text: Plus Jakarta Sans
+    code: Fira Code
+  icon:
+    repo: fontawesome/brands/github
 
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.highlight:
       anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.tabbed:
-      alternate_style: true 
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+      title: On this page
+
+plugins:
+  - search:
+      lang: en
+
+extra_css:
+  - assets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/JaniSoto/hs_guide
 
 nav:
-  - "Overview": index.md
-  - "Phase 0 - 3: Setup & Packages": phases/0-3-setup.md
-  - "Phase 4 - 6: Security & Drives": phases/4-6-security.md
-  - "Phase 7: Nextcloud & NPM": phases/7-services.md
-  - "Phase 8: Session Scripts": phases/8-scripts.md
-  - "Phase 9: VPN & Sunshine": phases/9-streaming.md
-  - "Phase 10 & 11: Init & Backups": phases/10-11-finish.md
-  - "Phase 12: Remote Webhook Client": phases/12-webhooks.md
-  - "Appendices":
-      - "A: Troubleshooting": appendices/a-troubleshooting.md
-      - "B: Quick Reference": appendices/b-reference.md
-      - "C: AMD GPU Acceleration": appendices/c-amd-gpu.md
-      - "D: Updates & Rollbacks": appendices/d-updates.md
-      - "E: Server Health Monitor": appendices/e-health.md
-  - "Website setup": setup-mkdocs.md
+  - "Home": index.md
+  - "Before You Begin": before-you-begin.md
+  - "Setup Guide":
+    - "Phase 0 — OS Installation": phases/phase-0-install.md
+    - "Phase 1 — First Boot & SSH": phases/phase-1-first-boot.md
+    - "Phase 2 — Router & Network": phases/phase-2-network.md
+    - "Phase 3 — System Packages": phases/phase-3-packages.md
+    - "Phase 4 — Security Hardening": phases/phase-4-security.md
+    - "Phase 5 — Docker Setup": phases/phase-5-docker.md
+    - "Phase 6 — Data Drive": phases/phase-6-drives.md
+    - "Phase 7 — Core Services": phases/phase-7-services.md
+    - "Phase 8 — Session Scripts": phases/phase-8-scripts.md
+    - "Phase 9 — VPN & Streaming": phases/phase-9-streaming.md
+    - "Phase 10 — Nextcloud Init": phases/phase-10-nextcloud.md
+    - "Phase 11 — Testing & Backups": phases/phase-11-testing.md
+    - "Phase 12 — One-Click Client": phases/phase-12-webhooks.md
+  - "Reference":
+    - "Quick Commands": reference/quick-commands.md
+    - "Troubleshooting": reference/troubleshooting.md
+    - "AMD GPU Acceleration": reference/amd-gpu.md
+    - "OS Updates & Rollbacks": reference/updates.md
+    - "Server Health Monitor": reference/health-monitor.md
+  - "Maintaining This Site": site-maintenance.md
