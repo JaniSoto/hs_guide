@@ -8,7 +8,7 @@ theme:
     # Light mode toggle
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
+      primary: white
       accent: blue
       toggle:
         icon: material/brightness-7
@@ -54,3 +54,4 @@ nav:
       - "C: AMD GPU Acceleration": appendices/c-amd-gpu.md
       - "D: Updates & Rollbacks": appendices/d-updates.md
       - "E: Server Health Monitor": appendices/e-health.md
+  - "Website setup": setup-mkdocs.md
