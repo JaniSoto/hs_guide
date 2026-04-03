@@ -1,0 +1,56 @@
+site_name: Bazzite Unified Home Server
+site_description: A self-contained guide building a headless home server with KDE Plasma and Gaming Mode.
+site_author: Janiel Soto
+
+theme:
+  name: material
+  palette:
+    # Light mode toggle
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode toggle
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true 
+
+nav:
+  - "Overview": index.md
+  - "Phase 0 - 3: Setup & Packages": phases/0-3-setup.md
+  - "Phase 4 - 6: Security & Drives": phases/4-6-security.md
+  - "Phase 7: Nextcloud & NPM": phases/7-services.md
+  - "Phase 8: Session Scripts": phases/8-scripts.md
+  - "Phase 9: VPN & Sunshine": phases/9-streaming.md
+  - "Phase 10 & 11: Init & Backups": phases/10-11-finish.md
+  - "Phase 12: Remote Webhook Client": phases/12-webhooks.md
+  - "Appendices":
+      - "A: Troubleshooting": appendices/a-troubleshooting.md
+      - "B: Quick Reference": appendices/b-reference.md
+      - "C: AMD GPU Acceleration": appendices/c-amd-gpu.md
+      - "D: Updates & Rollbacks": appendices/d-updates.md
+      - "E: Server Health Monitor": appendices/e-health.md
