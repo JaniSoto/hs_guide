@@ -13,28 +13,26 @@
       
       
       
-        <link rel="prev" href="../b-reference/">
+        <link rel="prev" href="../appendices/e-health/">
       
-      
-        <link rel="next" href="../d-updates/">
       
       
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>C: AMD GPU Acceleration - Bazzite Unified Home Server</title>
+        <title>Website setup - Bazzite Unified Home Server</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,7 +51,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -77,6 +75,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#the-from-scratch-guide-with-git-guardrails" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -87,7 +90,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Bazzite Unified Home Server" class="md-header__button md-logo" aria-label="Bazzite Unified Home Server" data-md-component="logo">
+    <a href=".." title="Bazzite Unified Home Server" class="md-header__button md-logo" aria-label="Bazzite Unified Home Server" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -107,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              C: AMD GPU Acceleration
+              Website setup
             
           </span>
         </div>
@@ -208,7 +211,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href=".." class="md-tabs__link">
         
   
   
@@ -227,7 +230,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../phases/0-3-setup/" class="md-tabs__link">
+      <a href="../phases/0-3-setup/" class="md-tabs__link">
         
   
   
@@ -246,7 +249,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../phases/4-6-security/" class="md-tabs__link">
+      <a href="../phases/4-6-security/" class="md-tabs__link">
         
   
   
@@ -265,7 +268,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../phases/7-services/" class="md-tabs__link">
+      <a href="../phases/7-services/" class="md-tabs__link">
         
   
   
@@ -284,7 +287,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../phases/8-scripts/" class="md-tabs__link">
+      <a href="../phases/8-scripts/" class="md-tabs__link">
         
   
   
@@ -303,7 +306,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../phases/9-streaming/" class="md-tabs__link">
+      <a href="../phases/9-streaming/" class="md-tabs__link">
         
   
   
@@ -322,7 +325,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../phases/10-11-finish/" class="md-tabs__link">
+      <a href="../phases/10-11-finish/" class="md-tabs__link">
         
   
   
@@ -341,7 +344,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../phases/12-webhooks/" class="md-tabs__link">
+      <a href="../phases/12-webhooks/" class="md-tabs__link">
         
   
   
@@ -358,13 +361,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../a-troubleshooting/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../appendices/a-troubleshooting/" class="md-tabs__link">
           
   
   
@@ -380,9 +381,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../../setup-mkdocs/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -417,7 +420,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Bazzite Unified Home Server" class="md-nav__button md-logo" aria-label="Bazzite Unified Home Server" data-md-component="logo">
+    <a href=".." title="Bazzite Unified Home Server" class="md-nav__button md-logo" aria-label="Bazzite Unified Home Server" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -435,7 +438,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -462,7 +465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../phases/0-3-setup/" class="md-nav__link">
+      <a href="../phases/0-3-setup/" class="md-nav__link">
         
   
   
@@ -489,7 +492,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../phases/4-6-security/" class="md-nav__link">
+      <a href="../phases/4-6-security/" class="md-nav__link">
         
   
   
@@ -516,7 +519,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../phases/7-services/" class="md-nav__link">
+      <a href="../phases/7-services/" class="md-nav__link">
         
   
   
@@ -543,7 +546,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../phases/8-scripts/" class="md-nav__link">
+      <a href="../phases/8-scripts/" class="md-nav__link">
         
   
   
@@ -570,7 +573,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../phases/9-streaming/" class="md-nav__link">
+      <a href="../phases/9-streaming/" class="md-nav__link">
         
   
   
@@ -597,7 +600,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../phases/10-11-finish/" class="md-nav__link">
+      <a href="../phases/10-11-finish/" class="md-nav__link">
         
   
   
@@ -624,7 +627,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../phases/12-webhooks/" class="md-nav__link">
+      <a href="../phases/12-webhooks/" class="md-nav__link">
         
   
   
@@ -648,31 +651,26 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
         
           
-          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
             
   
   
@@ -690,7 +688,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_9">
             <span class="md-nav__icon md-icon"></span>
             
@@ -708,7 +706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../a-troubleshooting/" class="md-nav__link">
+      <a href="../appendices/a-troubleshooting/" class="md-nav__link">
         
   
   
@@ -736,7 +734,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../b-reference/" class="md-nav__link">
+      <a href="../appendices/b-reference/" class="md-nav__link">
         
   
   
@@ -761,17 +759,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../appendices/c-amd-gpu/" class="md-nav__link">
         
   
   
@@ -787,7 +778,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -800,7 +790,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../d-updates/" class="md-nav__link">
+      <a href="../appendices/d-updates/" class="md-nav__link">
         
   
   
@@ -828,7 +818,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../e-health/" class="md-nav__link">
+      <a href="../appendices/e-health/" class="md-nav__link">
         
   
   
@@ -860,10 +850,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../setup-mkdocs/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website setup
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -879,6 +896,103 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-retrieval-get-your-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The Retrieval (Get your content)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-the-safety-check-is-the-shield-there" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. The Safety Check (Is the shield there?)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-the-bubble-the-virtual-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. The Bubble (The Virtual Environment)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-the-machinery-install-the-software" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. The Machinery (Install the Software)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-the-publication-push-to-the-world" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. The Publication (Push to the world)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this works:
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#one-time-setup-do-this-now-if-you-havent-yet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One-Time Setup (Do this now if you haven't yet)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -900,6 +1014,93 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-retrieval-get-your-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The Retrieval (Get your content)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-the-safety-check-is-the-shield-there" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. The Safety Check (Is the shield there?)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-the-bubble-the-virtual-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. The Bubble (The Virtual Environment)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-the-machinery-install-the-software" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. The Machinery (Install the Software)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-the-publication-push-to-the-world" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. The Publication (Push to the world)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this works:
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#one-time-setup-do-this-now-if-you-havent-yet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One-Time Setup (Do this now if you haven't yet)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -916,47 +1117,59 @@
 
 
 
-  <h1>C: AMD GPU Acceleration</h1>
-
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Appendix C: Optional AMD GPU Acceleration for Nextcloud</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>!!! warning &quot;Hardware Limitation&quot;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    AMD and Intel GPUs only. Do not follow this appendix on NVIDIA systems. 
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>VA-API (Video Acceleration API) is a Linux interface for hardware-accelerated video operations. Instead of the CPU processing every video frame, VA-API offloads it to the GPU.
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gs">**1. Verify your AMD GPU and render nodes are present**</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>```bash
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>ls -la /dev/dri/
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gh"># Expected: card0 (display output) and renderD128 (render node)</span>
-</code></pre></div>
-<p><strong>2. Remove the immutable guard</strong>
-The AIO mastercontainer's first-start initialisation writes ownership data to the data directory. The <code>chattr +i</code> immutable flag blocks this.
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>chattr<span class="w"> </span>-i<span class="w"> </span>/srv/nextcloud-data
+<h1 id="the-from-scratch-guide-with-git-guardrails">🚀 The "From Scratch" Guide (With Git Guardrails)</h1>
+<h3 id="1-the-retrieval-get-your-content">1. The Retrieval (Get your content)</h3>
+<p>Clone your repository. This downloads your Markdown files, your config, <strong>and your <code>.gitignore</code></strong>.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/YOUR_USERNAME/bazzite-guide.git
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>bazzite-guide
 </code></pre></div></p>
-<p><strong>3. Update the Nextcloud AIO compose file</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">cd</span><span class="w"> </span>~/docker/nextcloud
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>nano<span class="w"> </span>docker-compose.yml
+<h3 id="2-the-safety-check-is-the-shield-there">2. The Safety Check (Is the shield there?)</h3>
+<p>Before we create the bubble, let's make sure Git knows to ignore it. 
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># List all files, including hidden ones (starting with a dot)</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>ls<span class="w"> </span>-a
 </code></pre></div>
-Add the <code>devices</code> and <code>NEXTCLOUD_ENABLE_DRI_DEVICE</code> lines to your config:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="w">    </span><span class="nt">devices</span><span class="p">:</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/dev/dri:/dev/dri</span><span class="w"> </span><span class="c1"># Passes GPU render node into the container.</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">APACHE_PORT=11000</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">APACHE_IP_BINDING=127.0.0.1</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NEXTCLOUD_DATADIR=/srv/nextcloud-data</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NEXTCLOUD_ENABLE_DRI_DEVICE=true</span>
+*   <strong>If you see <code>.gitignore</code>:</strong> You are safe!
+*   <strong>If you DON'T see it:</strong> Create it now so you don't accidentally push the bubble later:
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;.venv/&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>.gitignore
 </code></pre></div></p>
-<p><strong>4. Start containers and re-apply the immutable guard</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1"># Wait until all AIO containers show &quot;(healthy)&quot;.</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>sudo<span class="w"> </span>chattr<span class="w"> </span>+i<span class="w"> </span>/srv/nextcloud-data
+<h3 id="3-the-bubble-the-virtual-environment">3. The Bubble (The Virtual Environment)</h3>
+<p>Now create the local "bubble" folder. Because of the <code>.gitignore</code> we just checked, Git will now completely ignore this folder.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
 </code></pre></div></p>
-<p><strong>5. Verify hardware acceleration is active</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>nextcloud-aio-nextcloud<span class="w"> </span>ffmpeg<span class="w"> </span>-hwaccels<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>vaapi
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># Expected: &quot;vaapi&quot; listed as an available hardware accelerator.</span>
+<h3 id="4-the-machinery-install-the-software">4. The Machinery (Install the Software)</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>mkdocs-material<span class="w"> </span>ghp-import
 </code></pre></div>
-```</p>
+<h3 id="5-the-publication-push-to-the-world">5. The Publication (Push to the world)</h3>
+<p>When you are ready to save your work:</p>
+<p><strong>Step A: Push your text and your <code>.gitignore</code> shield</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>git<span class="w"> </span>add<span class="w"> </span>.
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># Check what Git is about to send:</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>git<span class="w"> </span>status
+</code></pre></div></p>
+<div class="admonition info">
+<p class="admonition-title">Important Status Check</p>
+<p>If <code>git status</code> shows thousands of files in <code>.venv/</code>, <strong>STOP</strong>. Your <code>.gitignore</code> is missing or typed wrong. 
+If it only shows your <code>.md</code> files and <code>mkdocs.yml</code>, you are <strong>GOOD TO GO</strong>.</p>
+</div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Updated the guide&quot;</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>main
+</code></pre></div>
+<p><strong>Step B: Deploy the website</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>mkdocs<span class="w"> </span>gh-deploy
+</code></pre></div></p>
+<hr />
+<h3 id="why-this-works">Why this works:</h3>
+<p>Because <code>.gitignore</code> is now a file inside your GitHub repository, it acts like a <strong>permanent instruction manual</strong> for Git. Every time you (or anyone else) clones that project, Git reads that file and says: <em>"Okay, I see a folder called .venv, but the instructions say I should pretend it doesn't exist."</em></p>
+<h3 id="one-time-setup-do-this-now-if-you-havent-yet">One-Time Setup (Do this now if you haven't yet)</h3>
+<p>If you currently have your project open and you want to make sure the <code>.gitignore</code> is saved to GitHub forever, run these commands:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nb">cd</span><span class="w"> </span>~/bazzite-guide
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;.venv/&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>.gitignore
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>git<span class="w"> </span>add<span class="w"> </span>.gitignore
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Added permanent shield for the bubble&quot;</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>main
+</code></pre></div>
+<p><strong>Now the shield is on GitHub.</strong> You can delete the whole <code>bazzite-guide</code> folder, clone it back, and the shield will be there waiting for you.</p>
 
 
 
@@ -1012,10 +1225,10 @@ Add the <code>devices</code> and <code>NEXTCLOUD_ENABLE_DRI_DEVICE</code> lines 
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

@@ -69,7 +69,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="blue">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#2-nginx-proxy-manager-npm" class="md-skip">
+        <a href="#phase-7-deploying-services" class="md-skip">
           Skip to content
         </a>
       
@@ -125,7 +125,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -381,6 +381,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../setup-mkdocs/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Website setup
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -508,6 +527,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -550,12 +571,25 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-duckdns-auto-updater" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. DuckDNS Auto-Updater
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#2-nginx-proxy-manager-npm" class="md-nav__link">
@@ -894,6 +928,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup-mkdocs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -911,12 +972,25 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-duckdns-auto-updater" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. DuckDNS Auto-Updater
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#2-nginx-proxy-manager-npm" class="md-nav__link">
@@ -957,78 +1031,78 @@
 
 
 
-  <h1>Phase 7: Nextcloud & NPM</h1>
-
-<pre class="highlight"><code class="language-markdown"># Phase 7: Deploying Services
-
-!!! concept "What is a Docker Compose file?"
-    `docker-compose.yml` is a YAML configuration file that describes one or more containers as a single unit. YAML is indentation-sensitive — 2 spaces per level. Never use tabs; always use spaces.
-
-## 1. DuckDNS Auto-Updater
-
-!!! warning "Clock Check"
-    Check your clock before proceeding by running `timedatectl | grep "Time zone"` and `timedatectl | grep "RTC in local TZ"`.
-    *Expected:* `RTC in local TZ: no`. If it says "yes", run: `sudo timedatectl set-local-rtc 0`
-
-Create the directory and environment file:
-
-```bash
-mkdir -p ~/docker/duckdns &amp;&amp; cd ~/docker/duckdns
-TZ_VALUE=$(timedatectl show -p Timezone --value)
-nano .env</code></pre>
+<h1 id="phase-7-deploying-services">Phase 7: Deploying Services</h1>
+<div class="admonition concept">
+<p class="admonition-title">What is a Docker Compose file?</p>
+<p><code>docker-compose.yml</code> is a YAML configuration file that describes one or more containers as a single unit. YAML is indentation-sensitive — 2 spaces per level. Never use tabs; always use spaces.</p>
+</div>
+<h2 id="1-duckdns-auto-updater">1. DuckDNS Auto-Updater</h2>
+<div class="admonition warning">
+<p class="admonition-title">Clock Check</p>
+<p>Check your clock before proceeding by running <code>timedatectl | grep "Time zone"</code> and <code>timedatectl | grep "RTC in local TZ"</code>.
+<em>Expected:</em> <code>RTC in local TZ: no</code>. If it says "yes", run: <code>sudo timedatectl set-local-rtc 0</code></p>
+</div>
+<p>Create the directory and environment file:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/docker/duckdns<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>~/docker/duckdns
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nv">TZ_VALUE</span><span class="o">=</span><span class="k">$(</span>timedatectl<span class="w"> </span>show<span class="w"> </span>-p<span class="w"> </span>Timezone<span class="w"> </span>--value<span class="k">)</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>nano<span class="w"> </span>.env
+</code></pre></div>
 <p>Paste this into <code>.env</code> (replace with your actual info):
-<pre class="highlight"><code class="language-bash">DUCKDNS_SUBDOMAINS=yourname
-DUCKDNS_TOKEN=your-token-here</code></pre>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">DUCKDNS_SUBDOMAINS</span><span class="o">=</span>yourname
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nv">DUCKDNS_TOKEN</span><span class="o">=</span>your-token-here
+</code></pre></div>
 Press <code>Ctrl+O</code>, <code>Enter</code>, <code>Ctrl+X</code> to save and exit. Then create the compose file:</p>
-<pre class="highlight"><code class="language-bash">chmod 600 .env
-cat &gt; docker-compose.yml &lt;&lt; EOF
-services:
-  duckdns:
-    image: lscr.io/linuxserver/duckdns:latest
-    container_name: duckdns
-    restart: unless-stopped
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-    env_file:
-      - .env
-    environment:
-      - SUBDOMAINS=\${DUCKDNS_SUBDOMAINS}
-      - TOKEN=\${DUCKDNS_TOKEN}
-      - TZ=${TZ_VALUE}
-EOF
-docker compose up -d</code></pre>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>.env
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>cat<span class="w"> </span>&gt;<span class="w"> </span>docker-compose.yml<span class="w"> </span><span class="s">&lt;&lt; EOF</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">services:</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s">  duckdns:</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="s">    image: lscr.io/linuxserver/duckdns:latest</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="s">    container_name: duckdns</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="s">    restart: unless-stopped</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="s">    labels:</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="s">      - &quot;com.centurylinklabs.watchtower.enable=true&quot;</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="s">    env_file:</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="s">      - .env</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="s">    environment:</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="s">      - SUBDOMAINS=\${DUCKDNS_SUBDOMAINS}</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="s">      - TOKEN=\${DUCKDNS_TOKEN}</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="s">      - TZ=${TZ_VALUE}</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="s">EOF</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+</code></pre></div>
 <h2 id="2-nginx-proxy-manager-npm">2. Nginx Proxy Manager (NPM)</h2>
 <div class="admonition concept">
 <p class="admonition-title">What is a Reverse Proxy?</p>
 <p>A reverse proxy sits in front of your services and routes incoming requests. When a visitor connects to <code>yourname.duckdns.org</code>, their request arrives at NPM (on port 443). NPM looks at the domain name, finds the matching proxy host rule, and forwards the request internally to the correct container.</p>
 </div>
-<pre class="highlight"><code class="language-bash">mkdir -p ~/docker/npm &amp;&amp; cd ~/docker/npm
-mkdir -p data letsencrypt
-sudo chown -R $USER:$USER ./data ./letsencrypt
-
-cat &gt; docker-compose.yml &lt;&lt; 'EOF'
-services:
-  app:
-    image: 'jc21/nginx-proxy-manager:latest'
-    container_name: nginx-proxy-manager
-    restart: unless-stopped
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-    ports:
-      - '80:80' # HTTP and Let's Encrypt challenges.
-      - '443:443' # HTTPS.
-      - '127.0.0.1:81:81' # Admin panel — localhost only.
-    networks:
-      - nextcloud-aio
-    volumes:
-      - ./data:/data:z
-      - ./letsencrypt:/etc/letsencrypt:z
-networks:
-  nextcloud-aio:
-    external: true
-EOF
-
-docker compose up -d</code></pre>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/docker/npm<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>~/docker/npm
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>data<span class="w"> </span>letsencrypt
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>sudo<span class="w"> </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="nv">$USER</span>:<span class="nv">$USER</span><span class="w"> </span>./data<span class="w"> </span>./letsencrypt
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>cat<span class="w"> </span>&gt;<span class="w"> </span>docker-compose.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="s">services:</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="s">  app:</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="s">    image: &#39;jc21/nginx-proxy-manager:latest&#39;</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="s">    container_name: nginx-proxy-manager</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="s">    restart: unless-stopped</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="s">    labels:</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="s">      - &quot;com.centurylinklabs.watchtower.enable=true&quot;</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="s">    ports:</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="s">      - &#39;80:80&#39; # HTTP and Let&#39;s Encrypt challenges.</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="s">      - &#39;443:443&#39; # HTTPS.</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="s">      - &#39;127.0.0.1:81:81&#39; # Admin panel — localhost only.</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="s">    networks:</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="s">      - nextcloud-aio</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="s">    volumes:</span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="s">      - ./data:/data:z</span>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="s">      - ./letsencrypt:/etc/letsencrypt:z</span>
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="s">networks:</span>
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="s">  nextcloud-aio:</span>
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="s">    external: true</span>
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="s">EOF</span>
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+</code></pre></div>
 <h2 id="3-nextcloud-all-in-one">3. Nextcloud All-in-One</h2>
 <div class="admonition info">
 <p class="admonition-title">Port 9443 Update (Fixes Decky Loader Conflict)</p>
@@ -1038,41 +1112,41 @@ docker compose up -d</code></pre>
 <p class="admonition-title">Hardware Acceleration Note</p>
 <p><strong>AMD GPU hardware acceleration:</strong> If you want VA-API GPU acceleration for Nextcloud video transcoding, do NOT run <code>docker compose up -d</code> below yet. See Appendix C first.</p>
 </div>
-<p><pre class="highlight"><code class="language-bash">mkdir -p ~/docker/nextcloud &amp;&amp; cd ~/docker/nextcloud
-
-cat &gt; docker-compose.yml &lt;&lt; 'EOF'
-volumes:
-  nextcloud_aio_mastercontainer:
-    name: nextcloud_aio_mastercontainer
-
-services:
-  nextcloud-aio-mastercontainer:
-    image: ghcr.io/nextcloud-releases/all-in-one:latest
-    init: true
-    restart: always
-    container_name: nextcloud-aio-mastercontainer
-    security_opt:
-      - label:disable # REQUIRED: allows access to the Docker socket under SELinux.
-    labels:
-      - "com.centurylinklabs.watchtower.enable=false" # Never auto-update AIO.
-    volumes:
-      - nextcloud_aio_mastercontainer:/mnt/docker-aio-config
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - '127.0.0.1:9443:8080' # Changed from 8080 to 9443 to avoid conflict with Steam CEF.
-    networks:
-      - nextcloud-aio
-    environment:
-      - APACHE_PORT=11000
-      - APACHE_IP_BINDING=127.0.0.1
-      - NEXTCLOUD_DATADIR=/srv/nextcloud-data
-networks:
-  nextcloud-aio:
-    external: true
-EOF
-
-docker compose up -d</code></pre>
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/docker/nextcloud<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>~/docker/nextcloud
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>cat<span class="w"> </span>&gt;<span class="w"> </span>docker-compose.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="s">volumes:</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="s">  nextcloud_aio_mastercontainer:</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="s">    name: nextcloud_aio_mastercontainer</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="s">services:</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="s">  nextcloud-aio-mastercontainer:</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="s">    image: ghcr.io/nextcloud-releases/all-in-one:latest</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="s">    init: true</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="s">    restart: always</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="s">    container_name: nextcloud-aio-mastercontainer</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="s">    security_opt:</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="s">      - label:disable # REQUIRED: allows access to the Docker socket under SELinux.</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="s">    labels:</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="s">      - &quot;com.centurylinklabs.watchtower.enable=false&quot; # Never auto-update AIO.</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="s">    volumes:</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="s">      - nextcloud_aio_mastercontainer:/mnt/docker-aio-config</span>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="s">      - /var/run/docker.sock:/var/run/docker.sock:ro</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="s">    ports:</span>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="s">      - &#39;127.0.0.1:9443:8080&#39; # Changed from 8080 to 9443 to avoid conflict with Steam CEF.</span>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="s">    networks:</span>
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="s">      - nextcloud-aio</span>
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="s">    environment:</span>
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="s">      - APACHE_PORT=11000</span>
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="s">      - APACHE_IP_BINDING=127.0.0.1</span>
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="s">      - NEXTCLOUD_DATADIR=/srv/nextcloud-data</span>
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="s">networks:</span>
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a><span class="s">  nextcloud-aio:</span>
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="s">    external: true</span>
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a><span class="s">EOF</span>
+<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>
+<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+</code></pre></div>
 
 
 

@@ -69,7 +69,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="blue">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#phase-11-testing-backups" class="md-skip">
+        <a href="#phases-10-11-initialization-backups" class="md-skip">
           Skip to content
         </a>
       
@@ -125,7 +125,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -381,6 +381,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../setup-mkdocs/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Website setup
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -589,6 +608,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -631,12 +652,25 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#phase-10-link-initialise-nextcloud" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 10: Link &amp; Initialise Nextcloud
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#phase-11-testing-backups" class="md-nav__link">
@@ -883,6 +917,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup-mkdocs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -900,12 +961,25 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#phase-10-link-initialise-nextcloud" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 10: Link &amp; Initialise Nextcloud
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#phase-11-testing-backups" class="md-nav__link">
@@ -935,21 +1009,16 @@
 
 
 
-  <h1>Phase 10 & 11: Init & Backups</h1>
-
-<pre class="highlight"><code class="language-markdown"># Phases 10 &amp; 11: Initialization &amp; Backups
-
-## Phase 10: Link &amp; Initialise Nextcloud
-
-**1. Access admin panels via SSH tunnel**
-The admin panels are bound to `127.0.0.1` (server's localhost) — invisible to your LAN. Create SSH tunnels from your personal computer and leave them running in separate terminal windows.
-
-```bash
-# NPM admin panel — available at http://localhost:8081
-ssh -N -L 8081:127.0.0.1:81 -p 22022 username@192.168.1.50
-
-# Nextcloud AIO setup panel — now symmetrical (9443 to 9443)
-ssh -N -L 9443:127.0.0.1:9443 -p 22022 username@192.168.1.50</code></pre>
+<h1 id="phases-10-11-initialization-backups">Phases 10 &amp; 11: Initialization &amp; Backups</h1>
+<h2 id="phase-10-link-initialise-nextcloud">Phase 10: Link &amp; Initialise Nextcloud</h2>
+<p><strong>1. Access admin panels via SSH tunnel</strong>
+The admin panels are bound to <code>127.0.0.1</code> (server's localhost) — invisible to your LAN. Create SSH tunnels from your personal computer and leave them running in separate terminal windows.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># NPM admin panel — available at http://localhost:8081</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>ssh<span class="w"> </span>-N<span class="w"> </span>-L<span class="w"> </span><span class="m">8081</span>:127.0.0.1:81<span class="w"> </span>-p<span class="w"> </span><span class="m">22022</span><span class="w"> </span>username@192.168.1.50
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Nextcloud AIO setup panel — now symmetrical (9443 to 9443)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>ssh<span class="w"> </span>-N<span class="w"> </span>-L<span class="w"> </span><span class="m">9443</span>:127.0.0.1:9443<span class="w"> </span>-p<span class="w"> </span><span class="m">22022</span><span class="w"> </span>username@192.168.1.50
+</code></pre></div>
 <p><strong>2. Configure Nginx Proxy Manager</strong>
 Open <code>http://localhost:8081</code>. Log in with default credentials (<code>admin@example.com</code> / <code>changeme</code>) and change them immediately.</p>
 <p>Go to <strong>Hosts → Proxy Hosts → Add Proxy Host</strong>:</p>
@@ -969,11 +1038,12 @@ Open <code>http://localhost:8081</code>. Log in with default credentials (<code>
 </li>
 <li><strong>SSL Tab:</strong> Request new certificate · Force SSL · HTTP/2 · Agree to ToS</li>
 <li><strong>Advanced Tab:</strong> Paste the following:
-    <pre class="highlight"><code class="language-nginx">client_max_body_size 0;
-proxy_read_timeout 36000s;
-proxy_send_timeout 36000s;
-proxy_request_buffering off;
-proxy_hide_header Upgrade;</code></pre>
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">client_max_body_size</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">proxy_read_timeout</span><span class="w"> </span><span class="s">36000s</span><span class="p">;</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">proxy_send_timeout</span><span class="w"> </span><span class="s">36000s</span><span class="p">;</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">proxy_request_buffering</span><span class="w"> </span><span class="no">off</span><span class="p">;</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">proxy_hide_header</span><span class="w"> </span><span class="s">Upgrade</span><span class="p">;</span>
+</code></pre></div>
 Click <strong>Save</strong>. <em>(Note: A 502 Bad Gateway error when visiting your domain right now is normal, as the Nextcloud container hasn't been started yet).</em></li>
 </ul>
 <p><strong>3. Fix local network access (NAT loopback)</strong>
@@ -988,21 +1058,22 @@ Open <code>https://localhost:9443</code> (accept the self-signed cert warning). 
 <p><strong>1. System State Validation Checklist</strong>
 Run these on the server over SSH.</p>
 <p><em>Group A — OS &amp; Security Layer</em>
-<pre class="highlight"><code class="language-bash">ls /etc/sddm.conf.d/    # Expected: zzz-headless-server.conf only.
-ss -tlnp | grep sshd    # Expected: exactly one line showing *:22022.
-sudo semanage port -l | grep ssh # Expected: ssh_port_t tcp 22022, 22</code></pre></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ls<span class="w"> </span>/etc/sddm.conf.d/<span class="w">    </span><span class="c1"># Expected: zzz-headless-server.conf only.</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>ss<span class="w"> </span>-tlnp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>sshd<span class="w">    </span><span class="c1"># Expected: exactly one line showing *:22022.</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>sudo<span class="w"> </span>semanage<span class="w"> </span>port<span class="w"> </span>-l<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ssh<span class="w"> </span><span class="c1"># Expected: ssh_port_t tcp 22022, 22</span>
+</code></pre></div></p>
 <p><em>Group B — Storage &amp; Docker</em>
-<pre class="highlight"><code class="language-bash">ls -Zd /srv/nextcloud-data
-# Expected: system_u:object_r:container_file_t:s0 /srv/nextcloud-data
-sudo firewall-cmd --list-all
-# Expected: ports: 22022/tcp plus Sunshine ports. 80/443/51820 managed by Docker — absent is correct.</code></pre></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ls<span class="w"> </span>-Zd<span class="w"> </span>/srv/nextcloud-data
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># Expected: system_u:object_r:container_file_t:s0 /srv/nextcloud-data</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>sudo<span class="w"> </span>firewall-cmd<span class="w"> </span>--list-all
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Expected: ports: 22022/tcp plus Sunshine ports. 80/443/51820 managed by Docker — absent is correct.</span>
+</code></pre></div></p>
 <p><strong>2. Backups (Borg)</strong></p>
 <div class="admonition tip">
 <p class="admonition-title">Why Borg?</p>
 <p>Borg is free, open-source backup software integrated directly into the AIO panel. It creates compressed, deduplicated snapshots of your live SSD data onto a second physical drive.</p>
 </div>
-<p>Inside the AIO setup panel (<code>https://localhost:9443</code> via SSH tunnel): find the <strong>Borg Backup</strong> section. Set a destination path on your second drive (e.g., <code>/mnt/backup-drive</code>) and schedule daily backups.
-```</p>
+<p>Inside the AIO setup panel (<code>https://localhost:9443</code> via SSH tunnel): find the <strong>Borg Backup</strong> section. Set a destination path on your second drive (e.g., <code>/mnt/backup-drive</code>) and schedule daily backups.</p>
 
 
 

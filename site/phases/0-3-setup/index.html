@@ -69,7 +69,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="blue">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#phase-2-router-network-preparation" class="md-skip">
+        <a href="#phases-0-3-os-setup-packages" class="md-skip">
           Skip to content
         </a>
       
@@ -125,7 +125,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -381,6 +381,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../setup-mkdocs/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Website setup
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -454,6 +473,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -496,12 +517,36 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#phase-0-os-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 0: OS Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-first-boot-ssh-headless-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: First Boot, SSH &amp; Headless Config
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#phase-2-router-network-preparation" class="md-nav__link">
@@ -894,6 +939,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup-mkdocs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -911,12 +983,36 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#phase-0-os-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 0: OS Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-first-boot-ssh-headless-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: First Boot, SSH &amp; Headless Config
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#phase-2-router-network-preparation" class="md-nav__link">
@@ -957,97 +1053,94 @@
 
 
 
-  <h1>Phase 0 - 3: Setup & Packages</h1>
-
-<p><pre class="highlight"><code class="language-markdown"># Phases 0 - 3: OS Setup &amp; Packages
-
-## Phase 0: OS Installation
-*Done physically at the machine.*
-
-!!! concept "Why Bazzite-Deck specifically?"
-    Bazzite has two variants: standard desktop, and `bazzite-deck` — the HTPC/living-room variant. The `-deck` suffix means it ships both `gamescope-session` (Steam Deck-style Gaming Mode) and KDE Plasma in a single signed image. Starting with `bazzite-deck` eliminates a separate rebase step and ensures Gaming Mode is part of the verified OS image.
-
-**1. Download the correct ISO**
-Go to **bazzite.gg** and use the Image Picker tool. Select: Hardware = Desktop/HTPC, GPU = AMD/Intel or NVIDIA, Desktop = KDE Plasma, and enable Steam Gaming Mode. Download the ISO and flash it to a USB drive using Fedora Media Writer or Balena Etcher.
-
-**2. Install Bazzite**
-Boot from the USB drive and follow the Anaconda installer. Set your username, password, hostname (under 20 characters, no spaces), timezone, and keyboard layout. Install to your OS drive. Network is not required during installation.
-
-!!! warning "Dual Boot Warning"
-    If you have a Windows drive in the same machine, physically disconnect it before installing Bazzite to prevent accidental data loss or bootloader modification.
-
-**3. Note your GPU type**
-AMD and Intel GPUs are fully supported in Gaming Mode and for VA-API hardware acceleration. NVIDIA support in Gaming Mode is available but described as beta. NVIDIA GPUs are not compatible with VA-API hardware encoding for Sunshine.
-
----
-
-## Phase 1: First Boot, SSH &amp; Headless Config
-
-!!! failure "Critical Sequence"
-    Do ALL steps in this phase in sequence before rebooting. The headless SDDM override in Step 4 must be in place before your next reboot. If you reboot before completing Step 4, the machine will boot to Gaming Mode again — simply repeat this phase.
-
-**1. Enter KDE Desktop Mode**
-Navigate to the Power menu in Steam (bottom-right power icon) and select **Switch to Desktop**. 
-
-**2. Open Konsole and enable SSH**
-```bash
-# Enable and start the SSH daemon.
-sudo systemctl enable --now sshd
-
-# Find your active network interface and local IP address.
-ip route get 1.1.1.1</code></pre>
+<h1 id="phases-0-3-os-setup-packages">Phases 0 - 3: OS Setup &amp; Packages</h1>
+<h2 id="phase-0-os-installation">Phase 0: OS Installation</h2>
+<p><em>Done physically at the machine.</em></p>
+<div class="admonition concept">
+<p class="admonition-title">Why Bazzite-Deck specifically?</p>
+<p>Bazzite has two variants: standard desktop, and <code>bazzite-deck</code> — the HTPC/living-room variant. The <code>-deck</code> suffix means it ships both <code>gamescope-session</code> (Steam Deck-style Gaming Mode) and KDE Plasma in a single signed image. Starting with <code>bazzite-deck</code> eliminates a separate rebase step and ensures Gaming Mode is part of the verified OS image.</p>
+</div>
+<p><strong>1. Download the correct ISO</strong><br />
+Go to <strong>bazzite.gg</strong> and use the Image Picker tool. Select: Hardware = Desktop/HTPC, GPU = AMD/Intel or NVIDIA, Desktop = KDE Plasma, and enable Steam Gaming Mode. Download the ISO and flash it to a USB drive using Fedora Media Writer or Balena Etcher.</p>
+<p><strong>2. Install Bazzite</strong><br />
+Boot from the USB drive and follow the Anaconda installer. Set your username, password, hostname (under 20 characters, no spaces), timezone, and keyboard layout. Install to your OS drive. Network is not required during installation.</p>
+<div class="admonition warning">
+<p class="admonition-title">Dual Boot Warning</p>
+<p>If you have a Windows drive in the same machine, physically disconnect it before installing Bazzite to prevent accidental data loss or bootloader modification.</p>
+</div>
+<p><strong>3. Note your GPU type</strong><br />
+AMD and Intel GPUs are fully supported in Gaming Mode and for VA-API hardware acceleration. NVIDIA support in Gaming Mode is available but described as beta. NVIDIA GPUs are not compatible with VA-API hardware encoding for Sunshine.</p>
+<hr />
+<h2 id="phase-1-first-boot-ssh-headless-config">Phase 1: First Boot, SSH &amp; Headless Config</h2>
+<div class="admonition failure">
+<p class="admonition-title">Critical Sequence</p>
+<p>Do ALL steps in this phase in sequence before rebooting. The headless SDDM override in Step 4 must be in place before your next reboot. If you reboot before completing Step 4, the machine will boot to Gaming Mode again — simply repeat this phase.</p>
+</div>
+<p><strong>1. Enter KDE Desktop Mode</strong><br />
+Navigate to the Power menu in Steam (bottom-right power icon) and select <strong>Switch to Desktop</strong>.</p>
+<p><strong>2. Open Konsole and enable SSH</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Enable and start the SSH daemon.</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>sshd
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Find your active network interface and local IP address.</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>ip<span class="w"> </span>route<span class="w"> </span>get<span class="w"> </span><span class="m">1</span>.1.1.1
+</code></pre></div>
 <em>(Write down the IP address — you will use it for every SSH connection in this guide).</em></p>
-<p><strong>3. Disable auto-suspend</strong>
-Bazzite may suspend the machine after inactivity, silently killing all Docker containers. Permanently disable all suspend modes using two methods:
-*   <strong>Step A:</strong> KDE System Settings → Power Management → Energy Saving → On AC Power → set "Suspend session" to <strong>Never</strong>. Click Apply.
-*   <strong>Step B (Authoritative):</strong> Mask suspend targets at the OS level:
-<pre class="highlight"><code class="language-bash">sudo systemctl mask sleep.target suspend.target \
-  hibernate.target hybrid-sleep.target suspend-then-hibernate.target</code></pre></p>
-<p><strong>4. Apply the headless SDDM override</strong>
-We want SDDM to start but show an idle blank login screen, with no automatic login into any session.</p>
-<pre class="highlight"><code class="language-bash">sudo mkdir -p /etc/sddm.conf.d
-sudo tee /etc/sddm.conf.d/zzz-headless-server.conf &gt; /dev/null &lt;&lt; 'EOF'
-[Autologin]
-User=
-Session=
-Relogin=false
-EOF
-sudo systemctl restart sddm</code></pre>
+<p><strong>3. Disable auto-suspend</strong><br />
+Bazzite may suspend the machine after inactivity, silently killing all Docker containers. Permanently disable all suspend modes using two methods:</p>
+<ul>
+<li><strong>Step A:</strong> KDE System Settings → Power Management → Energy Saving → On AC Power → set "Suspend session" to <strong>Never</strong>. Click Apply.</li>
+<li><strong>Step B (Authoritative):</strong> Mask suspend targets at the OS level:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>mask<span class="w"> </span>sleep.target<span class="w"> </span>suspend.target<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>hibernate.target<span class="w"> </span>hybrid-sleep.target<span class="w"> </span>suspend-then-hibernate.target
+</code></pre></div></li>
+</ul>
+<p><strong>4. Apply the headless SDDM override</strong><br />
+We want SDDM to start but show an idle blank login screen, with no automatic login into any session.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/sddm.conf.d
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/sddm.conf.d/zzz-headless-server.conf<span class="w"> </span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">[Autologin]</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s">User=</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="s">Session=</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="s">Relogin=false</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="s">EOF</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>sddm
+</code></pre></div></p>
 <p><strong>5. Verify the headless config survives a reboot</strong>
-<pre class="highlight"><code class="language-bash">sudo systemctl reboot
-# Wait ~60 seconds. Physical display should show SDDM login screen — NOT Gaming Mode.
-ssh username@192.168.1.50
-loginctl list-sessions
-# Expected: empty output, or only your SSH session with no seat0 column entry.</code></pre></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>reboot
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># Wait ~60 seconds. Physical display should show SDDM login screen — NOT Gaming Mode.</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>ssh<span class="w"> </span>username@192.168.1.50
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>loginctl<span class="w"> </span>list-sessions
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1"># Expected: empty output, or only your SSH session with no seat0 column entry.</span>
+</code></pre></div></p>
 <hr />
 <h2 id="phase-2-router-network-preparation">Phase 2: Router &amp; Network Preparation</h2>
-<p><strong>1. Assign a static local IP (DHCP reservation)</strong>
+<p><strong>1. Assign a static local IP (DHCP reservation)</strong><br />
 In your router's admin panel, find the DHCP section, add a reservation for your server's MAC address, and assign the IP you noted in Phase 1.</p>
-<p><strong>2. Set up port forwarding</strong>
+<p><strong>2. Set up port forwarding</strong><br />
 Your router has one public IP address and shares it among all devices via NAT. Open only the specific ports that need to be publicly reachable.</p>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Port / Protocol</th>
-<th style="text-align: left;">Purpose</th>
+<th>Port / Protocol</th>
+<th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><strong>80/TCP</strong></td>
-<td style="text-align: left;">Required by Let's Encrypt for SSL certificate issuance (HTTP-01 challenge).</td>
+<td><strong>80/TCP</strong></td>
+<td>Required by Let's Encrypt for SSL certificate issuance (HTTP-01 challenge).</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>443/TCP</strong></td>
-<td style="text-align: left;">Your Nextcloud's public HTTPS entry point. All user traffic uses this port.</td>
+<td><strong>443/TCP</strong></td>
+<td>Your Nextcloud's public HTTPS entry point. All user traffic uses this port.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>22022/TCP</strong></td>
-<td style="text-align: left;">SSH — our custom hardened port (configured in Phase 4).</td>
+<td><strong>22022/TCP</strong></td>
+<td>SSH — our custom hardened port (configured in Phase 4).</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>51820/UDP</strong></td>
-<td style="text-align: left;">WireGuard VPN — Opens the secure tunnel for Sunshine game streaming.</td>
+<td><strong>51820/UDP</strong></td>
+<td>WireGuard VPN — Opens the secure tunnel for Sunshine game streaming.</td>
 </tr>
 </tbody>
 </table>
@@ -1057,32 +1150,33 @@ Your router has one public IP address and shares it among all devices via NAT. O
 </div>
 <hr />
 <h2 id="phase-3-system-package-installation">Phase 3: System Package Installation</h2>
-<p><strong>1. Add the Docker repository</strong>
+<p><strong>1. Add the Docker repository</strong><br />
 Bazzite comes with Podman pre-installed, but Nextcloud AIO requires native Docker CE.
-<pre class="highlight"><code class="language-bash">sudo curl -fsSL https://download.docker.com/linux/fedora/docker-ce.repo \
-  -o /etc/yum.repos.d/docker-ce.repo</code></pre></p>
-<p><strong>2. Install all required packages</strong>
-Bazzite is an immutable OS. We layer packages using <code>rpm-ostree</code>. We also safely remove the <code>podman-docker</code> shim if it exists to prevent conflicts.</p>
-<p><pre class="highlight"><code class="language-bash">if rpm -q podman-docker &gt;/dev/null 2&gt;&amp;1; then
-  rpm-ostree override remove podman-docker \
-    --install docker-ce \
-    --install docker-ce-cli \
-    --install containerd.io \
-    --install docker-buildx-plugin \
-    --install docker-compose-plugin \
-    --install fail2ban \
-    --install fail2ban-firewalld \
-    --install policycoreutils-python-utils
-else
-  rpm-ostree install \
-    docker-ce docker-ce-cli containerd.io \
-    docker-buildx-plugin docker-compose-plugin \
-    fail2ban fail2ban-firewalld \
-    policycoreutils-python-utils
-fi
-systemctl reboot</code></pre>
-<em>(Your SSH session will disconnect. Wait ~60 seconds, then reconnect).</em>
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sudo<span class="w"> </span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://download.docker.com/linux/fedora/docker-ce.repo<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>-o<span class="w"> </span>/etc/yum.repos.d/docker-ce.repo
+</code></pre></div></p>
+<p><strong>2. Install all required packages</strong><br />
+Bazzite is an immutable OS. We layer packages using <code>rpm-ostree</code>. We also safely remove the <code>podman-docker</code> shim if it exists to prevent conflicts.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">if</span><span class="w"> </span>rpm<span class="w"> </span>-q<span class="w"> </span>podman-docker<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>rpm-ostree<span class="w"> </span>override<span class="w"> </span>remove<span class="w"> </span>podman-docker<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--install<span class="w"> </span>docker-ce<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span>--install<span class="w"> </span>docker-ce-cli<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span>--install<span class="w"> </span>containerd.io<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span>--install<span class="w"> </span>docker-buildx-plugin<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span>--install<span class="w"> </span>docker-compose-plugin<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span>--install<span class="w"> </span>fail2ban<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span>--install<span class="w"> </span>fail2ban-firewalld<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span>--install<span class="w"> </span>policycoreutils-python-utils
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="k">else</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">  </span>rpm-ostree<span class="w"> </span>install<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">    </span>docker-ce<span class="w"> </span>docker-ce-cli<span class="w"> </span>containerd.io<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span>docker-buildx-plugin<span class="w"> </span>docker-compose-plugin<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">    </span>fail2ban<span class="w"> </span>fail2ban-firewalld<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">    </span>policycoreutils-python-utils
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="k">fi</span>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>systemctl<span class="w"> </span>reboot
+</code></pre></div>
+<em>(Your SSH session will disconnect. Wait ~60 seconds, then reconnect).</em></p>
 
 
 

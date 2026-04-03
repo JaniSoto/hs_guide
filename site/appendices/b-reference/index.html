@@ -69,7 +69,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="blue">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -125,7 +125,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -378,6 +378,25 @@
         </a>
       </li>
     
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../setup-mkdocs/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Website setup
+
+      </a>
+    </li>
   
 
       
@@ -888,6 +907,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup-mkdocs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -942,30 +988,32 @@
 
   <h1>B: Quick Reference</h1>
 
-<pre class="highlight"><code class="language-markdown"># Appendix B: Quick Reference (Workflows)
-
-All commands are run from your personal computer's terminal.
-
-!!! danger "CRITICAL: firewall-cmd reload warning"
-    Never run `firewall-cmd --reload` while Docker is running without immediately running `sudo systemctl restart docker` afterward. Firewalld flushes and rebuilds the entire nftables ruleset, wiping Docker's port-forwarding rules. Ports 80, 443, and 51820/UDP will become unreachable.
-
-### Stream the desktop remotely (Sunshine + Moonlight)
-1. Connect WireGuard on your client device.
-2. Launch KDE: `ssh -p 22022 username@your-server-ip 'sudo start-kde.sh'`
-3. Open Moonlight, connect to `10.8.0.1`, select Desktop.
-
-### Stream Gaming Mode remotely
-1. Connect WireGuard on your client device.
-2. Launch Gaming Mode: `ssh -p 22022 username@your-server-ip 'sudo start-gaming.sh'`
-3. In Moonlight, connect to `10.8.0.1`, select Steam Big Picture.
-
-### Game locally (physical display only)
-```bash
-ssh -p 22022 username@your-server-ip 'sudo start-gaming.sh'
-# To stop: Power menu in Steam Big Picture → Exit to Desktop.</code></pre>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Appendix B: Quick Reference (Workflows)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>All commands are run from your personal computer&#39;s terminal.
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>!!! danger &quot;CRITICAL: firewall-cmd reload warning&quot;
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    Never run <span class="sb">`firewall-cmd --reload`</span> while Docker is running without immediately running <span class="sb">`sudo systemctl restart docker`</span> afterward. Firewalld flushes and rebuilds the entire nftables ruleset, wiping Docker&#39;s port-forwarding rules. Ports 80, 443, and 51820/UDP will become unreachable.
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gu">### Stream the desktop remotely (Sunshine + Moonlight)</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> Connect WireGuard on your client device.
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> Launch KDE: <span class="sb">`ssh -p 22022 username@your-server-ip &#39;sudo start-kde.sh&#39;`</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> Open Moonlight, connect to <span class="sb">`10.8.0.1`</span>, select Desktop.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">### Stream Gaming Mode remotely</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">1.</span> Connect WireGuard on your client device.
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">2.</span> Launch Gaming Mode: <span class="sb">`ssh -p 22022 username@your-server-ip &#39;sudo start-gaming.sh&#39;`</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">3.</span> In Moonlight, connect to <span class="sb">`10.8.0.1`</span>, select Steam Big Picture.
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="gu">### Game locally (physical display only)</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>```bash
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>ssh -p 22022 username@your-server-ip &#39;sudo start-gaming.sh&#39;
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gh"># To stop: Power menu in Steam Big Picture → Exit to Desktop.</span>
+</code></pre></div>
 <h3 id="force-stop-a-stuck-session">Force-stop a stuck session</h3>
-<p><pre class="highlight"><code class="language-bash">ssh -p 22022 username@your-server-ip 'sudo stop-session.sh'
-# WARNING: all unsaved work in the terminated session is lost.</code></pre>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ssh<span class="w"> </span>-p<span class="w"> </span><span class="m">22022</span><span class="w"> </span>username@your-server-ip<span class="w"> </span><span class="s1">&#39;sudo stop-session.sh&#39;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># WARNING: all unsaved work in the terminated session is lost.</span>
+</code></pre></div>
 ```</p>
 
 

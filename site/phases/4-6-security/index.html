@@ -69,7 +69,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="blue">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#phase-5-docker-initialisation" class="md-skip">
+        <a href="#phases-4-6-security-drives" class="md-skip">
           Skip to content
         </a>
       
@@ -125,7 +125,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -381,6 +381,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../setup-mkdocs/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Website setup
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -481,6 +500,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -523,12 +544,25 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-ironclad-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Ironclad Security
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#phase-5-docker-initialisation" class="md-nav__link">
@@ -894,6 +928,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup-mkdocs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -911,12 +972,25 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-ironclad-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Ironclad Security
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#phase-5-docker-initialisation" class="md-nav__link">
@@ -957,74 +1031,80 @@
 
 
 
-  <h1>Phase 4 - 6: Security & Drives</h1>
-
-<pre class="highlight"><code class="language-markdown"># Phases 4 - 6: Security &amp; Drives
-
-## Phase 4: Ironclad Security
-*SELinux Port · SSH Keys · firewalld · Fail2ban*
-
-!!! failure "Critical SELinux Step"
-    SELinux controls which ports `sshd` is permitted to bind to. Only port 22 has the `ssh_port_t` label by default. You MUST label port 22022 BEFORE restarting sshd, or SELinux will silently block the bind syscall and lock you out permanently.
-
-**1. Label port 22022 in the SELinux policy**
-```bash
-sudo semanage port -a -t ssh_port_t -p tcp 22022
-# Verify:
-sudo semanage port -l | grep ssh
-# Expected: ssh_port_t tcp 22022, 22</code></pre>
+<h1 id="phases-4-6-security-drives">Phases 4 - 6: Security &amp; Drives</h1>
+<h2 id="phase-4-ironclad-security">Phase 4: Ironclad Security</h2>
+<p><em>SELinux Port · SSH Keys · firewalld · Fail2ban</em></p>
+<div class="admonition failure">
+<p class="admonition-title">Critical SELinux Step</p>
+<p>SELinux controls which ports <code>sshd</code> is permitted to bind to. Only port 22 has the <code>ssh_port_t</code> label by default. You MUST label port 22022 BEFORE restarting sshd, or SELinux will silently block the bind syscall and lock you out permanently.</p>
+</div>
+<p><strong>1. Label port 22022 in the SELinux policy</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>semanage<span class="w"> </span>port<span class="w"> </span>-a<span class="w"> </span>-t<span class="w"> </span>ssh_port_t<span class="w"> </span>-p<span class="w"> </span>tcp<span class="w"> </span><span class="m">22022</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Verify:</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>sudo<span class="w"> </span>semanage<span class="w"> </span>port<span class="w"> </span>-l<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ssh
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Expected: ssh_port_t tcp 22022, 22</span>
+</code></pre></div></p>
 <p><strong>2. Generate and copy SSH keys (Run on Personal Computer)</strong>
 <em>Linux / macOS / WSL:</em>
-<pre class="highlight"><code class="language-bash">ssh-keygen -t ed25519
-ssh-copy-id username@192.168.1.50</code></pre>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ssh-keygen<span class="w"> </span>-t<span class="w"> </span>ed25519
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>ssh-copy-id<span class="w"> </span>username@192.168.1.50
+</code></pre></div>
 <em>Windows (PowerShell):</em>
-<pre class="highlight"><code class="language-powershell">ssh-keygen -t ed25519
-scp $env:USERPROFILE\.ssh\id_ed25519.pub username@192.168.1.50:~/id_ed25519.pub
-ssh username@192.168.1.50 "mkdir -p ~/.ssh &amp;&amp; cat ~/id_ed25519.pub &gt;&gt; ~/.ssh/authorized_keys &amp;&amp; rm ~/id_ed25519.pub"</code></pre></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">ssh-keygen</span> <span class="n">-t</span> <span class="n">ed25519</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">scp</span> <span class="nv">$env:USERPROFILE</span><span class="p">\.</span><span class="n">ssh</span><span class="p">\</span><span class="n">id_ed25519</span><span class="p">.</span><span class="n">pub</span> <span class="n">username</span><span class="nv">@192</span><span class="p">.</span><span class="n">168</span><span class="p">.</span><span class="n">1</span><span class="p">.</span><span class="n">50</span><span class="p">:~/</span><span class="n">id_ed25519</span><span class="p">.</span><span class="n">pub</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">ssh</span> <span class="n">username</span><span class="nv">@192</span><span class="p">.</span><span class="n">168</span><span class="p">.</span><span class="n">1</span><span class="p">.</span><span class="n">50</span> <span class="s2">&quot;mkdir -p ~/.ssh &amp;&amp; cat ~/id_ed25519.pub &gt;&gt; ~/.ssh/authorized_keys &amp;&amp; rm ~/id_ed25519.pub&quot;</span>
+</code></pre></div></p>
 <p><strong>3. Create the SSH hardening drop-in config (Back on Server)</strong>
-<pre class="highlight"><code class="language-bash">sudo tee /etc/ssh/sshd_config.d/99-hardening.conf &gt; /dev/null &lt;&lt; EOF
-Port 22022
-PubkeyAuthentication yes
-PasswordAuthentication no
-PermitRootLogin no
-MaxAuthTries 3
-LoginGraceTime 20
-AllowUsers $(whoami)
-EOF
-sudo sshd -t # Validate syntax. No output = no errors.</code></pre></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/ssh/sshd_config.d/99-hardening.conf<span class="w"> </span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="s">&lt;&lt; EOF</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="s">Port 22022</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">PubkeyAuthentication yes</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">PasswordAuthentication no</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="s">PermitRootLogin no</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="s">MaxAuthTries 3</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="s">LoginGraceTime 20</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="s">AllowUsers $(whoami)</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="s">EOF</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>sudo<span class="w"> </span>sshd<span class="w"> </span>-t<span class="w"> </span><span class="c1"># Validate syntax. No output = no errors.</span>
+</code></pre></div></p>
 <p><strong>4. Configure firewalld and restart sshd</strong>
-<pre class="highlight"><code class="language-bash">sudo firewall-cmd --permanent --add-port=22022/tcp
-sudo firewall-cmd --reload
-sudo systemctl restart sshd</code></pre>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sudo<span class="w"> </span>firewall-cmd<span class="w"> </span>--permanent<span class="w"> </span>--add-port<span class="o">=</span><span class="m">22022</span>/tcp
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>sudo<span class="w"> </span>firewall-cmd<span class="w"> </span>--reload
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>sshd
+</code></pre></div>
 <em>TEST NOW:</em> Open a NEW terminal on your personal PC and connect: <code>ssh -p 22022 username@192.168.1.50</code>. If successful, remove port 22:
-<pre class="highlight"><code class="language-bash">sudo firewall-cmd --permanent --remove-service=ssh
-sudo firewall-cmd --reload</code></pre></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>firewall-cmd<span class="w"> </span>--permanent<span class="w"> </span>--remove-service<span class="o">=</span>ssh
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>sudo<span class="w"> </span>firewall-cmd<span class="w"> </span>--reload
+</code></pre></div></p>
 <p><strong>5. Configure and enable Fail2ban</strong>
-<pre class="highlight"><code class="language-bash">sudo tee /etc/fail2ban/jail.local &gt; /dev/null &lt;&lt; 'EOF'
-[sshd]
-enabled = true
-port = 22022
-ignoreip = 127.0.0.1/8 ::1 192.168.0.0/16 10.0.0.0/8 172.16.0.0/12
-backend = systemd
-banaction = firewallcmd-rich-rules
-EOF
-sudo systemctl enable --now fail2ban</code></pre></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/fail2ban/jail.local<span class="w"> </span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="s">[sshd]</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s">enabled = true</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s">port = 22022</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="s">ignoreip = 127.0.0.1/8 ::1 192.168.0.0/16 10.0.0.0/8 172.16.0.0/12</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="s">backend = systemd</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="s">banaction = firewallcmd-rich-rules</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="s">EOF</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>fail2ban
+</code></pre></div></p>
 <hr />
 <h2 id="phase-5-docker-initialisation">Phase 5: Docker Initialisation</h2>
 <p><strong>1. Enable Docker and add your user to the docker group</strong>
-<pre class="highlight"><code class="language-bash">sudo systemctl enable --now docker
-grep -q "^docker:" /etc/group || sudo sh -c "getent group docker &gt;&gt; /etc/group"
-sudo usermod -aG docker $USER</code></pre></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>docker
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>grep<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;^docker:&quot;</span><span class="w"> </span>/etc/group<span class="w"> </span><span class="o">||</span><span class="w"> </span>sudo<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;getent group docker &gt;&gt; /etc/group&quot;</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>docker<span class="w"> </span><span class="nv">$USER</span>
+</code></pre></div></p>
 <p><strong>2. Prevent Docker logs from filling your disk</strong>
-<pre class="highlight"><code class="language-bash">sudo tee /etc/docker/daemon.json &gt; /dev/null &lt;&lt; 'EOF'
-{
-  "log-driver": "json-file",
-  "log-opts": { "max-size": "10m", "max-file": "3" }
-}
-EOF
-sudo systemctl restart docker</code></pre></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/docker/daemon.json<span class="w"> </span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="s">{</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="s">  &quot;log-driver&quot;: &quot;json-file&quot;,</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="s">  &quot;log-opts&quot;: { &quot;max-size&quot;: &quot;10m&quot;, &quot;max-file&quot;: &quot;3&quot; }</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="s">}</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="s">EOF</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>docker
+</code></pre></div></p>
 <p><strong>3. Create the shared Docker network</strong>
-<pre class="highlight"><code class="language-bash">docker network create nextcloud-aio</code></pre></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>docker<span class="w"> </span>network<span class="w"> </span>create<span class="w"> </span>nextcloud-aio
+</code></pre></div></p>
 <hr />
 <h2 id="phase-6-data-drive-setup">Phase 6: Data Drive Setup</h2>
 <div class="admonition danger">
@@ -1032,25 +1112,27 @@ sudo systemctl restart docker</code></pre></p>
 <p>This will ERASE ALL DATA on the target drive. Confirm the correct drive with <code>lsblk</code> before proceeding.</p>
 </div>
 <p><strong>1. Format, mount, then label the data drive</strong>
-<pre class="highlight"><code class="language-bash">DATA_DRIVE="/dev/nvmeXnY" # &lt;-- REPLACE THIS with your actual data drive
-sudo parted "$DATA_DRIVE" --script mklabel gpt
-sudo parted "$DATA_DRIVE" --script mkpart primary ext4 1MiB 100%
-sudo partprobe "$DATA_DRIVE"
-sleep 2
-DATA_PART=$(lsblk -rn -o NAME "$DATA_DRIVE" | tail -n 1 | awk '{print "/dev/"$1}')
-sudo mkfs.ext4 "$DATA_PART"</code></pre></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nv">DATA_DRIVE</span><span class="o">=</span><span class="s2">&quot;/dev/nvmeXnY&quot;</span><span class="w"> </span><span class="c1"># &lt;-- REPLACE THIS with your actual data drive</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>sudo<span class="w"> </span>parted<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DATA_DRIVE</span><span class="s2">&quot;</span><span class="w"> </span>--script<span class="w"> </span>mklabel<span class="w"> </span>gpt
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>sudo<span class="w"> </span>parted<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DATA_DRIVE</span><span class="s2">&quot;</span><span class="w"> </span>--script<span class="w"> </span>mkpart<span class="w"> </span>primary<span class="w"> </span>ext4<span class="w"> </span>1MiB<span class="w"> </span><span class="m">100</span>%
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>sudo<span class="w"> </span>partprobe<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DATA_DRIVE</span><span class="s2">&quot;</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>sleep<span class="w"> </span><span class="m">2</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="nv">DATA_PART</span><span class="o">=</span><span class="k">$(</span>lsblk<span class="w"> </span>-rn<span class="w"> </span>-o<span class="w"> </span>NAME<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DATA_DRIVE</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print &quot;/dev/&quot;$1}&#39;</span><span class="k">)</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>sudo<span class="w"> </span>mkfs.ext4<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DATA_PART</span><span class="s2">&quot;</span>
+</code></pre></div></p>
 <p><strong>2. Apply <code>chattr +i</code> and mount</strong>
 The <code>+i</code> flag sets the "immutable" attribute on the empty directory. If the drive ever fails to mount at boot, Docker gets a "permission denied" error instead of corrupting the OS drive.
-<pre class="highlight"><code class="language-bash">sudo mkdir -p /srv/nextcloud-data
-sudo chattr +i /srv/nextcloud-data
-
-PART_UUID=$(sudo blkid -s UUID -o value "$DATA_PART")
-echo "UUID=${PART_UUID} /srv/nextcloud-data ext4 defaults,nofail 0 2" | sudo tee -a /etc/fstab
-sudo mount -a</code></pre></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/srv/nextcloud-data
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>sudo<span class="w"> </span>chattr<span class="w"> </span>+i<span class="w"> </span>/srv/nextcloud-data
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="nv">PART_UUID</span><span class="o">=</span><span class="k">$(</span>sudo<span class="w"> </span>blkid<span class="w"> </span>-s<span class="w"> </span>UUID<span class="w"> </span>-o<span class="w"> </span>value<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DATA_PART</span><span class="s2">&quot;</span><span class="k">)</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;UUID=</span><span class="si">${</span><span class="nv">PART_UUID</span><span class="si">}</span><span class="s2"> /srv/nextcloud-data ext4 defaults,nofail 0 2&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/fstab
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>sudo<span class="w"> </span>mount<span class="w"> </span>-a
+</code></pre></div></p>
 <p><strong>3. Apply SELinux rules</strong>
-<pre class="highlight"><code class="language-bash">sudo semanage fcontext -a -t container_file_t "/var/srv/nextcloud-data(/.*)?"
-sudo restorecon -Rv /var/srv/nextcloud-data</code></pre>
-```</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>sudo<span class="w"> </span>semanage<span class="w"> </span>fcontext<span class="w"> </span>-a<span class="w"> </span>-t<span class="w"> </span>container_file_t<span class="w"> </span><span class="s2">&quot;/var/srv/nextcloud-data(/.*)?&quot;</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>sudo<span class="w"> </span>restorecon<span class="w"> </span>-Rv<span class="w"> </span>/var/srv/nextcloud-data
+</code></pre></div></p>
 
 
 

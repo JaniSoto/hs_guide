@@ -69,7 +69,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="blue">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#2-write-start-gamingsh" class="md-skip">
+        <a href="#phase-8-session-management-scripts" class="md-skip">
           Skip to content
         </a>
       
@@ -125,7 +125,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -381,6 +381,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../setup-mkdocs/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Website setup
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -535,6 +554,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -577,12 +598,25 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-write-start-kdesh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Write start-kde.sh
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#2-write-start-gamingsh" class="md-nav__link">
@@ -905,6 +939,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup-mkdocs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -922,12 +983,25 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-write-start-kdesh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Write start-kde.sh
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#2-write-start-gamingsh" class="md-nav__link">
@@ -979,328 +1053,328 @@
 
 
 
-  <h1>Phase 8: Session Scripts</h1>
-
-<p><pre class="highlight"><code class="language-markdown"># Phase 8: Session Management Scripts
-
-These scripts act as the brains of the remote server. They allow you to swap between headless mode, KDE Plasma, and Gaming Mode securely.
-
-!!! tip "How the Scripts Handle KMS/DRM for Sunshine"
-    For Sunshine to capture a physical display perfectly, it needs access to the kernel's DRM (Direct Rendering Manager) via KMS. These scripts are designed to gracefully stop active sessions, wipe the DRM locks, and restart the `sddm` display manager so the GPU is freshly initialized and ready for Sunshine to capture `seat0`.
-
-## 1. Write `start-kde.sh`
-
-This script launches KDE Plasma on the physical display.
-
-```bash
-sudo nano /usr/local/bin/start-kde.sh</code></pre>
+<h1 id="phase-8-session-management-scripts">Phase 8: Session Management Scripts</h1>
+<p>These scripts act as the brains of the remote server. They allow you to swap between headless mode, KDE Plasma, and Gaming Mode securely.</p>
+<div class="admonition tip">
+<p class="admonition-title">How the Scripts Handle KMS/DRM for Sunshine</p>
+<p>For Sunshine to capture a physical display perfectly, it needs access to the kernel's DRM (Direct Rendering Manager) via KMS. These scripts are designed to gracefully stop active sessions, wipe the DRM locks, and restart the <code>sddm</code> display manager so the GPU is freshly initialized and ready for Sunshine to capture <code>seat0</code>.</p>
+</div>
+<h2 id="1-write-start-kdesh">1. Write <code>start-kde.sh</code></h2>
+<p>This script launches KDE Plasma on the physical display.</p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>nano<span class="w"> </span>/usr/local/bin/start-kde.sh
+</code></pre></div>
 Paste the following code:
-<pre class="highlight"><code class="language-bash">#!/usr/bin/env bash
-set -euo pipefail
-
-readonly USER_UID=1000
-readonly AUTOLOGIN_CONF="/etc/sddm.conf.d/zzzz-bazzite-htpc.conf"
-readonly SESSION_NAME="plasma.desktop"
-readonly SESSION_WAIT_TIMEOUT=90
-readonly SUNSHINE_SETTLE_SECS=6
-
-log()  { printf '[start-kde] %s\n'         "$*"; }
-warn() { printf '[start-kde] WARNING: %s\n' "$*" &gt;&amp;2; }
-die()  { printf '[start-kde] ERROR: %s\n'   "$*" &gt;&amp;2; exit 1; }
-
-detect_sunshine() {
-    for name in sunshine-kms sunshine sunshine-headless; do
-        if systemctl is-active --quiet "${name}" 2&gt;/dev/null || systemctl is-enabled --quiet "${name}" 2&gt;/dev/null; then
-            echo "${name}"; return 0
-        fi
-    done
-    systemctl list-units --type=service --no-legend 2&gt;/dev/null | awk '$1 ~ /sunshine/ { print $1; exit }' | sed 's/\.service$//'
-}
-
-active_graphical_sessions() {
-    loginctl list-sessions --no-legend | awk -v uid="${USER_UID}" '$2 == uid &amp;&amp; $4 != "-" { print $1 }'
-}
-
-[[ "${EUID}" -eq 0 ]] || die "Must be run as root (sudo)."
-USERNAME="$(id -nu "${USER_UID}")" || die "Cannot resolve username."
-SUNSHINE_SERVICE="$(detect_sunshine)" || die "Cannot find Sunshine service."
-
-log "User: ${USERNAME} | Session: ${SESSION_NAME} | Sunshine: ${SUNSHINE_SERVICE}"
-
-if [[ -n "$(active_graphical_sessions)" ]]; then
-    die "A graphical session is already active. Run 'sudo stop-session.sh' first."
-fi
-
-# Neutralize Bazzite's crash tracker to prevent false-positive session resets
-rm -f /tmp/chimeraos-short-session-tracker 2&gt;/dev/null || true
-
-log "Writing SDDM autologin configuration..."
-mkdir -p "$(dirname "${AUTOLOGIN_CONF}")"
-cat &gt; "${AUTOLOGIN_CONF}" &lt;&lt;EOF
-[Autologin]
-User=${USERNAME}
-Session=${SESSION_NAME}
-Relogin=true
-EOF
-
-log "Stopping SDDM and Sunshine to fully release DRM/KMS locks..."
-systemctl stop sddm 2&gt;/dev/null || true
-systemctl stop "${SUNSHINE_SERVICE}" 2&gt;/dev/null || true
-sleep 3
-
-log "Starting SDDM to trigger KDE autologin..."
-systemctl start sddm
-
-log "Waiting for KDE session to become active..."
-elapsed=0
-confirmed=false
-while (( elapsed &lt; SESSION_WAIT_TIMEOUT )); do
-    session_id="$(active_graphical_sessions | head -n 1)"
-    if [[ -n "${session_id}" ]]; then
-        state="$(loginctl show-session "${session_id}" -p State --value 2&gt;/dev/null || true)"
-        if [[ "${state}" == "active" ]]; then
-            log "Session ${session_id} is active."
-            confirmed=true
-            break
-        fi
-    fi
-    sleep 2
-    (( elapsed += 2 ))
-done
-
-"${confirmed}" || warn "Session not confirmed active after ${SESSION_WAIT_TIMEOUT}s. Proceeding anyway."
-
-log "Letting KWin compositor initialize for ${SUNSHINE_SETTLE_SECS}s..."
-sleep "${SUNSHINE_SETTLE_SECS}"
-
-log "Starting Sunshine to capture KDE via KMS..."
-systemctl reset-failed "${SUNSHINE_SERVICE}" 2&gt;/dev/null || true
-systemctl start "${SUNSHINE_SERVICE}"
-
-echo -e "\n✓ KDE Plasma session started. Reconnect Moonlight now."</code></pre>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="ch">#!/usr/bin/env bash</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">set</span><span class="w"> </span>-euo<span class="w"> </span>pipefail
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">USER_UID</span><span class="o">=</span><span class="m">1000</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">AUTOLOGIN_CONF</span><span class="o">=</span><span class="s2">&quot;/etc/sddm.conf.d/zzzz-bazzite-htpc.conf&quot;</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">SESSION_NAME</span><span class="o">=</span><span class="s2">&quot;plasma.desktop&quot;</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">SESSION_WAIT_TIMEOUT</span><span class="o">=</span><span class="m">90</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">SUNSHINE_SETTLE_SECS</span><span class="o">=</span><span class="m">6</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>log<span class="o">()</span><span class="w">  </span><span class="o">{</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;[start-kde] %s\n&#39;</span><span class="w">         </span><span class="s2">&quot;</span><span class="nv">$*</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>warn<span class="o">()</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;[start-kde] WARNING: %s\n&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$*</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>die<span class="o">()</span><span class="w">  </span><span class="o">{</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;[start-kde] ERROR: %s\n&#39;</span><span class="w">   </span><span class="s2">&quot;</span><span class="nv">$*</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>detect_sunshine<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">    </span><span class="k">for</span><span class="w"> </span>name<span class="w"> </span><span class="k">in</span><span class="w"> </span>sunshine-kms<span class="w"> </span>sunshine<span class="w"> </span>sunshine-headless<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span>systemctl<span class="w"> </span>is-active<span class="w"> </span>--quiet<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span>systemctl<span class="w"> </span>is-enabled<span class="w"> </span>--quiet<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">            </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">0</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">        </span><span class="k">fi</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">    </span><span class="k">done</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">    </span>systemctl<span class="w"> </span>list-units<span class="w"> </span>--type<span class="o">=</span>service<span class="w"> </span>--no-legend<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;$1 ~ /sunshine/ { print $1; exit }&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/\.service$//&#39;</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="o">}</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>active_graphical_sessions<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">    </span>loginctl<span class="w"> </span>list-sessions<span class="w"> </span>--no-legend<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span>-v<span class="w"> </span><span class="nv">uid</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="s1">&#39;$2 == uid &amp;&amp; $4 != &quot;-&quot; { print $1 }&#39;</span>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="o">}</span>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="o">[[</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">EUID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>die<span class="w"> </span><span class="s2">&quot;Must be run as root (sudo).&quot;</span>
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="nv">USERNAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>id<span class="w"> </span>-nu<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>die<span class="w"> </span><span class="s2">&quot;Cannot resolve username.&quot;</span>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="nv">SUNSHINE_SERVICE</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>detect_sunshine<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>die<span class="w"> </span><span class="s2">&quot;Cannot find Sunshine service.&quot;</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>log<span class="w"> </span><span class="s2">&quot;User: </span><span class="si">${</span><span class="nv">USERNAME</span><span class="si">}</span><span class="s2"> | Session: </span><span class="si">${</span><span class="nv">SESSION_NAME</span><span class="si">}</span><span class="s2"> | Sunshine: </span><span class="si">${</span><span class="nv">SUNSHINE_SERVICE</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>active_graphical_sessions<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="w">    </span>die<span class="w"> </span><span class="s2">&quot;A graphical session is already active. Run &#39;sudo stop-session.sh&#39; first.&quot;</span>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="k">fi</span>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="c1"># Neutralize Bazzite&#39;s crash tracker to prevent false-positive session resets</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>rm<span class="w"> </span>-f<span class="w"> </span>/tmp/chimeraos-short-session-tracker<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>log<span class="w"> </span><span class="s2">&quot;Writing SDDM autologin configuration...&quot;</span>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>dirname<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AUTOLOGIN_CONF</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>cat<span class="w"> </span>&gt;<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AUTOLOGIN_CONF</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="s">[Autologin]</span>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="s">User=${USERNAME}</span>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="s">Session=${SESSION_NAME}</span>
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="s">Relogin=true</span>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="s">EOF</span>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>log<span class="w"> </span><span class="s2">&quot;Stopping SDDM and Sunshine to fully release DRM/KMS locks...&quot;</span>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>systemctl<span class="w"> </span>stop<span class="w"> </span>sddm<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>systemctl<span class="w"> </span>stop<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUNSHINE_SERVICE</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>sleep<span class="w"> </span><span class="m">3</span>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>log<span class="w"> </span><span class="s2">&quot;Starting SDDM to trigger KDE autologin...&quot;</span>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>systemctl<span class="w"> </span>start<span class="w"> </span>sddm
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>log<span class="w"> </span><span class="s2">&quot;Waiting for KDE session to become active...&quot;</span>
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="nv">elapsed</span><span class="o">=</span><span class="m">0</span>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="nv">confirmed</span><span class="o">=</span><span class="nb">false</span>
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="k">while</span><span class="w"> </span><span class="o">((</span><span class="w"> </span>elapsed<span class="w"> </span>&lt;<span class="w"> </span>SESSION_WAIT_TIMEOUT<span class="w"> </span><span class="o">))</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="w">    </span><span class="nv">session_id</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>active_graphical_sessions<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="w">        </span><span class="nv">state</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>loginctl<span class="w"> </span>show-session<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>-p<span class="w"> </span>State<span class="w"> </span>--value<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span><span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">state</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;active&quot;</span><span class="w"> </span><span class="o">]]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="w">            </span>log<span class="w"> </span><span class="s2">&quot;Session </span><span class="si">${</span><span class="nv">session_id</span><span class="si">}</span><span class="s2"> is active.&quot;</span>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="w">            </span><span class="nv">confirmed</span><span class="o">=</span><span class="nb">true</span>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="w">            </span><span class="k">break</span>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="w">        </span><span class="k">fi</span>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="w">    </span><span class="k">fi</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="w">    </span>sleep<span class="w"> </span><span class="m">2</span>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="w">    </span><span class="o">((</span><span class="w"> </span><span class="nv">elapsed</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">))</span>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="k">done</span>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="s2">&quot;</span><span class="si">${</span><span class="nv">confirmed</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>warn<span class="w"> </span><span class="s2">&quot;Session not confirmed active after </span><span class="si">${</span><span class="nv">SESSION_WAIT_TIMEOUT</span><span class="si">}</span><span class="s2">s. Proceeding anyway.&quot;</span>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>log<span class="w"> </span><span class="s2">&quot;Letting KWin compositor initialize for </span><span class="si">${</span><span class="nv">SUNSHINE_SETTLE_SECS</span><span class="si">}</span><span class="s2">s...&quot;</span>
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>sleep<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUNSHINE_SETTLE_SECS</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>log<span class="w"> </span><span class="s2">&quot;Starting Sunshine to capture KDE via KMS...&quot;</span>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>systemctl<span class="w"> </span>reset-failed<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUNSHINE_SERVICE</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>systemctl<span class="w"> </span>start<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUNSHINE_SERVICE</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="nb">echo</span><span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;\n✓ KDE Plasma session started. Reconnect Moonlight now.&quot;</span>
+</code></pre></div>
 Make it executable: <code>sudo chmod +x /usr/local/bin/start-kde.sh</code></p>
 <h2 id="2-write-start-gamingsh">2. Write <code>start-gaming.sh</code></h2>
 <p>This script launches the Steam Gaming Mode (gamescope).</p>
-<p><pre class="highlight"><code class="language-bash">sudo nano /usr/local/bin/start-gaming.sh</code></pre>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>nano<span class="w"> </span>/usr/local/bin/start-gaming.sh
+</code></pre></div>
 Paste the following code:
-<pre class="highlight"><code class="language-bash">#!/usr/bin/env bash
-set -euo pipefail
-
-readonly USER_UID=1000
-readonly AUTOLOGIN_CONF="/etc/sddm.conf.d/zzzz-bazzite-htpc.conf"
-readonly SESSION_NAME="gamescope-session.desktop"
-readonly SESSION_WAIT_TIMEOUT=180
-readonly SUNSHINE_SETTLE_SECS=15
-
-log()  { printf '[start-gaming] %s\n'         "$*"; }
-warn() { printf '[start-gaming] WARNING: %s\n' "$*" &gt;&amp;2; }
-die()  { printf '[start-gaming] ERROR: %s\n'   "$*" &gt;&amp;2; exit 1; }
-
-detect_sunshine() {
-    for name in sunshine-kms sunshine sunshine-headless; do
-        if systemctl is-active --quiet "${name}" 2&gt;/dev/null || systemctl is-enabled --quiet "${name}" 2&gt;/dev/null; then
-            echo "${name}"; return 0
-        fi
-    done
-    systemctl list-units --type=service --no-legend 2&gt;/dev/null | awk '$1 ~ /sunshine/ { print $1; exit }' | sed 's/\.service$//'
-}
-
-active_graphical_sessions() {
-    loginctl list-sessions --no-legend | awk -v uid="${USER_UID}" '$2 == uid &amp;&amp; $4 != "-" { print $1 }'
-}
-
-[[ "${EUID}" -eq 0 ]] || die "Must be run as root (sudo)."
-USERNAME="$(id -nu "${USER_UID}")" || die "Cannot resolve username."
-SUNSHINE_SERVICE="$(detect_sunshine)" || die "Cannot find Sunshine service."
-
-log "User: ${USERNAME} | Session: ${SESSION_NAME} | Sunshine: ${SUNSHINE_SERVICE}"
-
-if [[ -n "$(active_graphical_sessions)" ]]; then
-    die "A graphical session is already active. Run 'sudo stop-session.sh' first."
-fi
-
-# Neutralize Bazzite's crash tracker to prevent false-positive session resets
-rm -f /tmp/chimeraos-short-session-tracker 2&gt;/dev/null || true
-
-log "Ensuring conflicting user-level Sunshine hooks are disabled..."
-sudo -Eu "${USERNAME}" \
-    XDG_RUNTIME_DIR="/run/user/${USER_UID}" \
-    DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${USER_UID}/bus" \
-    systemctl --user disable --now sunshine.service 2&gt;/dev/null || true
-
-log "Writing SDDM autologin configuration..."
-mkdir -p "$(dirname "${AUTOLOGIN_CONF}")"
-cat &gt; "${AUTOLOGIN_CONF}" &lt;&lt;EOF
-[Autologin]
-User=${USERNAME}
-Session=${SESSION_NAME}
-Relogin=true
-EOF
-
-log "Stopping SDDM and Sunshine to fully release DRM/KMS locks..."
-systemctl stop sddm 2&gt;/dev/null || true
-systemctl stop "${SUNSHINE_SERVICE}" 2&gt;/dev/null || true
-sleep 3
-
-log "Starting SDDM to trigger Gaming Mode autologin..."
-systemctl start sddm
-
-log "Waiting for Gamescope/Steam session to appear..."
-elapsed=0
-confirmed=false
-while (( elapsed &lt; SESSION_WAIT_TIMEOUT )); do
-    session_id="$(active_graphical_sessions | head -n 1)"
-    if [[ -n "${session_id}" ]]; then
-        log "Gaming Mode session ${session_id} detected."
-        confirmed=true
-        break
-    fi
-    sleep 3
-    (( elapsed += 3 ))
-done
-
-"${confirmed}" || warn "Session did not appear after ${SESSION_WAIT_TIMEOUT}s. Proceeding anyway."
-
-log "Giving Steam and Gamescope ${SUNSHINE_SETTLE_SECS}s to finish loading..."
-sleep "${SUNSHINE_SETTLE_SECS}"
-
-log "Starting Sunshine to capture Gaming Mode via KMS..."
-systemctl reset-failed "${SUNSHINE_SERVICE}" 2&gt;/dev/null || true
-systemctl start "${SUNSHINE_SERVICE}"
-
-echo -e "\n✓ Gaming Mode session started. Reconnect Moonlight now."</code></pre>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="ch">#!/usr/bin/env bash</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">set</span><span class="w"> </span>-euo<span class="w"> </span>pipefail
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">USER_UID</span><span class="o">=</span><span class="m">1000</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">AUTOLOGIN_CONF</span><span class="o">=</span><span class="s2">&quot;/etc/sddm.conf.d/zzzz-bazzite-htpc.conf&quot;</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">SESSION_NAME</span><span class="o">=</span><span class="s2">&quot;gamescope-session.desktop&quot;</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">SESSION_WAIT_TIMEOUT</span><span class="o">=</span><span class="m">180</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">SUNSHINE_SETTLE_SECS</span><span class="o">=</span><span class="m">15</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>log<span class="o">()</span><span class="w">  </span><span class="o">{</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;[start-gaming] %s\n&#39;</span><span class="w">         </span><span class="s2">&quot;</span><span class="nv">$*</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>warn<span class="o">()</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;[start-gaming] WARNING: %s\n&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$*</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>die<span class="o">()</span><span class="w">  </span><span class="o">{</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;[start-gaming] ERROR: %s\n&#39;</span><span class="w">   </span><span class="s2">&quot;</span><span class="nv">$*</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>detect_sunshine<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span><span class="k">for</span><span class="w"> </span>name<span class="w"> </span><span class="k">in</span><span class="w"> </span>sunshine-kms<span class="w"> </span>sunshine<span class="w"> </span>sunshine-headless<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span>systemctl<span class="w"> </span>is-active<span class="w"> </span>--quiet<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span>systemctl<span class="w"> </span>is-enabled<span class="w"> </span>--quiet<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">            </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">0</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">        </span><span class="k">fi</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="w">    </span><span class="k">done</span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="w">    </span>systemctl<span class="w"> </span>list-units<span class="w"> </span>--type<span class="o">=</span>service<span class="w"> </span>--no-legend<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;$1 ~ /sunshine/ { print $1; exit }&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/\.service$//&#39;</span>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="o">}</span>
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>active_graphical_sessions<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="w">    </span>loginctl<span class="w"> </span>list-sessions<span class="w"> </span>--no-legend<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span>-v<span class="w"> </span><span class="nv">uid</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="s1">&#39;$2 == uid &amp;&amp; $4 != &quot;-&quot; { print $1 }&#39;</span>
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="o">}</span>
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a><span class="o">[[</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">EUID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>die<span class="w"> </span><span class="s2">&quot;Must be run as root (sudo).&quot;</span>
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a><span class="nv">USERNAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>id<span class="w"> </span>-nu<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>die<span class="w"> </span><span class="s2">&quot;Cannot resolve username.&quot;</span>
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a><span class="nv">SUNSHINE_SERVICE</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>detect_sunshine<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>die<span class="w"> </span><span class="s2">&quot;Cannot find Sunshine service.&quot;</span>
+<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>
+<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>log<span class="w"> </span><span class="s2">&quot;User: </span><span class="si">${</span><span class="nv">USERNAME</span><span class="si">}</span><span class="s2"> | Session: </span><span class="si">${</span><span class="nv">SESSION_NAME</span><span class="si">}</span><span class="s2"> | Sunshine: </span><span class="si">${</span><span class="nv">SUNSHINE_SERVICE</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>
+<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a><span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>active_graphical_sessions<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a><span class="w">    </span>die<span class="w"> </span><span class="s2">&quot;A graphical session is already active. Run &#39;sudo stop-session.sh&#39; first.&quot;</span>
+<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a><span class="k">fi</span>
+<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>
+<a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a><span class="c1"># Neutralize Bazzite&#39;s crash tracker to prevent false-positive session resets</span>
+<a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a>rm<span class="w"> </span>-f<span class="w"> </span>/tmp/chimeraos-short-session-tracker<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>
+<a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a>log<span class="w"> </span><span class="s2">&quot;Ensuring conflicting user-level Sunshine hooks are disabled...&quot;</span>
+<a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a>sudo<span class="w"> </span>-Eu<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">USERNAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-42" name="__codelineno-3-42" href="#__codelineno-3-42"></a><span class="w">    </span><span class="nv">XDG_RUNTIME_DIR</span><span class="o">=</span><span class="s2">&quot;/run/user/</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-43" name="__codelineno-3-43" href="#__codelineno-3-43"></a><span class="w">    </span><span class="nv">DBUS_SESSION_BUS_ADDRESS</span><span class="o">=</span><span class="s2">&quot;unix:path=/run/user/</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">/bus&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-44" name="__codelineno-3-44" href="#__codelineno-3-44"></a><span class="w">    </span>systemctl<span class="w"> </span>--user<span class="w"> </span>disable<span class="w"> </span>--now<span class="w"> </span>sunshine.service<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-3-45" name="__codelineno-3-45" href="#__codelineno-3-45"></a>
+<a id="__codelineno-3-46" name="__codelineno-3-46" href="#__codelineno-3-46"></a>log<span class="w"> </span><span class="s2">&quot;Writing SDDM autologin configuration...&quot;</span>
+<a id="__codelineno-3-47" name="__codelineno-3-47" href="#__codelineno-3-47"></a>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>dirname<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AUTOLOGIN_CONF</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-3-48" name="__codelineno-3-48" href="#__codelineno-3-48"></a>cat<span class="w"> </span>&gt;<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AUTOLOGIN_CONF</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a id="__codelineno-3-49" name="__codelineno-3-49" href="#__codelineno-3-49"></a><span class="s">[Autologin]</span>
+<a id="__codelineno-3-50" name="__codelineno-3-50" href="#__codelineno-3-50"></a><span class="s">User=${USERNAME}</span>
+<a id="__codelineno-3-51" name="__codelineno-3-51" href="#__codelineno-3-51"></a><span class="s">Session=${SESSION_NAME}</span>
+<a id="__codelineno-3-52" name="__codelineno-3-52" href="#__codelineno-3-52"></a><span class="s">Relogin=true</span>
+<a id="__codelineno-3-53" name="__codelineno-3-53" href="#__codelineno-3-53"></a><span class="s">EOF</span>
+<a id="__codelineno-3-54" name="__codelineno-3-54" href="#__codelineno-3-54"></a>
+<a id="__codelineno-3-55" name="__codelineno-3-55" href="#__codelineno-3-55"></a>log<span class="w"> </span><span class="s2">&quot;Stopping SDDM and Sunshine to fully release DRM/KMS locks...&quot;</span>
+<a id="__codelineno-3-56" name="__codelineno-3-56" href="#__codelineno-3-56"></a>systemctl<span class="w"> </span>stop<span class="w"> </span>sddm<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-3-57" name="__codelineno-3-57" href="#__codelineno-3-57"></a>systemctl<span class="w"> </span>stop<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUNSHINE_SERVICE</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-3-58" name="__codelineno-3-58" href="#__codelineno-3-58"></a>sleep<span class="w"> </span><span class="m">3</span>
+<a id="__codelineno-3-59" name="__codelineno-3-59" href="#__codelineno-3-59"></a>
+<a id="__codelineno-3-60" name="__codelineno-3-60" href="#__codelineno-3-60"></a>log<span class="w"> </span><span class="s2">&quot;Starting SDDM to trigger Gaming Mode autologin...&quot;</span>
+<a id="__codelineno-3-61" name="__codelineno-3-61" href="#__codelineno-3-61"></a>systemctl<span class="w"> </span>start<span class="w"> </span>sddm
+<a id="__codelineno-3-62" name="__codelineno-3-62" href="#__codelineno-3-62"></a>
+<a id="__codelineno-3-63" name="__codelineno-3-63" href="#__codelineno-3-63"></a>log<span class="w"> </span><span class="s2">&quot;Waiting for Gamescope/Steam session to appear...&quot;</span>
+<a id="__codelineno-3-64" name="__codelineno-3-64" href="#__codelineno-3-64"></a><span class="nv">elapsed</span><span class="o">=</span><span class="m">0</span>
+<a id="__codelineno-3-65" name="__codelineno-3-65" href="#__codelineno-3-65"></a><span class="nv">confirmed</span><span class="o">=</span><span class="nb">false</span>
+<a id="__codelineno-3-66" name="__codelineno-3-66" href="#__codelineno-3-66"></a><span class="k">while</span><span class="w"> </span><span class="o">((</span><span class="w"> </span>elapsed<span class="w"> </span>&lt;<span class="w"> </span>SESSION_WAIT_TIMEOUT<span class="w"> </span><span class="o">))</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-3-67" name="__codelineno-3-67" href="#__codelineno-3-67"></a><span class="w">    </span><span class="nv">session_id</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>active_graphical_sessions<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-3-68" name="__codelineno-3-68" href="#__codelineno-3-68"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-3-69" name="__codelineno-3-69" href="#__codelineno-3-69"></a><span class="w">        </span>log<span class="w"> </span><span class="s2">&quot;Gaming Mode session </span><span class="si">${</span><span class="nv">session_id</span><span class="si">}</span><span class="s2"> detected.&quot;</span>
+<a id="__codelineno-3-70" name="__codelineno-3-70" href="#__codelineno-3-70"></a><span class="w">        </span><span class="nv">confirmed</span><span class="o">=</span><span class="nb">true</span>
+<a id="__codelineno-3-71" name="__codelineno-3-71" href="#__codelineno-3-71"></a><span class="w">        </span><span class="k">break</span>
+<a id="__codelineno-3-72" name="__codelineno-3-72" href="#__codelineno-3-72"></a><span class="w">    </span><span class="k">fi</span>
+<a id="__codelineno-3-73" name="__codelineno-3-73" href="#__codelineno-3-73"></a><span class="w">    </span>sleep<span class="w"> </span><span class="m">3</span>
+<a id="__codelineno-3-74" name="__codelineno-3-74" href="#__codelineno-3-74"></a><span class="w">    </span><span class="o">((</span><span class="w"> </span><span class="nv">elapsed</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="o">))</span>
+<a id="__codelineno-3-75" name="__codelineno-3-75" href="#__codelineno-3-75"></a><span class="k">done</span>
+<a id="__codelineno-3-76" name="__codelineno-3-76" href="#__codelineno-3-76"></a>
+<a id="__codelineno-3-77" name="__codelineno-3-77" href="#__codelineno-3-77"></a><span class="s2">&quot;</span><span class="si">${</span><span class="nv">confirmed</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>warn<span class="w"> </span><span class="s2">&quot;Session did not appear after </span><span class="si">${</span><span class="nv">SESSION_WAIT_TIMEOUT</span><span class="si">}</span><span class="s2">s. Proceeding anyway.&quot;</span>
+<a id="__codelineno-3-78" name="__codelineno-3-78" href="#__codelineno-3-78"></a>
+<a id="__codelineno-3-79" name="__codelineno-3-79" href="#__codelineno-3-79"></a>log<span class="w"> </span><span class="s2">&quot;Giving Steam and Gamescope </span><span class="si">${</span><span class="nv">SUNSHINE_SETTLE_SECS</span><span class="si">}</span><span class="s2">s to finish loading...&quot;</span>
+<a id="__codelineno-3-80" name="__codelineno-3-80" href="#__codelineno-3-80"></a>sleep<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUNSHINE_SETTLE_SECS</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-3-81" name="__codelineno-3-81" href="#__codelineno-3-81"></a>
+<a id="__codelineno-3-82" name="__codelineno-3-82" href="#__codelineno-3-82"></a>log<span class="w"> </span><span class="s2">&quot;Starting Sunshine to capture Gaming Mode via KMS...&quot;</span>
+<a id="__codelineno-3-83" name="__codelineno-3-83" href="#__codelineno-3-83"></a>systemctl<span class="w"> </span>reset-failed<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUNSHINE_SERVICE</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-3-84" name="__codelineno-3-84" href="#__codelineno-3-84"></a>systemctl<span class="w"> </span>start<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUNSHINE_SERVICE</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-3-85" name="__codelineno-3-85" href="#__codelineno-3-85"></a>
+<a id="__codelineno-3-86" name="__codelineno-3-86" href="#__codelineno-3-86"></a><span class="nb">echo</span><span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;\n✓ Gaming Mode session started. Reconnect Moonlight now.&quot;</span>
+</code></pre></div>
 Make it executable: <code>sudo chmod +x /usr/local/bin/start-gaming.sh</code></p>
 <h2 id="3-write-stop-sessionsh">3. Write <code>stop-session.sh</code></h2>
 <p>This script gracefully terminates whichever session is active and returns the server to its headless, idle state.</p>
-<p><pre class="highlight"><code class="language-bash">sudo nano /usr/local/bin/stop-session.sh</code></pre>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sudo<span class="w"> </span>nano<span class="w"> </span>/usr/local/bin/stop-session.sh
+</code></pre></div>
 Paste the following code:
-<pre class="highlight"><code class="language-bash">#!/usr/bin/env bash
-set -euo pipefail
-
-readonly USER_UID=1000
-readonly AUTOLOGIN_CONF="/etc/sddm.conf.d/zzzz-bazzite-htpc.conf"
-readonly SESSION_STOP_TIMEOUT=45
-readonly SUNSHINE_SETTLE_SECS=4
-
-log()  { printf '[stop-session] %s\n'         "$*"; }
-warn() { printf '[stop-session] WARNING: %s\n' "$*" &gt;&amp;2; }
-die()  { printf '[stop-session] ERROR: %s\n'   "$*" &gt;&amp;2; exit 1; }
-
-detect_sunshine() {
-    for name in sunshine-kms sunshine sunshine-headless; do
-        if systemctl is-active --quiet "${name}" 2&gt;/dev/null || systemctl is-enabled --quiet "${name}" 2&gt;/dev/null; then
-            echo "${name}"; return 0
-        fi
-    done
-    systemctl list-units --type=service --no-legend 2&gt;/dev/null | awk '$1 ~ /sunshine/ { print $1; exit }' | sed 's/\.service$//'
-}
-
-active_graphical_sessions() {
-    loginctl list-sessions --no-legend | awk -v uid="${USER_UID}" '$2 == uid &amp;&amp; $4 != "-" { print $1 }'
-}
-
-[[ "${EUID}" -eq 0 ]] || die "Must be run as root (sudo)."
-USERNAME="$(id -nu "${USER_UID}")" || die "Cannot resolve username."
-SUNSHINE_SERVICE="$(detect_sunshine)" || die "Cannot find Sunshine service."
-
-session_id="$(active_graphical_sessions | head -n 1)"
-[[ -n "${session_id}" ]] || die "No active graphical session found."
-
-log "Active graphical session detected: ${session_id}"
-
-# Neutralize Bazzite's crash tracker so this clean stop isn't registered as a crash
-rm -f /tmp/chimeraos-short-session-tracker 2&gt;/dev/null || true
-
-# Write a blanked autologin file FIRST.
-log "Disabling SDDM autologin to enforce return to greeter..."
-mkdir -p "$(dirname "${AUTOLOGIN_CONF}")"
-cat &gt; "${AUTOLOGIN_CONF}" &lt;&lt;EOF
-[Autologin]
-User=
-Session=
-Relogin=false
-EOF
-
-log "Stopping Sunshine to release DRM/KMS locks for SDDM Greeter..."
-systemctl stop "${SUNSHINE_SERVICE}" 2&gt;/dev/null || true
-
-desktop="$(loginctl show-session "${session_id}" -p Desktop --value 2&gt;/dev/null || true)"
-is_gaming=false
-if [[ "${desktop,,}" == *"gamescope"* ]] || pgrep -u "${USER_UID}" -x gamescope &gt;/dev/null; then
-    is_gaming=true
-fi
-
-if "${is_gaming}"; then
-    log "Session Type: Gamescope/Steam Mode."
-    log "Gracefully stopping Steam and Gamescope..."
-    sudo -Eu "${USERNAME}" \
-        XDG_RUNTIME_DIR="/run/user/${USER_UID}" \
-        DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${USER_UID}/bus" \
-        systemctl --user stop gamescope-session-plus@steam.service || true
-else
-    log "Session Type: KDE Plasma."
-    log "Sending graceful D-Bus logout signal to KDE..."
-    sudo -Eu "${USERNAME}" \
-        XDG_RUNTIME_DIR="/run/user/${USER_UID}" \
-        DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${USER_UID}/bus" \
-        qdbus org.kde.Shutdown /Shutdown org.kde.Shutdown.logout || true
-fi
-
-log "Waiting for session to close gracefully (Timeout: ${SESSION_STOP_TIMEOUT}s)..."
-elapsed=0
-closed=false
-while (( elapsed &lt; SESSION_STOP_TIMEOUT )); do
-    if [[ -z "$(active_graphical_sessions)" ]]; then
-        log "Session closed safely."
-        closed=true
-        break
-    fi
-    sleep 2
-    (( elapsed += 2 ))
-done
-
-if ! "${closed}"; then
-    warn "Session stuck. Forcing termination..."
-    loginctl terminate-session "${session_id}" 2&gt;/dev/null || true
-    sleep 3
-fi
-
-log "Waiting for SDDM to launch the greeter..."
-elapsed=0
-greeter_ready=false
-while (( elapsed &lt; 20 )); do
-    if loginctl list-sessions --no-legend | awk '$6 == "greeter" { print $1 }' | grep -q .; then
-        log "SDDM greeter is active."
-        greeter_ready=true
-        break
-    fi
-    sleep 1
-    (( elapsed++ ))
-done
-
-"${greeter_ready}" || warn "Greeter did not appear cleanly. You may need to restart SDDM manually."
-
-log "Letting greeter render for ${SUNSHINE_SETTLE_SECS}s..."
-sleep "${SUNSHINE_SETTLE_SECS}"
-
-log "Starting Sunshine to capture SDDM Greeter via KMS..."
-systemctl reset-failed "${SUNSHINE_SERVICE}" 2&gt;/dev/null || true
-systemctl start "${SUNSHINE_SERVICE}"
-
-echo -e "\n✓ Session ended. System is idling at the SDDM greeter. Reconnect Moonlight to view."</code></pre>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="ch">#!/usr/bin/env bash</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">set</span><span class="w"> </span>-euo<span class="w"> </span>pipefail
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">USER_UID</span><span class="o">=</span><span class="m">1000</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">AUTOLOGIN_CONF</span><span class="o">=</span><span class="s2">&quot;/etc/sddm.conf.d/zzzz-bazzite-htpc.conf&quot;</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">SESSION_STOP_TIMEOUT</span><span class="o">=</span><span class="m">45</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nb">readonly</span><span class="w"> </span><span class="nv">SUNSHINE_SETTLE_SECS</span><span class="o">=</span><span class="m">4</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>log<span class="o">()</span><span class="w">  </span><span class="o">{</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;[stop-session] %s\n&#39;</span><span class="w">         </span><span class="s2">&quot;</span><span class="nv">$*</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>warn<span class="o">()</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;[stop-session] WARNING: %s\n&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$*</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>die<span class="o">()</span><span class="w">  </span><span class="o">{</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;[stop-session] ERROR: %s\n&#39;</span><span class="w">   </span><span class="s2">&quot;</span><span class="nv">$*</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>detect_sunshine<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span><span class="k">for</span><span class="w"> </span>name<span class="w"> </span><span class="k">in</span><span class="w"> </span>sunshine-kms<span class="w"> </span>sunshine<span class="w"> </span>sunshine-headless<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span>systemctl<span class="w"> </span>is-active<span class="w"> </span>--quiet<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span>systemctl<span class="w"> </span>is-enabled<span class="w"> </span>--quiet<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">            </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">0</span>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">        </span><span class="k">fi</span>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">    </span><span class="k">done</span>
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="w">    </span>systemctl<span class="w"> </span>list-units<span class="w"> </span>--type<span class="o">=</span>service<span class="w"> </span>--no-legend<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;$1 ~ /sunshine/ { print $1; exit }&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/\.service$//&#39;</span>
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="o">}</span>
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>active_graphical_sessions<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="w">    </span>loginctl<span class="w"> </span>list-sessions<span class="w"> </span>--no-legend<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span>-v<span class="w"> </span><span class="nv">uid</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="s1">&#39;$2 == uid &amp;&amp; $4 != &quot;-&quot; { print $1 }&#39;</span>
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="o">}</span>
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="o">[[</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">EUID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>die<span class="w"> </span><span class="s2">&quot;Must be run as root (sudo).&quot;</span>
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="nv">USERNAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>id<span class="w"> </span>-nu<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>die<span class="w"> </span><span class="s2">&quot;Cannot resolve username.&quot;</span>
+<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a><span class="nv">SUNSHINE_SERVICE</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>detect_sunshine<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>die<span class="w"> </span><span class="s2">&quot;Cannot find Sunshine service.&quot;</span>
+<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>
+<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a><span class="nv">session_id</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>active_graphical_sessions<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a><span class="o">[[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>die<span class="w"> </span><span class="s2">&quot;No active graphical session found.&quot;</span>
+<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>
+<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>log<span class="w"> </span><span class="s2">&quot;Active graphical session detected: </span><span class="si">${</span><span class="nv">session_id</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>
+<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a><span class="c1"># Neutralize Bazzite&#39;s crash tracker so this clean stop isn&#39;t registered as a crash</span>
+<a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a>rm<span class="w"> </span>-f<span class="w"> </span>/tmp/chimeraos-short-session-tracker<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-5-37" name="__codelineno-5-37" href="#__codelineno-5-37"></a>
+<a id="__codelineno-5-38" name="__codelineno-5-38" href="#__codelineno-5-38"></a><span class="c1"># Write a blanked autologin file FIRST.</span>
+<a id="__codelineno-5-39" name="__codelineno-5-39" href="#__codelineno-5-39"></a>log<span class="w"> </span><span class="s2">&quot;Disabling SDDM autologin to enforce return to greeter...&quot;</span>
+<a id="__codelineno-5-40" name="__codelineno-5-40" href="#__codelineno-5-40"></a>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>dirname<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AUTOLOGIN_CONF</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-5-41" name="__codelineno-5-41" href="#__codelineno-5-41"></a>cat<span class="w"> </span>&gt;<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">AUTOLOGIN_CONF</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a id="__codelineno-5-42" name="__codelineno-5-42" href="#__codelineno-5-42"></a><span class="s">[Autologin]</span>
+<a id="__codelineno-5-43" name="__codelineno-5-43" href="#__codelineno-5-43"></a><span class="s">User=</span>
+<a id="__codelineno-5-44" name="__codelineno-5-44" href="#__codelineno-5-44"></a><span class="s">Session=</span>
+<a id="__codelineno-5-45" name="__codelineno-5-45" href="#__codelineno-5-45"></a><span class="s">Relogin=false</span>
+<a id="__codelineno-5-46" name="__codelineno-5-46" href="#__codelineno-5-46"></a><span class="s">EOF</span>
+<a id="__codelineno-5-47" name="__codelineno-5-47" href="#__codelineno-5-47"></a>
+<a id="__codelineno-5-48" name="__codelineno-5-48" href="#__codelineno-5-48"></a>log<span class="w"> </span><span class="s2">&quot;Stopping Sunshine to release DRM/KMS locks for SDDM Greeter...&quot;</span>
+<a id="__codelineno-5-49" name="__codelineno-5-49" href="#__codelineno-5-49"></a>systemctl<span class="w"> </span>stop<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUNSHINE_SERVICE</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-5-50" name="__codelineno-5-50" href="#__codelineno-5-50"></a>
+<a id="__codelineno-5-51" name="__codelineno-5-51" href="#__codelineno-5-51"></a><span class="nv">desktop</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>loginctl<span class="w"> </span>show-session<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>-p<span class="w"> </span>Desktop<span class="w"> </span>--value<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span><span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-5-52" name="__codelineno-5-52" href="#__codelineno-5-52"></a><span class="nv">is_gaming</span><span class="o">=</span><span class="nb">false</span>
+<a id="__codelineno-5-53" name="__codelineno-5-53" href="#__codelineno-5-53"></a><span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">desktop</span><span class="p">,,</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">==</span><span class="w"> </span>*<span class="s2">&quot;gamescope&quot;</span>*<span class="w"> </span><span class="o">]]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>pgrep<span class="w"> </span>-u<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>-x<span class="w"> </span>gamescope<span class="w"> </span>&gt;/dev/null<span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-5-54" name="__codelineno-5-54" href="#__codelineno-5-54"></a><span class="w">    </span><span class="nv">is_gaming</span><span class="o">=</span><span class="nb">true</span>
+<a id="__codelineno-5-55" name="__codelineno-5-55" href="#__codelineno-5-55"></a><span class="k">fi</span>
+<a id="__codelineno-5-56" name="__codelineno-5-56" href="#__codelineno-5-56"></a>
+<a id="__codelineno-5-57" name="__codelineno-5-57" href="#__codelineno-5-57"></a><span class="k">if</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">is_gaming</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-5-58" name="__codelineno-5-58" href="#__codelineno-5-58"></a><span class="w">    </span>log<span class="w"> </span><span class="s2">&quot;Session Type: Gamescope/Steam Mode.&quot;</span>
+<a id="__codelineno-5-59" name="__codelineno-5-59" href="#__codelineno-5-59"></a><span class="w">    </span>log<span class="w"> </span><span class="s2">&quot;Gracefully stopping Steam and Gamescope...&quot;</span>
+<a id="__codelineno-5-60" name="__codelineno-5-60" href="#__codelineno-5-60"></a><span class="w">    </span>sudo<span class="w"> </span>-Eu<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">USERNAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-61" name="__codelineno-5-61" href="#__codelineno-5-61"></a><span class="w">        </span><span class="nv">XDG_RUNTIME_DIR</span><span class="o">=</span><span class="s2">&quot;/run/user/</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-62" name="__codelineno-5-62" href="#__codelineno-5-62"></a><span class="w">        </span><span class="nv">DBUS_SESSION_BUS_ADDRESS</span><span class="o">=</span><span class="s2">&quot;unix:path=/run/user/</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">/bus&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-63" name="__codelineno-5-63" href="#__codelineno-5-63"></a><span class="w">        </span>systemctl<span class="w"> </span>--user<span class="w"> </span>stop<span class="w"> </span>gamescope-session-plus@steam.service<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-5-64" name="__codelineno-5-64" href="#__codelineno-5-64"></a><span class="k">else</span>
+<a id="__codelineno-5-65" name="__codelineno-5-65" href="#__codelineno-5-65"></a><span class="w">    </span>log<span class="w"> </span><span class="s2">&quot;Session Type: KDE Plasma.&quot;</span>
+<a id="__codelineno-5-66" name="__codelineno-5-66" href="#__codelineno-5-66"></a><span class="w">    </span>log<span class="w"> </span><span class="s2">&quot;Sending graceful D-Bus logout signal to KDE...&quot;</span>
+<a id="__codelineno-5-67" name="__codelineno-5-67" href="#__codelineno-5-67"></a><span class="w">    </span>sudo<span class="w"> </span>-Eu<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">USERNAME</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-68" name="__codelineno-5-68" href="#__codelineno-5-68"></a><span class="w">        </span><span class="nv">XDG_RUNTIME_DIR</span><span class="o">=</span><span class="s2">&quot;/run/user/</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-69" name="__codelineno-5-69" href="#__codelineno-5-69"></a><span class="w">        </span><span class="nv">DBUS_SESSION_BUS_ADDRESS</span><span class="o">=</span><span class="s2">&quot;unix:path=/run/user/</span><span class="si">${</span><span class="nv">USER_UID</span><span class="si">}</span><span class="s2">/bus&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-70" name="__codelineno-5-70" href="#__codelineno-5-70"></a><span class="w">        </span>qdbus<span class="w"> </span>org.kde.Shutdown<span class="w"> </span>/Shutdown<span class="w"> </span>org.kde.Shutdown.logout<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-5-71" name="__codelineno-5-71" href="#__codelineno-5-71"></a><span class="k">fi</span>
+<a id="__codelineno-5-72" name="__codelineno-5-72" href="#__codelineno-5-72"></a>
+<a id="__codelineno-5-73" name="__codelineno-5-73" href="#__codelineno-5-73"></a>log<span class="w"> </span><span class="s2">&quot;Waiting for session to close gracefully (Timeout: </span><span class="si">${</span><span class="nv">SESSION_STOP_TIMEOUT</span><span class="si">}</span><span class="s2">s)...&quot;</span>
+<a id="__codelineno-5-74" name="__codelineno-5-74" href="#__codelineno-5-74"></a><span class="nv">elapsed</span><span class="o">=</span><span class="m">0</span>
+<a id="__codelineno-5-75" name="__codelineno-5-75" href="#__codelineno-5-75"></a><span class="nv">closed</span><span class="o">=</span><span class="nb">false</span>
+<a id="__codelineno-5-76" name="__codelineno-5-76" href="#__codelineno-5-76"></a><span class="k">while</span><span class="w"> </span><span class="o">((</span><span class="w"> </span>elapsed<span class="w"> </span>&lt;<span class="w"> </span>SESSION_STOP_TIMEOUT<span class="w"> </span><span class="o">))</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-5-77" name="__codelineno-5-77" href="#__codelineno-5-77"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>active_graphical_sessions<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-5-78" name="__codelineno-5-78" href="#__codelineno-5-78"></a><span class="w">        </span>log<span class="w"> </span><span class="s2">&quot;Session closed safely.&quot;</span>
+<a id="__codelineno-5-79" name="__codelineno-5-79" href="#__codelineno-5-79"></a><span class="w">        </span><span class="nv">closed</span><span class="o">=</span><span class="nb">true</span>
+<a id="__codelineno-5-80" name="__codelineno-5-80" href="#__codelineno-5-80"></a><span class="w">        </span><span class="k">break</span>
+<a id="__codelineno-5-81" name="__codelineno-5-81" href="#__codelineno-5-81"></a><span class="w">    </span><span class="k">fi</span>
+<a id="__codelineno-5-82" name="__codelineno-5-82" href="#__codelineno-5-82"></a><span class="w">    </span>sleep<span class="w"> </span><span class="m">2</span>
+<a id="__codelineno-5-83" name="__codelineno-5-83" href="#__codelineno-5-83"></a><span class="w">    </span><span class="o">((</span><span class="w"> </span><span class="nv">elapsed</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">))</span>
+<a id="__codelineno-5-84" name="__codelineno-5-84" href="#__codelineno-5-84"></a><span class="k">done</span>
+<a id="__codelineno-5-85" name="__codelineno-5-85" href="#__codelineno-5-85"></a>
+<a id="__codelineno-5-86" name="__codelineno-5-86" href="#__codelineno-5-86"></a><span class="k">if</span><span class="w"> </span>!<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">closed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-5-87" name="__codelineno-5-87" href="#__codelineno-5-87"></a><span class="w">    </span>warn<span class="w"> </span><span class="s2">&quot;Session stuck. Forcing termination...&quot;</span>
+<a id="__codelineno-5-88" name="__codelineno-5-88" href="#__codelineno-5-88"></a><span class="w">    </span>loginctl<span class="w"> </span>terminate-session<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-5-89" name="__codelineno-5-89" href="#__codelineno-5-89"></a><span class="w">    </span>sleep<span class="w"> </span><span class="m">3</span>
+<a id="__codelineno-5-90" name="__codelineno-5-90" href="#__codelineno-5-90"></a><span class="k">fi</span>
+<a id="__codelineno-5-91" name="__codelineno-5-91" href="#__codelineno-5-91"></a>
+<a id="__codelineno-5-92" name="__codelineno-5-92" href="#__codelineno-5-92"></a>log<span class="w"> </span><span class="s2">&quot;Waiting for SDDM to launch the greeter...&quot;</span>
+<a id="__codelineno-5-93" name="__codelineno-5-93" href="#__codelineno-5-93"></a><span class="nv">elapsed</span><span class="o">=</span><span class="m">0</span>
+<a id="__codelineno-5-94" name="__codelineno-5-94" href="#__codelineno-5-94"></a><span class="nv">greeter_ready</span><span class="o">=</span><span class="nb">false</span>
+<a id="__codelineno-5-95" name="__codelineno-5-95" href="#__codelineno-5-95"></a><span class="k">while</span><span class="w"> </span><span class="o">((</span><span class="w"> </span>elapsed<span class="w"> </span>&lt;<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="o">))</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-5-96" name="__codelineno-5-96" href="#__codelineno-5-96"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span>loginctl<span class="w"> </span>list-sessions<span class="w"> </span>--no-legend<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;$6 == &quot;greeter&quot; { print $1 }&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-q<span class="w"> </span>.<span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-5-97" name="__codelineno-5-97" href="#__codelineno-5-97"></a><span class="w">        </span>log<span class="w"> </span><span class="s2">&quot;SDDM greeter is active.&quot;</span>
+<a id="__codelineno-5-98" name="__codelineno-5-98" href="#__codelineno-5-98"></a><span class="w">        </span><span class="nv">greeter_ready</span><span class="o">=</span><span class="nb">true</span>
+<a id="__codelineno-5-99" name="__codelineno-5-99" href="#__codelineno-5-99"></a><span class="w">        </span><span class="k">break</span>
+<a id="__codelineno-5-100" name="__codelineno-5-100" href="#__codelineno-5-100"></a><span class="w">    </span><span class="k">fi</span>
+<a id="__codelineno-5-101" name="__codelineno-5-101" href="#__codelineno-5-101"></a><span class="w">    </span>sleep<span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-5-102" name="__codelineno-5-102" href="#__codelineno-5-102"></a><span class="w">    </span><span class="o">((</span><span class="w"> </span>elapsed++<span class="w"> </span><span class="o">))</span>
+<a id="__codelineno-5-103" name="__codelineno-5-103" href="#__codelineno-5-103"></a><span class="k">done</span>
+<a id="__codelineno-5-104" name="__codelineno-5-104" href="#__codelineno-5-104"></a>
+<a id="__codelineno-5-105" name="__codelineno-5-105" href="#__codelineno-5-105"></a><span class="s2">&quot;</span><span class="si">${</span><span class="nv">greeter_ready</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>warn<span class="w"> </span><span class="s2">&quot;Greeter did not appear cleanly. You may need to restart SDDM manually.&quot;</span>
+<a id="__codelineno-5-106" name="__codelineno-5-106" href="#__codelineno-5-106"></a>
+<a id="__codelineno-5-107" name="__codelineno-5-107" href="#__codelineno-5-107"></a>log<span class="w"> </span><span class="s2">&quot;Letting greeter render for </span><span class="si">${</span><span class="nv">SUNSHINE_SETTLE_SECS</span><span class="si">}</span><span class="s2">s...&quot;</span>
+<a id="__codelineno-5-108" name="__codelineno-5-108" href="#__codelineno-5-108"></a>sleep<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUNSHINE_SETTLE_SECS</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-5-109" name="__codelineno-5-109" href="#__codelineno-5-109"></a>
+<a id="__codelineno-5-110" name="__codelineno-5-110" href="#__codelineno-5-110"></a>log<span class="w"> </span><span class="s2">&quot;Starting Sunshine to capture SDDM Greeter via KMS...&quot;</span>
+<a id="__codelineno-5-111" name="__codelineno-5-111" href="#__codelineno-5-111"></a>systemctl<span class="w"> </span>reset-failed<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUNSHINE_SERVICE</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+<a id="__codelineno-5-112" name="__codelineno-5-112" href="#__codelineno-5-112"></a>systemctl<span class="w"> </span>start<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SUNSHINE_SERVICE</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-5-113" name="__codelineno-5-113" href="#__codelineno-5-113"></a>
+<a id="__codelineno-5-114" name="__codelineno-5-114" href="#__codelineno-5-114"></a><span class="nb">echo</span><span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;\n✓ Session ended. System is idling at the SDDM greeter. Reconnect Moonlight to view.&quot;</span>
+</code></pre></div>
 Make it executable: <code>sudo chmod +x /usr/local/bin/stop-session.sh</code></p>
 <h2 id="4-configure-passwordless-sudo">4. Configure Passwordless Sudo</h2>
 <p>To make remote streaming totally seamless, we allow your user to run these specific scripts without typing a password every time.</p>
-<p><pre class="highlight"><code class="language-bash">printf "%s ALL=(ALL) NOPASSWD: /usr/local/bin/start-kde.sh\n" "$USER" \
-  | sudo tee /etc/sudoers.d/session-scripts &gt; /dev/null
-printf "%s ALL=(ALL) NOPASSWD: /usr/local/bin/start-gaming.sh\n" "$USER" \
-  | sudo tee -a /etc/sudoers.d/session-scripts &gt; /dev/null
-printf "%s ALL=(ALL) NOPASSWD: /usr/local/bin/stop-session.sh\n" "$USER" \
-  | sudo tee -a /etc/sudoers.d/session-scripts &gt; /dev/null
-sudo chmod 440 /etc/sudoers.d/session-scripts
-sudo visudo -c -f /etc/sudoers.d/session-scripts</code></pre>
-<em>(Ensure the last command outputs: <code>parsed OK</code>)</em>
-```</p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">printf</span><span class="w"> </span><span class="s2">&quot;%s ALL=(ALL) NOPASSWD: /usr/local/bin/start-kde.sh\n&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$USER</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/sudoers.d/session-scripts<span class="w"> </span>&gt;<span class="w"> </span>/dev/null
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nb">printf</span><span class="w"> </span><span class="s2">&quot;%s ALL=(ALL) NOPASSWD: /usr/local/bin/start-gaming.sh\n&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$USER</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/sudoers.d/session-scripts<span class="w"> </span>&gt;<span class="w"> </span>/dev/null
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nb">printf</span><span class="w"> </span><span class="s2">&quot;%s ALL=(ALL) NOPASSWD: /usr/local/bin/stop-session.sh\n&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$USER</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/sudoers.d/session-scripts<span class="w"> </span>&gt;<span class="w"> </span>/dev/null
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>sudo<span class="w"> </span>chmod<span class="w"> </span><span class="m">440</span><span class="w"> </span>/etc/sudoers.d/session-scripts
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>sudo<span class="w"> </span>visudo<span class="w"> </span>-c<span class="w"> </span>-f<span class="w"> </span>/etc/sudoers.d/session-scripts
+</code></pre></div>
+<em>(Ensure the last command outputs: <code>parsed OK</code>)</em></p>
 
 
 
