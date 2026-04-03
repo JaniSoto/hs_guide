@@ -1,4 +1,3 @@
-```markdown
 # Appendix C: Optional AMD GPU Acceleration for Nextcloud
 
 !!! warning "Hardware Limitation"
@@ -45,5 +44,4 @@ sudo chattr +i /srv/nextcloud-data
 ```bash
 docker exec nextcloud-aio-nextcloud ffmpeg -hwaccels 2>/dev/null | grep -i vaapi
 # Expected: "vaapi" listed as an available hardware accelerator.
-```
 ```

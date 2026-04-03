@@ -1,4 +1,3 @@
-```markdown
 # Appendix D: OS Updates & Containers
 
 ### OS Updates & Rollbacks
@@ -36,4 +35,3 @@ docker compose up -d
 
 ### Nextcloud AIO — Manual Update Procedure
 Nextcloud AIO child containers must be updated through the AIO admin panel (`https://localhost:9443` over SSH tunnel) to ensure database migrations happen correctly.
-```

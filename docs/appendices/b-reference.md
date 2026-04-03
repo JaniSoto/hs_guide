@@ -1,4 +1,3 @@
-```markdown
 # Appendix B: Quick Reference (Workflows)
 
 All commands are run from your personal computer's terminal.
@@ -26,5 +25,4 @@ ssh -p 22022 username@your-server-ip 'sudo start-gaming.sh'
 ```bash
 ssh -p 22022 username@your-server-ip 'sudo stop-session.sh'
 # WARNING: all unsaved work in the terminated session is lost.
-```
 ```

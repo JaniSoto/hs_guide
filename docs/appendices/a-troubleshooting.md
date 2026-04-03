@@ -1,4 +1,3 @@
-```markdown
 # Appendix A: Troubleshooting
 
 ### Machine boots to Gaming Mode after initial install
@@ -42,5 +41,4 @@ This should not happen if `nofail` is in fstab (Phase 6). Connect a display and 
 nano /etc/fstab
 # Add "nofail" to the /srv/nextcloud-data options column.
 systemctl reboot
-```
 ```

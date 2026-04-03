@@ -1,4 +1,3 @@
-```markdown
 # Appendix E: Server Health Monitor
 
 The `server-health` script is a live terminal dashboard that displays CPU, RAM, GPU, storage, Docker container status, Nextcloud health, Fail2ban count, and SDDM session state.
@@ -78,4 +77,3 @@ done
 Make it executable: `sudo chmod 755 /usr/local/bin/server-health`
 
 Run the script by typing `server-health` in your terminal.
-```
