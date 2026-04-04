@@ -7,7 +7,7 @@
   </div>
 </div>
 
-This phase builds a "one-click" system: you press a single button on your KDE laptop (or any client), and it automatically connects the VPN, resolves any session conflicts, starts the gaming session on the server, launches Moonlight, and cleans up the server when you're done.
+This phase builds a "one-click" system: you press a single button on your laptop (or any client), and it automatically connects the VPN, resolves any session conflicts, starts the gaming session on the server, launches Moonlight, and cleans up the server when you're done.
 
 ---
 
@@ -111,7 +111,7 @@ sudo systemctl restart docker
 
 ---
 
-## Part 2 — Client-Side Setup (KDE Laptop / Desktop)
+## Part 2 — Client-Side Setup (Laptop / Desktop)
 
 Do these steps on the device you play games from.
 
@@ -141,68 +141,147 @@ mkdir -p ~/.local/bin
 nano ~/.local/bin/play-home.sh
 ```
 
-Paste this script — **update `SERVER_IP` to your server's local IP:**
+Choose the appropriate script below for your desktop environment. **Make sure to update `SERVER_IP`, `VPN_NAME`, and `APP_NAME`** to match your network and Sunshine configuration.
 
-```bash
-#!/bin/bash
+=== "KDE Plasma"
+    ```bash
+    #!/bin/bash
 
-SERVER_IP="192.168.1.50"   # ← Your server's local IP
-VPN_NAME="your-vpn-name"   # ← Name of your WireGuard connection in NetworkManager
-WEBHOOK_PORT="9000"
+    SERVER_IP="<your-server-ip>"
+    VPN_NAME="<your-vpn-name>"
+    APP_NAME="Desktop"         # ← Name of the app in Sunshine to launch
+    WEBHOOK_PORT="9000"
 
-# Connect to VPN
-if nmcli connection up "$VPN_NAME"; then
-    sleep 3
-    kdialog --passivepopup "Checking server status..." 3
+    # Connect to VPN
+    if nmcli connection up "$VPN_NAME"; then
+        
+        # Wait for the server to become reachable
+        MAX_WAIT=15
+        WAIT_COUNT=0
+        while ! ping -c 1 -W 1 "$SERVER_IP" > /dev/null 2>&1; do
+            sleep 1
+            WAIT_COUNT=$((WAIT_COUNT + 1))
+            if [ "$WAIT_COUNT" -ge "$MAX_WAIT" ]; then
+                kdialog --error "Connected to VPN, but server $SERVER_IP is unreachable."
+                nmcli connection down "$VPN_NAME"
+                exit 1
+            fi
+        done
 
-    # Trigger gaming session and capture the response
-    RESPONSE=$(curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming")
+        # Trigger gaming session and capture the response
+        RESPONSE=$(curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming")
 
-    # Handle session conflict
-    if echo "$RESPONSE" | grep -iq "ERROR: A graphical session is already active"; then
-        kdialog --title "Session Conflict" \
-          --yesno "A session is already active on the server. Stop it and start a new one?"
-
-        if [ $? -eq 0 ]; then
-            kdialog --passivepopup "Stopping existing session..." 5
-            curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/stop-session" > /dev/null
-            sleep 8
-            kdialog --passivepopup "Starting gaming session..." 3
-            curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming" > /dev/null
-            sleep 6
+        # Handle session conflict
+        if echo "$RESPONSE" | grep -iq "ERROR: A graphical session is already active"; then
+            if kdialog --title "Session Conflict" --yesno "A session is already active on the server. Do you want to stop it and start a new one?"; then
+                kdialog --passivepopup "Stopping existing session..." 3
+                curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/stop-session" > /dev/null
+                sleep 8
+                kdialog --passivepopup "Starting gaming session..." 3
+                curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming" > /dev/null
+                sleep 8
+            fi
         fi
-    fi
 
-    kdialog --passivepopup "Ready. Launching Moonlight..." 5
+        kdialog --passivepopup "Ready. Launching Moonlight..." 3
 
-    # Launch Moonlight
-    if command -v flatpak >/dev/null 2>&1 && flatpak list | grep -q com.moonlight_stream.Moonlight; then
-        flatpak run com.moonlight_stream.Moonlight
-        MOONLIGHT_EXIT=$?
+        # Launch Moonlight
+        if command -v flatpak >/dev/null 2>&1 && flatpak list | grep -q com.moonlight_stream.Moonlight; then
+            flatpak run com.moonlight_stream.Moonlight stream "$SERVER_IP" "$APP_NAME"
+            MOONLIGHT_EXIT=$?
+        else
+            moonlight stream "$SERVER_IP" "$APP_NAME"
+            MOONLIGHT_EXIT=$?
+        fi
+
+        # On clean exit: stop the session on the server
+        if [ $MOONLIGHT_EXIT -eq 0 ]; then
+            kdialog --passivepopup "Cleaning up server session..." 3
+            curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/stop-session" > /dev/null
+        else
+            # On crash/disconnect: keep the session alive so you can reconnect
+            kdialog --passivepopup "Connection lost. Keeping server session alive..." 3
+        fi
+
+        # Always disconnect the VPN
+        sleep 2
+        nmcli connection down "$VPN_NAME"
+
     else
-        moonlight
-        MOONLIGHT_EXIT=$?
+        kdialog --error "Failed to connect to VPN."
     fi
+    ```
 
-    # On clean exit: stop the session on the server
-    if [ $MOONLIGHT_EXIT -eq 0 ]; then
-        kdialog --passivepopup "Cleaning up server session..." 5
-        curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/stop-session" > /dev/null
+=== "GNOME"
+    ```bash
+    #!/bin/bash
+
+    SERVER_IP="<your-server-ip>"
+    VPN_NAME="<your-vpn-name>"
+    APP_NAME="Desktop"         # ← Name of the app in Sunshine to launch
+    WEBHOOK_PORT="9000"
+
+    # Connect to VPN
+    if nmcli connection up "$VPN_NAME"; then
+        
+        # Wait for the server to become reachable
+        MAX_WAIT=15
+        WAIT_COUNT=0
+        while ! ping -c 1 -W 1 "$SERVER_IP" > /dev/null 2>&1; do
+            sleep 1
+            WAIT_COUNT=$((WAIT_COUNT + 1))
+            if [ "$WAIT_COUNT" -ge "$MAX_WAIT" ]; then
+                zenity --error --text="Connected to VPN, but server $SERVER_IP is unreachable."
+                nmcli connection down "$VPN_NAME"
+                exit 1
+            fi
+        done
+
+        # Trigger gaming session and capture the response
+        RESPONSE=$(curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming")
+
+        # Handle session conflict
+        if echo "$RESPONSE" | grep -iq "ERROR: A graphical session is already active"; then      
+            if zenity --question --text="A session is already active on the server. Do you want to stop it and start a new one?"; then
+                notify-send -t 3000 "Stopping existing session..."
+                curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/stop-session" > /dev/null
+                sleep 8
+                notify-send -t 3000 "Starting gaming session..."
+                curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming" > /dev/null
+                sleep 8
+            fi
+        fi
+
+        notify-send -t 3000 "Ready. Launching Moonlight..."
+
+        # Launch Moonlight
+        if command -v flatpak >/dev/null 2>&1 && flatpak list | grep -q com.moonlight_stream.Moonlight; then
+            flatpak run com.moonlight_stream.Moonlight stream "$SERVER_IP" "$APP_NAME"
+            MOONLIGHT_EXIT=$?
+        else
+            moonlight stream "$SERVER_IP" "$APP_NAME"
+            MOONLIGHT_EXIT=$?
+        fi
+
+        # On clean exit: stop the session on the server
+        if [ $MOONLIGHT_EXIT -eq 0 ]; then
+            notify-send -t 3000 "Cleaning up server session..."
+            curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/stop-session" > /dev/null	
+        else
+            # On crash/disconnect: keep the session alive so you can reconnect
+            notify-send -t 3000 "Connection lost. Keeping server session alive..."
+        fi
+
+        # Always disconnect the VPN
+        sleep 2
+        nmcli connection down "$VPN_NAME"
+
     else
-        # On crash/disconnect: keep the session alive so you can reconnect
-        kdialog --passivepopup "Connection lost. Keeping server session alive..." 4
+        zenity --error --text="Failed to connect to VPN."
     fi
+    ```
 
-    # Always disconnect the VPN
-    sleep 2
-    nmcli connection down "$VPN_NAME"
-
-else
-    kdialog --error "Failed to connect to VPN."
-fi
-```
-
-Make it executable:
+Make your script executable:
 
 ```bash
 chmod +x ~/.local/bin/play-home.sh
@@ -216,7 +295,7 @@ chmod +x ~/.local/bin/play-home.sh
 nano ~/.local/share/applications/play-home.desktop
 ```
 
-Paste — **replace `YOUR_USER` with your local username:**
+Paste — **replace `YOUR_USER` with your local client username:**
 
 ```ini
 [Desktop Entry]
@@ -228,7 +307,7 @@ Categories=Game;
 Terminal=false
 ```
 
-Open your application launcher, search for **"Play Home"**, and run it. The system will now handle VPN, session management, streaming, and cleanup automatically.
+Open your application launcher, search for **"Play Home"**, and run it. The system will now handle VPN routing, ping verification, session management, Moonlight streaming, and cleanup automatically.
 
 ---
 
