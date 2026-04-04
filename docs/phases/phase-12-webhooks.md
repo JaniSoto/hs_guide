@@ -141,7 +141,7 @@ mkdir -p ~/.local/bin
 nano ~/.local/bin/play-home.sh
 ```
 
-Choose the appropriate script below for your desktop environment. **Make sure to update `SERVER_IP`, `VPN_NAME`, and `APP_NAME`** to match your network and Sunshine configuration.
+Choose the appropriate script below for your desktop environment. The **Admin** versions include a prompt asking if you want to launch a Gaming session or a remote KDE desktop session. **Make sure to update the variables at the top** to match your network and configuration.
 
 === "KDE Plasma"
     ```bash
@@ -267,6 +267,234 @@ Choose the appropriate script below for your desktop environment. **Make sure to
         if [ $MOONLIGHT_EXIT -eq 0 ]; then
             notify-send -t 3000 "Cleaning up server session..."
             curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/stop-session" > /dev/null	
+        else
+            # On crash/disconnect: keep the session alive so you can reconnect
+            notify-send -t 3000 "Connection lost. Keeping server session alive..."
+        fi
+
+        # Always disconnect the VPN
+        sleep 2
+        nmcli connection down "$VPN_NAME"
+
+    else
+        zenity --error --text="Failed to connect to VPN."
+    fi
+    ```
+
+=== "KDE Plasma (Admin)"
+    ```bash
+    #!/bin/bash
+
+    SERVER_IP="<your-server-ip>"
+    VPN_NAME="<your-vpn-name>"
+    APP_NAME="Desktop"         # ← Name of the app in Sunshine to launch
+    WEBHOOK_PORT="9000"
+    SSH_ALIAS="<your-ssh-alias>" # ← Your SSH config alias for the server
+
+    # Connect to VPN
+    if nmcli connection up "$VPN_NAME"; then
+
+        # Wait for the server to become reachable
+        MAX_WAIT=15
+        WAIT_COUNT=0
+        while ! ping -c 1 -W 1 "$SERVER_IP" > /dev/null 2>&1; do
+            sleep 1
+            WAIT_COUNT=$((WAIT_COUNT + 1))
+            if [ "$WAIT_COUNT" -ge "$MAX_WAIT" ]; then
+                kdialog --error "Connected to VPN, but server $SERVER_IP is unreachable."
+                nmcli connection down "$VPN_NAME"
+                exit 1
+            fi
+        done
+
+        # Prompt user for session type
+        SESSION_TYPE=$(kdialog --title "Select Session" \
+            --radiolist "Which session would you like to start?" \
+            "Gaming" "Gaming" on \
+            "KDE" "KDE" off)
+
+        # If the user clicks "Cancel" or closes the window, disconnect VPN and exit gracefully
+        if [ -z "$SESSION_TYPE" ]; then
+            nmcli connection down "$VPN_NAME"
+            exit 0
+        fi
+
+        if [ "$SESSION_TYPE" == "KDE" ]; then
+            kdialog --passivepopup "Starting KDE session..." 3
+            
+            # Create a temporary askpass script so SSH can use kdialog to ask for the passphrase
+            ASKPASS_SCRIPT=$(mktemp)
+            echo '#!/bin/bash' > "$ASKPASS_SCRIPT"
+            echo 'kdialog --password "SSH Passphrase for '"$SSH_ALIAS"'"' >> "$ASKPASS_SCRIPT"
+            chmod +x "$ASKPASS_SCRIPT"
+
+            export SSH_ASKPASS="$ASKPASS_SCRIPT"
+            export SSH_ASKPASS_REQUIRE="force"
+
+            # Run SSH. 'setsid -w' detaches it from the background environment and forces the GUI askpass prompt.
+            setsid -w ssh "$SSH_ALIAS" "sudo start-kde.sh" < /dev/null
+            SSH_EXIT=$?
+
+            # Clean up the temporary askpass script
+            rm -f "$ASKPASS_SCRIPT"
+
+            # If user canceled the password prompt or SSH failed, abort
+            if [ $SSH_EXIT -ne 0 ]; then
+                kdialog --error "SSH connection failed or passphrase prompt canceled."
+                nmcli connection down "$VPN_NAME"
+                exit 1
+            fi
+            
+            sleep 2 # Small pause to let the remote KDE session start up
+
+        elif [ "$SESSION_TYPE" == "Gaming" ]; then
+            # Trigger gaming session and capture the response
+            RESPONSE=$(curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming")
+
+            # Handle session conflict
+            if echo "$RESPONSE" | grep -iq "ERROR: A graphical session is already active"; then      
+                if kdialog --title "Session Conflict" --yesno "A session is already active on the server. Do you want to stop it and start a new one?"; then
+                    kdialog --passivepopup "Stopping existing session..." 3
+                    curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/stop-session" > /dev/null
+                    sleep 8
+                    kdialog --passivepopup "Starting gaming session..." 3
+                    curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming" > /dev/null
+                    sleep 8
+                fi
+            fi
+        fi
+
+        kdialog --passivepopup "Ready. Launching Moonlight..." 3
+
+        # Launch Moonlight
+        if command -v flatpak >/dev/null 2>&1 && flatpak list | grep -q com.moonlight_stream.Moonlight; then
+            flatpak run com.moonlight_stream.Moonlight stream "$SERVER_IP" "$APP_NAME"
+            MOONLIGHT_EXIT=$?
+        else
+            moonlight stream "$SERVER_IP" "$APP_NAME"
+            MOONLIGHT_EXIT=$?
+        fi
+
+        # On clean exit: stop the session on the server
+        if [ $MOONLIGHT_EXIT -eq 0 ]; then
+            kdialog --passivepopup "Cleaning up server session..." 3
+            curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/stop-session" > /dev/null  
+        else
+            # On crash/disconnect: keep the session alive so you can reconnect
+            kdialog --passivepopup "Connection lost. Keeping server session alive..." 3
+        fi
+
+        # Always disconnect the VPN
+        sleep 2
+        nmcli connection down "$VPN_NAME"
+
+    else
+        kdialog --error "Failed to connect to VPN."
+    fi
+    ```
+
+=== "GNOME (Admin)"
+    ```bash
+    #!/bin/bash
+
+    SERVER_IP="<your-server-ip>"
+    VPN_NAME="<your-vpn-name>"
+    APP_NAME="Desktop"         # ← Name of the app in Sunshine to launch
+    WEBHOOK_PORT="9000"
+    SSH_ALIAS="<your-ssh-alias>" # ← Your SSH config alias for the server
+
+    # Connect to VPN
+    if nmcli connection up "$VPN_NAME"; then
+
+        # Wait for the server to become reachable
+        MAX_WAIT=15
+        WAIT_COUNT=0
+        while ! ping -c 1 -W 1 "$SERVER_IP" > /dev/null 2>&1; do
+            sleep 1
+            WAIT_COUNT=$((WAIT_COUNT + 1))
+            if [ "$WAIT_COUNT" -ge "$MAX_WAIT" ]; then
+                zenity --error --text="Connected to VPN, but server $SERVER_IP is unreachable."
+                nmcli connection down "$VPN_NAME"
+                exit 1
+            fi
+        done
+
+        # Prompt user for session type
+        SESSION_TYPE=$(zenity --list \
+            --title="Select Session" \
+            --text="Which session would you like to start?" \
+            --radiolist \
+            --column="Select" --column="Session Type" \
+            TRUE "Gaming" \
+            FALSE "KDE" \
+            --width=300 --height=200)
+
+        # If the user clicks "Cancel" or closes the window, disconnect VPN and exit gracefully
+        if [ -z "$SESSION_TYPE" ]; then
+            nmcli connection down "$VPN_NAME"
+            exit 0
+        fi
+
+        if [ "$SESSION_TYPE" == "KDE" ]; then
+            notify-send -t 3000 "Starting KDE session..."
+            
+            # Create a temporary askpass script so SSH can use Zenity to ask for the passphrase
+            ASKPASS_SCRIPT=$(mktemp)
+            echo '#!/bin/bash' > "$ASKPASS_SCRIPT"
+            echo 'zenity --password --title="SSH Passphrase for '"$SSH_ALIAS"'"' >> "$ASKPASS_SCRIPT"
+            chmod +x "$ASKPASS_SCRIPT"
+
+            export SSH_ASKPASS="$ASKPASS_SCRIPT"
+            export SSH_ASKPASS_REQUIRE="force"
+
+            # Run SSH. 'setsid -w' detaches it from the background environment and forces the GUI askpass prompt.
+            setsid -w ssh "$SSH_ALIAS" "sudo start-kde.sh" < /dev/null
+            SSH_EXIT=$?
+
+            # Clean up the temporary askpass script
+            rm -f "$ASKPASS_SCRIPT"
+
+            # If user canceled the password prompt or SSH failed, abort
+            if [ $SSH_EXIT -ne 0 ]; then
+                zenity --error --text="SSH connection failed or passphrase prompt canceled."
+                nmcli connection down "$VPN_NAME"
+                exit 1
+            fi
+            
+            sleep 2 # Small pause to let the remote KDE session start up
+
+        elif [ "$SESSION_TYPE" == "Gaming" ]; then
+            # Trigger gaming session and capture the response
+            RESPONSE=$(curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming")
+
+            # Handle session conflict
+            if echo "$RESPONSE" | grep -iq "ERROR: A graphical session is already active"; then      
+                if zenity --question --text="A session is already active on the server. Do you want to stop it and start a new one?"; then
+                    notify-send -t 3000 "Stopping existing session..."
+                    curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/stop-session" > /dev/null
+                    sleep 8
+                    notify-send -t 3000 "Starting gaming session..."
+                    curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming" > /dev/null
+                    sleep 8
+                fi
+            fi
+        fi
+
+        notify-send -t 3000 "Ready. Launching Moonlight..."
+
+        # Launch Moonlight
+        if command -v flatpak >/dev/null 2>&1 && flatpak list | grep -q com.moonlight_stream.Moonlight; then
+            flatpak run com.moonlight_stream.Moonlight stream "$SERVER_IP" "$APP_NAME"
+            MOONLIGHT_EXIT=$?
+        else
+            moonlight stream "$SERVER_IP" "$APP_NAME"
+            MOONLIGHT_EXIT=$?
+        fi
+
+        # On clean exit: stop the session on the server
+        if [ $MOONLIGHT_EXIT -eq 0 ]; then
+            notify-send -t 3000 "Cleaning up server session..."
+            curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/stop-session" > /dev/null  
         else
             # On crash/disconnect: keep the session alive so you can reconnect
             notify-send -t 3000 "Connection lost. Keeping server session alive..."
