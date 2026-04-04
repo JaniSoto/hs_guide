@@ -170,10 +170,42 @@ sudo chmod 755 /usr/local/bin/server-health
 
 ---
 
-## Run the Dashboard
+## Create a Sudoers Drop-in File
+
+Because the script runs privileged commands (like `sudo fail2ban-client`) and requires root access to fetch full system data, you should configure a sudoers drop-in to allow running the script without being prompted for a password.
 
 ```bash
-server-health
+echo "$(whoami) ALL=(root) NOPASSWD: /usr/local/bin/server-health" | sudo tee /etc/sudoers.d/server-health
+sudo chmod 0440 /etc/sudoers.d/server-health
+```
+
+---
+
+## Create a Convenience Alias
+
+To make launching the dashboard even easier, add an alias to your shell profile so you can simply type `health` from anywhere:
+
+```bash
+echo 'alias health="sudo server-health"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+*(If you are using Zsh, replace `.bashrc` with `.zshrc` in the above commands.)*
+
+---
+
+## Run the Dashboard
+
+If you set up the alias, simply run:
+
+```bash
+health
+```
+
+Otherwise, run the script directly:
+
+```bash
+sudo server-health
 ```
 
 Press `Ctrl+C` to exit.

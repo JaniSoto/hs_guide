@@ -136,6 +136,13 @@ Nextcloud AIO is a "master container" that manages all the sub-containers Nextcl
 !!! info "AMD GPU acceleration"
     If you want Nextcloud to use your AMD GPU for video transcoding, **do not run the compose command below yet**. First read the [AMD GPU Acceleration](../reference/amd-gpu.md) reference page, then come back and use the modified compose file from there.
 
+!!! warning "Temporarily remove the Immutable Guard"
+    The `chattr +i` flag set in Phase 6 protects the data directory but also blocks Nextcloud AIO's first-start initialisation. Remove it before starting containers:
+
+```bash
+sudo chattr -i /srv/nextcloud-data
+```
+
 ```bash
 mkdir -p ~/docker/nextcloud && cd ~/docker/nextcloud
 
@@ -172,6 +179,13 @@ networks:
 EOF
 
 docker compose up -d
+```
+
+!!! note "Re-apply the guard after startup"
+    add `+i` back after Nextcloud's containers are up.
+
+```bash
+sudo chattr +i /srv/nextcloud-data
 ```
 
 ---

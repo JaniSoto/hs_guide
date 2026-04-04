@@ -373,7 +373,7 @@ sudo start-kde.sh      # Launches KDE Plasma
 sudo stop-session.sh   # Returns to idle
 sudo start-gaming.sh   # Launches Steam Gaming Mode
 ```
-
-Streaming won't work yet — Sunshine still needs to be configured in Phase 9.
+!!! note "Streaming won't work yet"
+    Sunshine still needs to be configured in Phase 9.
 
 [Next: Phase 9 — VPN & Streaming →](phase-9-streaming.md){ .next-phase }

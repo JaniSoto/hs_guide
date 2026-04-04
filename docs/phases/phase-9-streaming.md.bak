@@ -37,19 +37,7 @@ sudo ujust setup-sunshine
 !!! info "What `ujust setup-sunshine` does"
     This sets the `cap_sys_admin` Linux capability on the Sunshine binary and configures udev rules. This is what allows Sunshine to use **KMS (Kernel Mode Setting)** to directly capture the GPU's display output — which is how it streams your desktop or gaming session without needing a virtual display.
 
-**1c — Configure Sunshine to use KMS:**
-
-By default, Sunshine tries to use X11 or Wayland screen capture protocols, which require an active user session. For a headless setup, you must explicitly tell Sunshine to capture directly from the kernel using KMS.
-
-```bash
-mkdir -p ~/.config/sunshine
-
-cat > ~/.config/sunshine/sunshine.conf << 'EOF'
-capture = kms
-EOF
-```
-
-**1d — Enable login persistence and reboot:**
+**1c — Enable login persistence and reboot:**
 
 ```bash
 sudo loginctl enable-linger $(whoami)
@@ -136,39 +124,10 @@ sudo systemctl restart docker
 !!! danger "Always restart Docker after `firewall-cmd --reload`"
     firewalld flushes and rebuilds the entire nftables ruleset when you reload it. This wipes Docker's internal port-forwarding rules. Running `sudo systemctl restart docker` immediately after restores them.
 
-**3b — Create and enable a System Service for Sunshine:**
-
-By default, Sunshine runs as a *user* service, meaning it only starts *after* an active session starts. To guarantee Sunshine is always running and accessible upon boot (crucial for a headless server), we will disable the user service and install it as a system-level service.
+**3b — Enable the Sunshine service:**
 
 ```bash
-# Disable user services that might have been enabled by `ujust setup-sunshine`
-systemctl --user disable --now sunshine.service sunshine-kms.service 2>/dev/null || true
-
-# Create the system service drop-in file
-sudo tee /etc/systemd/system/sunshine.service << EOF
-[Unit]
-Description=Sunshine Game Stream Server (KMS System Service)
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-User=$(whoami)
-Group=$(whoami)
-ExecStartPre=/bin/sleep 5
-ExecStart=/usr/bin/sunshine /home/$(whoami)/.config/sunshine/sunshine.conf
-Restart=on-failure
-RestartSec=5s
-# Grant KMS permissions directly to the service
-AmbientCapabilities=CAP_SYS_ADMIN
-CapabilityBoundingSet=CAP_SYS_ADMIN
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Reload systemd and start Sunshine on boot
-sudo systemctl daemon-reload
-sudo systemctl enable --now sunshine.service
+systemctl --user enable --now sunshine
 ```
 
 **3c — Set up Sunshine's web UI:**
@@ -187,9 +146,9 @@ Open `https://localhost:47990` in your browser. Accept the self-signed certifica
 
 This is the full remote streaming workflow once everything is configured:
 
-1. **Connect VPN** — Open WireGuard on your device and activate your profile. Your server becomes accessible at `192.168.1.50` (use your private IP address.
+1. **Connect VPN** — Open WireGuard on your device and activate your profile. Your server becomes accessible at `10.8.0.1`.
 2. **Launch a session** — SSH into the server and run `sudo start-kde.sh` or `sudo start-gaming.sh`
-3. **Open Moonlight** — Click **Add Host** and enter `<your-ip-address>`
+3. **Open Moonlight** — Click **Add Host** and enter `10.8.0.1`
 4. **Stream** — Select **Desktop** or **Steam Big Picture**
 5. **Stop** — Close Moonlight, then run `sudo stop-session.sh` over SSH to return to headless mode
 
@@ -200,6 +159,6 @@ This is the full remote streaming workflow once everything is configured:
 
 ## ✅ Phase 9 Complete
 
-WireGuard VPN and Sunshine are running as a system service with KMS enabled. You can stream your desktop or Gaming Mode over an encrypted VPN tunnel, and Sunshine will always be ready after a reboot without needing an active user session.
+WireGuard VPN and Sunshine are running. You can stream your desktop or Gaming Mode over an encrypted VPN tunnel.
 
 [Next: Phase 10 — Nextcloud Init →](phase-10-nextcloud.md){ .next-phase }

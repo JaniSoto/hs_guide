@@ -23,7 +23,7 @@ ls /etc/sddm.conf.d/
 ```bash
 loginctl list-sessions
 ```
-**Expected:** Only your SSH session (no `seat0` entry with a session type)
+**Expected:** `greeter` on `seat0` (unless start-kde or start-gaming were executed) 
 
 ```bash
 ss -tlnp | grep sshd
@@ -75,8 +75,8 @@ ports: 22022/tcp 47984/tcp 47989/tcp 48010/tcp 47998/udp 47999/udp 48000/udp 480
 ### Group D — Streaming & VPN
 
 1. Connect WireGuard on your device
-2. Confirm `ping 10.8.0.1` succeeds
-3. Run `sudo start-kde.sh` over SSH, then open Moonlight and connect to `10.8.0.1`
+2. Confirm `ping <your-ip-address>` succeeds
+3. Run `sudo start-kde.sh` over SSH, then open Moonlight and connect to `<your-ip-address>`
 4. Confirm a stream appears, then run `sudo stop-session.sh`
 
 ---

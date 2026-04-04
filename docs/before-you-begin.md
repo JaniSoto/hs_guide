@@ -9,7 +9,7 @@ This page covers everything you should know and prepare **before** running a sin
 You will end up with a single PC that does two things at once:
 
 - **Always on (24/7):** The machine runs headless — no monitor, no graphical interface active. Docker containers serving Nextcloud, a reverse proxy, a VPN, and automatic updates all run silently in the background.
-- **On demand:** From any device on your network (or remotely over VPN), you SSH in and run one command to launch KDE Plasma or Steam Gaming Mode. Sunshine then streams the display to Moonlight. When you're done, you run another command and the machine returns to idle.
+- **On demand:** From any device you SSH in and run one command to launch KDE Plasma or Steam Gaming Mode. Sunshine then streams the display to Moonlight. When you're done, you run another command and the machine returns to idle. You can also use webhooks to run the scripts remotly over the VPN on any web browser.
 
 ```
 Normal state:       Machine idle at blank SDDM login screen
@@ -31,7 +31,7 @@ Before starting, install these on the **PC or laptop you'll use to SSH into the 
 | Tool | Purpose | Where to Get |
 |------|----------|--------------|
 | **SSH client** | Connect to the server from your computer | Built-in on Linux/macOS/Windows 10+ |
-| **Fedora Media Writer** or **Balena Etcher** | Flash the Bazzite ISO to a USB drive | [fedoraproject.org](https://fedoraproject.org/en/workstation/download) · [etcher.balena.io](https://etcher.balena.io) |
+| **Ventoy (Recommended)**, **Fedora Media Writer** or **Balena Etcher** | Flash the Bazzite ISO to a USB drive | [ventoy.net](https://www.ventoy.net/) · [fedoraproject.org](https://fedoraproject.org/en/workstation/download) · [etcher.balena.io](https://etcher.balena.io) |
 | **Moonlight** | Stream games/desktop from the server | [moonlight-stream.org](https://moonlight-stream.org) |
 | **WireGuard** | VPN client for remote access | [wireguard.com/install](https://www.wireguard.com/install/) |
 
@@ -67,7 +67,7 @@ Don't worry if these are new to you — each concept is explained again where it
     WireGuard is a fast, modern VPN protocol. When your phone or laptop connects to your WireGuard VPN, it's as if they're on your home network — even if you're on the other side of the world. This is how Sunshine/Moonlight game streaming works securely without exposing Sunshine ports to the internet.
 
 ??? note "What is Sunshine/Moonlight?"
-    Sunshine is a game streaming server that runs on your server. Moonlight is the client app on your phone, tablet, laptop, or Steam Deck. Together they stream your gaming session over the network with low latency — better than RDP or VNC because they use hardware-accelerated video encoding and UDP.
+    Sunshine is a game streaming server that runs on your server. Moonlight is the client app on your phone, tablet, laptop, smart TV or Steam Deck. Together they stream your gaming session over the network with low latency — better than RDP or VNC because they use hardware-accelerated video encoding and UDP.
 
 ??? note "What is SELinux?"
     SELinux (Security-Enhanced Linux) is a mandatory access control system built into Fedora/Bazzite. It enforces strict rules about which programs can access which files and ports. Bazzite ships with it enabled, and this guide keeps it on. A few steps in the guide apply "SELinux labels" — this just tells SELinux that a specific file or port is allowed to be used by a specific service.
@@ -113,7 +113,7 @@ Throughout this guide, you'll create passwords, tokens, and IP addresses that yo
 
 | Value | Your Entry |
 |-------|-----------|
-| Server local IP | `192.168.1.___` |
+| Server local IP | `192.168.___.___` |
 | SSH username | |
 | DuckDNS subdomain | `_______.duckdns.org` |
 | DuckDNS token | |

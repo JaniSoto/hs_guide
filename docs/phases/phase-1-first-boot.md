@@ -110,7 +110,7 @@ Once connected, check that no graphical session started:
 loginctl list-sessions
 ```
 
-**Expected result:** Empty output, or only your SSH session listed with no seat (`-`) in the seat column. If you see a session with `seat0`, the headless override didn't apply — re-run Step 4.
+**Expected result:** You should see a `greeter` session on `seat0`. 
 
 ---
 
