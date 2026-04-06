@@ -285,11 +285,12 @@ Choose the appropriate script below for your desktop environment. The **Admin** 
     ```bash
     #!/bin/bash
 
+    # --- Configuration ---
     SERVER_IP="<your-server-ip>"
     VPN_NAME="<your-vpn-name>"
-    APP_NAME="Desktop"         # ← Name of the app in Sunshine to launch
+    APP_NAME="Desktop"           # ← Name of the app in Sunshine to launch
     WEBHOOK_PORT="9000"
-    SSH_ALIAS="<your-ssh-alias>" # ← Your SSH config alias for the server
+    SSH_ALIAS="<your-ssh-alias>"   # ← Your SSH config alias for the server
 
     # Connect to VPN
     if nmcli connection up "$VPN_NAME"; then
@@ -313,7 +314,7 @@ Choose the appropriate script below for your desktop environment. The **Admin** 
             "Gaming" "Gaming" on \
             "KDE" "KDE" off)
 
-        # If the user clicks "Cancel" or closes the window, disconnect VPN and exit gracefully
+        # If the user clicks "Cancel" or closes the window, disconnect VPN and exit
         if [ -z "$SESSION_TYPE" ]; then
             nmcli connection down "$VPN_NAME"
             exit 0
@@ -321,37 +322,55 @@ Choose the appropriate script below for your desktop environment. The **Admin** 
 
         if [ "$SESSION_TYPE" == "KDE" ]; then
             kdialog --passivepopup "Starting KDE session..." 3
-            
+
             # Create a temporary askpass script so SSH can use kdialog to ask for the passphrase
             ASKPASS_SCRIPT=$(mktemp)
             echo '#!/bin/bash' > "$ASKPASS_SCRIPT"
-            echo 'kdialog --password "SSH Passphrase for '"$SSH_ALIAS"'"' >> "$ASKPASS_SCRIPT"
+            echo 'kdialog --password "SSH Authentication for '"$SSH_ALIAS"'"' >> "$ASKPASS_SCRIPT"
             chmod +x "$ASKPASS_SCRIPT"
 
             export SSH_ASKPASS="$ASKPASS_SCRIPT"
             export SSH_ASKPASS_REQUIRE="force"
 
-            # Run SSH. 'setsid -w' detaches it from the background environment and forces the GUI askpass prompt.
-            setsid -w ssh "$SSH_ALIAS" "sudo start-kde.sh" < /dev/null
+            # Run SSH and capture output to check for conflicts
+            SSH_OUTPUT=$(setsid -w ssh "$SSH_ALIAS" "sudo start-kde.sh" 2>&1 < /dev/null)
             SSH_EXIT=$?
+
+            # --- Handle Session Conflict for KDE ---
+            if echo "$SSH_OUTPUT" | grep -iq "already active"; then      
+                if kdialog --title "Session Conflict" --yesno "A graphical session is already active on the server. Do you want to stop it and start KDE?"; then
+                    kdialog --passivepopup "Stopping existing session..." 3
+                    # Stop existing session via SSH
+                    ssh "$SSH_ALIAS" "sudo stop-session.sh" > /dev/null 2>&1
+                    sleep 5
+                    kdialog --passivepopup "Starting KDE session..." 3
+                    # Try starting KDE again
+                    SSH_OUTPUT=$(setsid -w ssh "$SSH_ALIAS" "sudo start-kde.sh" 2>&1 < /dev/null)
+                    SSH_EXIT=$?
+                else
+                    rm -f "$ASKPASS_SCRIPT"
+                    nmcli connection down "$VPN_NAME"
+                    exit 0
+                fi
+            fi
 
             # Clean up the temporary askpass script
             rm -f "$ASKPASS_SCRIPT"
 
-            # If user canceled the password prompt or SSH failed, abort
+            # If SSH failed for any other reason
             if [ $SSH_EXIT -ne 0 ]; then
-                kdialog --error "SSH connection failed or passphrase prompt canceled."
+                kdialog --error "SSH Failed: $SSH_OUTPUT"
                 nmcli connection down "$VPN_NAME"
                 exit 1
             fi
-            
+
             sleep 2 # Small pause to let the remote KDE session start up
 
         elif [ "$SESSION_TYPE" == "Gaming" ]; then
-            # Trigger gaming session and capture the response
+            # Trigger gaming session via Webhook
             RESPONSE=$(curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming")
 
-            # Handle session conflict
+            # --- Handle Session Conflict for Gaming ---
             if echo "$RESPONSE" | grep -iq "ERROR: A graphical session is already active"; then      
                 if kdialog --title "Session Conflict" --yesno "A session is already active on the server. Do you want to stop it and start a new one?"; then
                     kdialog --passivepopup "Stopping existing session..." 3
@@ -397,11 +416,12 @@ Choose the appropriate script below for your desktop environment. The **Admin** 
     ```bash
     #!/bin/bash
 
+    # --- Configuration ---
     SERVER_IP="<your-server-ip>"
     VPN_NAME="<your-vpn-name>"
-    APP_NAME="Desktop"         # ← Name of the app in Sunshine to launch
+    APP_NAME="Desktop"           # ← Name of the app in Sunshine to launch
     WEBHOOK_PORT="9000"
-    SSH_ALIAS="<your-ssh-alias>" # ← Your SSH config alias for the server
+    SSH_ALIAS="<your-ssh-alias>"   # ← Your SSH config alias for the server
 
     # Connect to VPN
     if nmcli connection up "$VPN_NAME"; then
@@ -429,7 +449,7 @@ Choose the appropriate script below for your desktop environment. The **Admin** 
             FALSE "KDE" \
             --width=300 --height=200)
 
-        # If the user clicks "Cancel" or closes the window, disconnect VPN and exit gracefully
+        # If the user clicks "Cancel" or closes the window, disconnect VPN and exit
         if [ -z "$SESSION_TYPE" ]; then
             nmcli connection down "$VPN_NAME"
             exit 0
@@ -437,37 +457,54 @@ Choose the appropriate script below for your desktop environment. The **Admin** 
 
         if [ "$SESSION_TYPE" == "KDE" ]; then
             notify-send -t 3000 "Starting KDE session..."
-            
-            # Create a temporary askpass script so SSH can use Zenity to ask for the passphrase
+
+            # Create a temporary askpass script for GUI SSH authentication
             ASKPASS_SCRIPT=$(mktemp)
             echo '#!/bin/bash' > "$ASKPASS_SCRIPT"
-            echo 'zenity --password --title="SSH Passphrase for '"$SSH_ALIAS"'"' >> "$ASKPASS_SCRIPT"
+            echo 'zenity --password --title="SSH Authentication for '"$SSH_ALIAS"'"' >> "$ASKPASS_SCRIPT"
             chmod +x "$ASKPASS_SCRIPT"
 
             export SSH_ASKPASS="$ASKPASS_SCRIPT"
             export SSH_ASKPASS_REQUIRE="force"
 
-            # Run SSH. 'setsid -w' detaches it from the background environment and forces the GUI askpass prompt.
-            setsid -w ssh "$SSH_ALIAS" "sudo start-kde.sh" < /dev/null
+            # Try to start KDE and capture output/errors
+            SSH_OUTPUT=$(setsid -w ssh "$SSH_ALIAS" "sudo start-kde.sh" 2>&1 < /dev/null)
             SSH_EXIT=$?
 
-            # Clean up the temporary askpass script
+            # --- Handle Session Conflict for KDE ---
+            if echo "$SSH_OUTPUT" | grep -iq "already active"; then      
+                if zenity --question --text="A graphical session is already active on the server. Do you want to stop it and start KDE?"; then
+                    notify-send -t 3000 "Stopping existing session..."
+                    # Run stop script via SSH
+                    ssh "$SSH_ALIAS" "sudo stop-session.sh" > /dev/null 2>&1
+                    sleep 5
+                    notify-send -t 3000 "Starting KDE session..."
+                    # Try starting KDE again
+                    SSH_OUTPUT=$(setsid -w ssh "$SSH_ALIAS" "sudo start-kde.sh" 2>&1 < /dev/null)
+                    SSH_EXIT=$?
+                else
+                    rm -f "$ASKPASS_SCRIPT"
+                    nmcli connection down "$VPN_NAME"
+                    exit 0
+                fi
+            fi
+
             rm -f "$ASKPASS_SCRIPT"
 
-            # If user canceled the password prompt or SSH failed, abort
+            # If SSH failed for any other reason
             if [ $SSH_EXIT -ne 0 ]; then
-                zenity --error --text="SSH connection failed or passphrase prompt canceled."
+                zenity --error --text="SSH Failed: $SSH_OUTPUT"
                 nmcli connection down "$VPN_NAME"
                 exit 1
             fi
-            
-            sleep 2 # Small pause to let the remote KDE session start up
+
+            sleep 2 
 
         elif [ "$SESSION_TYPE" == "Gaming" ]; then
-            # Trigger gaming session and capture the response
+            # Trigger gaming session via Webhook
             RESPONSE=$(curl -s -m 15 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming")
 
-            # Handle session conflict
+            # --- Handle Session Conflict for Gaming ---
             if echo "$RESPONSE" | grep -iq "ERROR: A graphical session is already active"; then      
                 if zenity --question --text="A session is already active on the server. Do you want to stop it and start a new one?"; then
                     notify-send -t 3000 "Stopping existing session..."
@@ -506,7 +543,7 @@ Choose the appropriate script below for your desktop environment. The **Admin** 
 
     else
         zenity --error --text="Failed to connect to VPN."
-    fi
+    fi 
     ```
 
 Make your script executable:
