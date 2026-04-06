@@ -1,9 +1,12 @@
+
+
+
 <div class="phase-header">
   <span class="phase-num">8</span>
   <div class="phase-header-text">
     <p class="phase-header-eyebrow">Phase 8 · Run over SSH</p>
     <h1>Session Management Scripts</h1>
-    <p class="phase-header-sub">Write the three scripts that launch and stop KDE, Gaming Mode, and Sunshine.</p>
+    <p class="phase-header-sub">Write the scripts that launch KDE and Gaming Mode, and return the server to a true headless idle state.</p>
   </div>
 </div>
 
@@ -16,6 +19,8 @@
     4. **Start** SDDM so it auto-logs into the chosen session
     5. **Wait** for the session to appear and stabilise
     6. **Start** Sunshine to capture the session via KMS
+
+    When stopping a session, the script gracefully closes your games (allowing cloud saves to sync) and then completely shuts down SDDM. This drops the server into a **true headless state** (a raw Linux TTY terminal). This clears VRAM, stops the display server, and allows the GPU to idle at its lowest power state.
 
 ---
 
@@ -73,8 +78,7 @@ Create all three of the scripts below to manage your server's graphical sessions
 
     log "Writing SDDM autologin configuration..."
     mkdir -p "$(dirname "${AUTOLOGIN_CONF}")"
-    cat > "${AUTOLOGIN_CONF}" <<EOF
-    [Autologin]
+    cat > "${AUTOLOGIN_CONF}" <<EOF[Autologin]
     User=${USERNAME}
     Session=${SESSION_NAME}
     Relogin=true
@@ -221,7 +225,7 @@ Create all three of the scripts below to manage your server's graphical sessions
     ```
 
 === "stop-session.sh"
-    Gracefully stops whichever session is active and returns the server to its headless idle state.
+    Gracefully stops whichever session is active and completely terminates SDDM, dropping the server to a highly efficient headless TTY.
 
     ```bash
     sudo nano /usr/local/bin/stop-session.sh
@@ -260,12 +264,11 @@ Create all three of the scripts below to manage your server's graphical sessions
     SUNSHINE_SERVICE="$(detect_sunshine)" || die "Cannot find Sunshine service."
 
     session_id="$(active_graphical_sessions | head -n 1)"
-    [[ -n "${session_id}" ]] || die "No active graphical session found."
+    [[ -n "${session_id}" ]] || log "No active graphical session found. Forcing headless state anyway."
 
-    log "Active graphical session: ${session_id}"
     rm -f /tmp/chimeraos-short-session-tracker 2>/dev/null || true
 
-    log "Disabling SDDM autologin to enforce return to greeter..."
+    log "Disabling SDDM autologin..."
     mkdir -p "$(dirname "${AUTOLOGIN_CONF}")"
     cat > "${AUTOLOGIN_CONF}" <<EOF
     [Autologin]
@@ -277,60 +280,55 @@ Create all three of the scripts below to manage your server's graphical sessions
     log "Stopping Sunshine to release DRM/KMS locks..."
     systemctl stop "${SUNSHINE_SERVICE}" 2>/dev/null || true
 
-    desktop="$(loginctl show-session "${session_id}" -p Desktop --value 2>/dev/null || true)"
-    is_gaming=false
-    if [[ "${desktop,,}" == *"gamescope"* ]] || pgrep -u "${USER_UID}" -x gamescope >/dev/null; then
-        is_gaming=true
-    fi
-
-    if "${is_gaming}"; then
-        log "Session type: Gamescope/Steam Mode"
-        sudo -Eu "${USERNAME}" \
-            XDG_RUNTIME_DIR="/run/user/${USER_UID}" \
-            DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${USER_UID}/bus" \
-            systemctl --user stop gamescope-session-plus@steam.service || true
-    else
-        log "Session type: KDE Plasma"
-        sudo -Eu "${USERNAME}" \
-            XDG_RUNTIME_DIR="/run/user/${USER_UID}" \
-            DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${USER_UID}/bus" \
-            qdbus org.kde.Shutdown /Shutdown org.kde.Shutdown.logout || true
-    fi
-
-    log "Waiting for session to close (timeout: ${SESSION_STOP_TIMEOUT}s)..."
-    elapsed=0; closed=false
-    while (( elapsed < SESSION_STOP_TIMEOUT )); do
-        if [[ -z "$(active_graphical_sessions)" ]]; then
-            log "Session closed."; closed=true; break
+    # Only attempt graceful shutdown if a session is actually running
+    if [[ -n "${session_id}" ]]; then
+        desktop="$(loginctl show-session "${session_id}" -p Desktop --value 2>/dev/null || true)"
+        is_gaming=false
+        if [[ "${desktop,,}" == *"gamescope"* ]] || pgrep -u "${USER_UID}" -x gamescope >/dev/null; then
+            is_gaming=true
         fi
-        sleep 2; (( elapsed += 2 ))
-    done
 
-    if ! "${closed}"; then
-        warn "Session stuck. Forcing termination..."
-        loginctl terminate-session "${session_id}" 2>/dev/null || true
-        sleep 3
+        if "${is_gaming}"; then
+            log "Session type: Gamescope/Steam Mode. Stopping gracefully (allows cloud saves)..."
+            sudo -Eu "${USERNAME}" \
+                XDG_RUNTIME_DIR="/run/user/${USER_UID}" \
+                DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${USER_UID}/bus" \
+                systemctl --user stop gamescope-session-plus@steam.service || true
+        else
+            log "Session type: KDE Plasma. Logging out gracefully..."
+            sudo -Eu "${USERNAME}" \
+                XDG_RUNTIME_DIR="/run/user/${USER_UID}" \
+                DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${USER_UID}/bus" \
+                qdbus org.kde.Shutdown /Shutdown org.kde.Shutdown.logout || true
+        fi
+
+        log "Waiting up to ${SESSION_STOP_TIMEOUT}s for session to close cleanly..."
+        elapsed=0; closed=false
+        while (( elapsed < SESSION_STOP_TIMEOUT )); do
+            if [[ -z "$(active_graphical_sessions)" ]]; then
+                log "Session closed cleanly."; closed=true; break
+            fi
+            sleep 2; (( elapsed += 2 ))
+        done
+
+        if ! "${closed}"; then
+            warn "Session stuck. Forcing termination..."
+            loginctl terminate-session "${session_id}" 2>/dev/null || true
+            sleep 3
+        fi
     fi
 
-    log "Waiting for SDDM greeter..."
-    elapsed=0; greeter_ready=false
-    while (( elapsed < 20 )); do
-        if loginctl list-sessions --no-legend | awk '$6 == "greeter" { print $1 }' | grep -q .; then
-            greeter_ready=true; break
-        fi
-        sleep 1; (( elapsed++ ))
-    done
+    log "Shutting down the SDDM Display Manager entirely to enter pure headless state..."
+    systemctl stop sddm 2>/dev/null || true
 
-    "${greeter_ready}" || warn "Greeter did not appear cleanly."
-
-    log "Letting greeter render for ${SUNSHINE_SETTLE_SECS}s..."
+    log "Allowing GPU to release resources for ${SUNSHINE_SETTLE_SECS}s..."
     sleep "${SUNSHINE_SETTLE_SECS}"
 
-    log "Starting Sunshine to capture SDDM Greeter via KMS..."
+    log "Starting Sunshine to capture the raw headless TTY via KMS..."
     systemctl reset-failed "${SUNSHINE_SERVICE}" 2>/dev/null || true
     systemctl start "${SUNSHINE_SERVICE}"
 
-    echo -e "\n✓ Session ended. Server is idle at the SDDM greeter. Reconnect Moonlight to view."
+    echo -e "\n✓ Session ended. Server is purely headless. Reconnect Moonlight to view the TTY console."
     ```
 
     Make it executable:
@@ -367,10 +365,9 @@ Three session management scripts are installed and sudoers is configured. You ca
 
 ```bash
 sudo start-kde.sh      # Launches KDE Plasma
-sudo stop-session.sh   # Returns to idle
 sudo start-gaming.sh   # Launches Steam Gaming Mode
+sudo stop-session.sh   # Returns to ultra-low-power idle (TTY console)
 ```
-!!! note "Streaming won't work yet"
-    Sunshine still needs to be configured in Phase 9.
 
-[Next: Phase 9 — VPN & Streaming →](phase-9-streaming.md){ .next-phase }
+!!! note "Streaming won't work yet"
+    Sunshine still needs to be configured in Phase 9.[Next: Phase 9 — VPN & Streaming →](phase-9-streaming.md){ .next-phase }
