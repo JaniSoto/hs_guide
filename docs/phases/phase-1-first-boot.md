@@ -1,17 +1,14 @@
-
-
-
 <div class="phase-header">
   <span class="phase-num">1</span>
   <div class="phase-header-text">
     <p class="phase-header-eyebrow">Phase 1 · Last time at the physical machine</p>
     <h1>First Boot, SSH & Headless Setup</h1>
-    <p class="phase-header-sub">Enable SSH, disable sleep, and lock the machine into a true headless text-mode state.</p>
+    <p class="phase-header-sub">Enable SSH, disable sleep, and lock the machine into headless server mode.</p>
   </div>
 </div>
 
 !!! danger "Complete ALL steps before rebooting"
-    Do every step in this phase **in order** before you reboot. The headless boot target in Step 4 must be in place before your next reboot. If you reboot early, the machine boots back into Gaming Mode — just repeat this phase.
+    Do every step in this phase **in order** before you reboot. The headless SDDM override in Step 4 must be in place before your next reboot. If you reboot early, the machine boots back into Gaming Mode — just repeat this phase.
 
 ---
 
@@ -70,20 +67,28 @@ This permanently prevents the system from sleeping, even if some application tri
 
 ---
 
-## Step 4 — Configure True Headless Boot
+## Step 4 — Apply the Headless SDDM Override
 
-This is the most important step. By default, Bazzite automatically boots into a graphical interface (Gaming Mode). To save maximum GPU/RAM resources and allow your GPU to deep-sleep, we will force the server to boot into a pure text-only headless state (`multi-user.target`) and ensure Sunshine starts in this mode.
+This is the most important step. SDDM is the login screen manager. By default on Bazzite, it auto-logs into Gaming Mode. We want it to start and sit idle — showing a blank login screen — so Docker containers run without any graphical session active.
 
 ```bash
-sudo systemctl set-default multi-user.target
-
-sudo sed -i 's/WantedBy=.*/WantedBy=multi-user.target graphical.target/' /etc/systemd/system/sunshine.service
-sudo systemctl daemon-reload
-sudo systemctl reenable sunshine.service
+sudo mkdir -p /etc/sddm.conf.d
+sudo tee /etc/sddm.conf.d/zzz-headless-server.conf > /dev/null << 'EOF'
+[Autologin]
+User=
+Session=
+Relogin=false
+EOF
 ```
 
-!!! info "What does this do?"
-    It stops the graphical display manager (SDDM) from starting on boot. Your server will act like an enterprise data-center machine, dropping to a raw Linux text console (TTY) while keeping Docker and background services running perfectly.
+Apply it immediately:
+
+```bash
+sudo systemctl restart sddm
+```
+
+!!! info "What does this file do?"
+    SDDM reads all `.conf` files in `/etc/sddm.conf.d/` in alphabetical order. The `zzz-` prefix ensures our file loads **last**, overriding any Bazzite defaults (which use names like `bazzite-autologin.conf`). Setting `User=` and `Session=` to blank disables autologin entirely.
 
 ---
 
@@ -105,12 +110,12 @@ Once connected, check that no graphical session started:
 loginctl list-sessions
 ```
 
-**Expected result:** You should only see your current text sessions (like `tty` or `pts/0`). You should **not** see a `greeter` or any graphical `seat0` sessions. The physical monitor plugged into the server (if any) will just show a black screen with a text login prompt.
+**Expected result:** You should see a `greeter` session on `seat0`. 
 
 ---
 
 ## ✅ Phase 1 Complete
 
-You can now SSH into your server and the physical machine sits entirely idle at a Linux terminal. **You no longer need a keyboard or monitor plugged into the server.** All remaining steps in this guide are done over SSH from your personal computer.
+You can now SSH into your server and the screen shows a blank SDDM login. **You no longer need a keyboard or monitor plugged into the server.** All remaining steps in this guide are done over SSH from your personal computer.
 
 [Next: Phase 2 — Router & Network →](phase-2-network.md){ .next-phase }
