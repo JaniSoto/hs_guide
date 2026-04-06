@@ -5,8 +5,8 @@
   <span class="phase-num">12</span>
   <div class="phase-header-text">
     <p class="phase-header-eyebrow">Phase 12 · Local AI Setup</p>
-    <h1>Jarvis Native Architecture</h1>
-    <p class="phase-header-sub">Deploy a locally hosted, privacy-first AI Assistant optimized for the Ryzen 780M with native Nextcloud and Home Assistant integrations.</p>
+    <h1>Secretary-Boss Architecture</h1>
+    <p class="phase-header-sub">Deploy a dual-GPU, locally hosted AI setup. A hyper-fast "Secretary" model runs instantly on the iGPU, automatically waking the eGPU "Boss" model for heavy compute tasks.</p>
   </div>
 </div>
 
@@ -14,22 +14,23 @@
 
 ## Step 1 — Hardware & OS Pre-flight
 
-To run a 14-Billion parameter model locally with tool-calling capabilities, we must explicitly configure your AMD APU and kernel to handle the massive VRAM workload without freezing the system.
+We must configure the kernel and Docker to handle the dual-GPU workload without freezing. 
 
 **1. BIOS Configuration (Mandatory)**
-Reboot your machine into the BIOS and ensure your **UMA Frame Buffer** (VRAM allocation) is explicitly set to **16GB**. Leaving it on "Auto" will result in out-of-memory crashes.
+Reboot into the BIOS and ensure your **UMA Frame Buffer** (iGPU VRAM allocation) is explicitly set to **16GB**. Leaving it on "Auto" will result in crashes.
 
-**2. Apply Bazzite Kernel Parameters**
-Run these commands to stabilize ROCm (AMD's compute engine) and prevent the system from hanging during heavy text generation:
+**2. Apply Kernel Parameters**
+Run these to stabilize ROCm (AMD's compute engine) for the 780M iGPU:
 
 ```bash
-sudo rpm-ostree kargs --append=amdgpu.sg_display=0
-sudo rpm-ostree kargs --append=amdgpu.noretry=0
-sudo rpm-ostree kargs --append=amdgpu.cwsr_enable=0
+sudo rpm-ostree kargs \
+  --append-if-missing=amdgpu.sg_display=0 \
+  --append-if-missing=amdgpu.noretry=0 \
+  --append-if-missing=amdgpu.cwsr_enable=0
 ```
 
 **3. Get your Linux Group IDs**
-Your Docker container needs exact hardware permissions to talk to the Radeon 780M. Run these two commands and **write down the numbers** (e.g., 44 and 107):
+Your Docker containers need exact hardware permissions to talk to the AMD GPUs. Run these two commands and **write down the numbers** (e.g., 44 and 107):
 
 ```bash
 getent group video | cut -d: -f3
@@ -41,9 +42,14 @@ getent group render | cut -d: -f3
 
 ---
 
-## Step 2 — Deploy the AI Stack
+## Step 2 — Deploy the Dual-GPU Stack
 
-We will deploy Ollama (the LLM engine) and Open WebUI (the chat interface). They will join the `nextcloud-aio` network you created in Phase 5 so they can communicate securely with your existing setup.
+We will deploy **two** separate Ollama containers — one strictly bound to the iGPU (`renderD128`) and one bound to the eGPU (`renderD129`). Open WebUI will connect to both.
+
+!!! warning "Crucial: Power on the eGPU first!"
+    Before running the Docker Compose command, you MUST turn on the eGPU using the script from Phase 11:
+    `sudo gpu-on.sh`
+    Docker needs to "see" `/dev/dri/renderD129` during the initial container creation.
 
 Create a directory for your stack and open a new compose file:
 
@@ -52,31 +58,46 @@ mkdir -p ~/docker/ai-stack && cd ~/docker/ai-stack
 nano docker-compose.yml
 ```
 
-Paste the following configuration. **Make sure to replace `YOUR_VIDEO_GID` and `YOUR_RENDER_GID`** with the numbers you wrote down in Step 1.
+Paste the following configuration. **Replace `YOUR_VIDEO_GID` and `YOUR_RENDER_GID`** with your numbers.
 
 ```yaml
 services:
-  ollama:
+  # ── THE SECRETARY (iGPU - Always On) ────────────────────────
+  ollama-igpu:
     image: ollama/ollama:rocm
-    container_name: ollama
+    container_name: ollama-igpu
     restart: unless-stopped
     devices:
       - /dev/kfd:/dev/kfd
-      - /dev/dri:/dev/dri
+      - /dev/dri/renderD128:/dev/dri/renderD128  # Locked to 780M
     group_add:
-      - YOUR_VIDEO_GID  # Replace with video GID
-      - YOUR_RENDER_GID # Replace with render GID
+      - YOUR_VIDEO_GID
+      - YOUR_RENDER_GID
     environment:
-      # Spoofing the 780M (gfx1103) as gfx1100 to ensure ROCm compatibility
-      - HSA_OVERRIDE_GFX_VERSION=11.0.0
+      - HSA_OVERRIDE_GFX_VERSION=11.0.0  # Spoof 780M for ROCm compatibility
       - OLLAMA_FLASH_ATTENTION=false
-      - OLLAMA_NUM_PARALLEL=1
-      - OLLAMA_MAX_LOADED_MODELS=1
     volumes:
-      - ./ollama_data:/root/.ollama:z
+      - ./ollama_igpu_data:/root/.ollama:z
     networks:
       - nextcloud-aio
 
+  # ── THE BOSS (eGPU - On Demand) ─────────────────────────────
+  ollama-egpu:
+    image: ollama/ollama:rocm
+    container_name: ollama-egpu
+    restart: "no"  # Do not auto-restart; gpu-on.sh manages this
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri/renderD129:/dev/dri/renderD129  # Locked to eGPU
+    group_add:
+      - YOUR_VIDEO_GID
+      - YOUR_RENDER_GID
+    volumes:
+      - ./ollama_egpu_data:/root/.ollama:z
+    networks:
+      - nextcloud-aio
+
+  # ── OPEN WEBUI (The Interface) ──────────────────────────────
   openwebui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: openwebui
@@ -84,7 +105,8 @@ services:
     ports:
       - "3000:8080"
     environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
+      # Connects to both Ollama instances
+      - OLLAMA_BASE_URLS=http://ollama-igpu:11434;http://ollama-egpu:11434
     volumes:
       - ./webui_data:/app/backend/data:z
     networks:
@@ -103,204 +125,249 @@ docker compose up -d
 
 ---
 
-## Step 3 — The VRAM Diet & Model Configuration
+## Step 3 — Download the Models
 
-The Qwen 2.5 14B model is incredibly smart but requires ~9.3GB of VRAM just to load. If we do not restrict its "context window" (memory size), it will demand over 16GB, causing the AMD driver to Segmentation Fault (`SIGSEGV`) and crash the runner.
+We will use a fast 3B model for the Secretary and a highly capable 14B model for the Boss.
 
-**1. Pull the Model**
-Download the model directly into the Ollama container:
+**1. Pull the Secretary Model (iGPU)**
 ```bash
-docker exec ollama ollama pull qwen2.5:14b-instruct-q4_K_M
+docker exec ollama-igpu ollama pull qwen2.5:3b
 ```
 
-**2. Strip Open WebUI Bloat**
-Open your browser and navigate to `http://<your-server-ip>:3000`. Create your admin account.
-Go to **Settings** (Admin Panel) → **Workspace** → **Settings**. We must prevent Open WebUI from loading secondary embedding models into VRAM.
+**2. Pull the Boss Model (eGPU)**
+```bash
+docker exec ollama-egpu ollama pull qwen2.5:14b-instruct-q4_K_M
+```
 
-*   Under **Capabilities**, **uncheck** Vision, File Upload, File Context, Web Search, Image Generation, Code Interpreter, Usage, and Citations. Leave **Status Updates** and **Builtin Tools** checked.
-*   Under **Builtin Tools**, **uncheck** Memory, Chat History, Notes, Knowledge Base, Channels, Web Search, Image Generation, and Code Interpreter. Leave **Time & Calculation** checked.
+---
+
+## Step 4 — Open WebUI Optimization
+
+Open your browser and navigate to `http://<your-server-ip>:3000`. Create your admin account.
+Go to **Settings** (Admin Panel) → **Workspace** → **Settings**. We must prevent Open WebUI from bloating VRAM with secondary models.
+
+*   Under **Capabilities**, **uncheck** Vision, File Upload, Web Search, Image Generation, Code Interpreter, and Citations. Leave **Status Updates** and **Builtin Tools** checked.
+*   Under **Builtin Tools**, **uncheck** Memory, Chat History, Web Search, Image Generation, and Code Interpreter. Leave **Time & Calculation** checked.
 *   Click **Save**.
 
-**3. Create the Jarvis Persona & Apply the VRAM Limits**
-Go to **Workspace** (left sidebar) → **Models** and click the **+ (Create Model)** button.
-
-*   **Name:** `Jarvis`
-*   **Base Model:** `qwen2.5:14b-instruct-q4_K_M`
-*   **System Prompt:** Paste the following strict logic exactly as written:
-
-```text
-You are Jarvis, a highly intelligent, localized Smart Home and Memory Assistant.
-You have access to tools. Use them immediately when requested.
-
-CORE DIRECTIVES:
-1. HOME CONTROL: If asked to turn on/off devices, control AC, or open blinds, IMMEDIATELY use the Smart Home Controller tool.
-2. MEMORY & LISTS: If asked to "remember" something, "make a list", or check a list, IMMEDIATELY use the Nextcloud Memory Manager tool. File names must always end in .txt.
-3. STRICT NAMING CONVENTION: When creating or looking for files, ALWAYS use ultra-simple, lowercase, one-or-two word filenames (e.g., "hana_gifts.txt", "groceries.txt", "todo.txt"). Never use words like "list" or "ideas" in the filename unless explicitly requested.
-4. NEVER HALLUCINATE: Never guess the state of a home device or the contents of a list. ALWAYS use your tools to check first.
-5. SELF-CORRECTION: If you try to read a list and the tool says it is empty or does not exist, silently guess the next most likely simple filename and check again before telling the user it doesn't exist.
-6. BE ULTRA-CONCISE: Once a tool executes successfully, confirm the action in ONE short sentence. Never explain how you did it.
-```
-
-!!! danger "Critical VRAM Settings"
-    Scroll down to **Advanced Params** and click **Show**. You MUST set **`num_ctx`** to `8192`. The default is `32768`, which *will* instantly crash your GPU. 
-    Also set **`use_mmap`** to enabled, **`num_batch`** to `512`, and **`Temperature`** to `0.1`.
-
-Click **Save & Update**.
-
 ---
 
-## Step 4 — Native Python Tools
+## Step 5 — Native Python Tools
 
-We will leverage Open WebUI's native Python tool engine to execute scripts directly, completely avoiding Docker volume permission issues.
+We will leverage Open WebUI's native Python engine. The "Secretary" will have access to these to manage your home, files, and intelligently wake the eGPU when needed.
 
-### Tool 1: Nextcloud WebDAV Memory
+Go to **Workspace** (left sidebar) → **Tools** → **Create Tool**. You will create three separate tools using the code blocks below.
 
-This tool allows Jarvis to read and write lists seamlessly into your Nextcloud setup from Phase 10. 
+=== "Wake Boss AI Tool"
 
-**Prerequisite:** 
-1. Log into Nextcloud (`https://yourname.duckdns.org`).
-2. Create a folder named `AI_Memory` in your main files area.
-3. Click your Profile Icon → **Personal Settings** → **Security**.
-4. Scroll to the *very bottom* to **Devices & sessions**. Type "Jarvis", click **Create new app password**, and copy the password provided.
+    **Name:** `wake_boss`
+    **Description:** *Triggers the eGPU power cycle.*
+    **Update:** Replace `192.168.1.xxx:PORT` with your webhook server IP and port from Phase 11.
 
-Go to Open WebUI → **Workspace** → **Tools** → **Create Tool**.
-Name it `nextcloud_memory` and paste this code. **Update lines 13, 14, and 15**:
+    ```python
+    """
+    title: Wake Boss AI
+    description: Powers on the eGPU to enable the heavy-duty "Boss" model for complex tasks.
+    author: LocalAdmin
+    version: 1.0
+    """
+    import requests
 
-```python
-"""
-title: Nextcloud Memory Manager
-description: Read, write, and remember lists, passwords, and notes natively in Nextcloud via WebDAV.
-author: LocalAdmin
-version: 1.3
-"""
-import requests
-import urllib.parse
+    class Tools:
+        def __init__(self):
+            # UPDATE THIS LINE
+            self.webhook_url = "http://192.168.1.xxx:PORT/gpu-on"
 
-class Tools:
-    def __init__(self):
-        # UPDATE THESE 3 LINES
-        self.nc_url = "https://yourname.duckdns.org" # Your Phase 10 Domain
-        self.username = "your_username"
-        self.app_password = "your_app_password"
-        
-        self.folder_path = "AI_Memory" 
-        self.base_url = f"{self.nc_url}/remote.php/dav/files/{self.username}/{self.folder_path}"
-
-    def write_to_nextcloud(self, filename: str, content: str, mode: str = "append") -> str:
-        """
-        Writes or appends to a memory file or list (e.g., "grocery_list.txt").
-        :param filename: The name of the file. MUST end in .txt
-        :param content: The text to save.
-        :param mode: "append" to add to an existing list, or "overwrite" to replace.
-        """
-        if not filename.endswith('.txt'): 
-            filename += '.txt'
-            
-        file_url = f"{self.base_url}/{urllib.parse.quote(filename)}"
-        current_content = ""
-        
-        if mode == "append":
+        def wake_boss_ai(self) -> str:
+            """
+            USE THIS IMMEDIATELY if the user asks a highly complex question, requests heavy coding, 
+            needs deep reasoning, or explicitly asks for "the boss", "more power", or "the big AI".
+            """
             try:
-                res = requests.get(file_url, auth=(self.username, self.app_password))
-                if res.status_code == 200: 
-                    current_content = res.text + "\n"
-            except Exception: 
-                pass
-        
-        new_content = current_content + content
-        response = requests.put(file_url, auth=(self.username, self.app_password), data=new_content.encode('utf-8'))
-        
-        if response.status_code in[201, 204]:
-            return f"Success: Saved to {filename}."
-        return f"Error saving file: {response.status_code} - {response.text}"
+                requests.get(self.webhook_url, timeout=5)
+                return "Action Successful. Tell the user EXACTLY this: 'Hold on, let me enable more computing power. The eGPU is waking up. Please switch to the Boss model in the top left menu in about 30 seconds.'"
+            except Exception as e:
+                return f"Failed to wake the eGPU: {e}"
+    ```
 
-    def read_from_nextcloud(self, filename: str) -> str:
-        """
-        Reads the contents of a list or memory file. Use this BEFORE answering what is on a list.
-        :param filename: The name of the file (e.g., "grocery_list.txt")
-        """
-        if not filename.endswith('.txt'): 
-            filename += '.txt'
+=== "Nextcloud Memory Tool"
+
+    **Name:** `nextcloud_memory`
+    **Description:** *Read, write, and remember lists in Nextcloud.*
+    **Prerequisite:** Create an `AI_Memory` folder in Nextcloud and generate an App Password in your Nextcloud Security settings.
+
+    ```python
+    """
+    title: Nextcloud Memory Manager
+    description: Read, write, and remember lists or notes natively in Nextcloud via WebDAV.
+    author: LocalAdmin
+    version: 1.3
+    """
+    import requests
+    import urllib.parse
+
+    class Tools:
+        def __init__(self):
+            # UPDATE THESE 3 LINES
+            self.nc_url = "https://yourname.duckdns.org" # Your Phase 10 Domain
+            self.username = "your_username"
+            self.app_password = "your_app_password"
             
-        file_url = f"{self.base_url}/{urllib.parse.quote(filename)}"
-        response = requests.get(file_url, auth=(self.username, self.app_password))
-        
-        if response.status_code == 200: 
-            return f"Contents of {filename}:\n{response.text}"
-        return f"The file {filename} is empty or does not exist."
-```
-Click **Save**.
+            self.folder_path = "AI_Memory" 
+            self.base_url = f"{self.nc_url}/remote.php/dav/files/{self.username}/{self.folder_path}"
 
-### Tool 2: Home Assistant Controller
+        def write_to_nextcloud(self, filename: str, content: str, mode: str = "append") -> str:
+            """
+            Writes or appends to a memory file or list (e.g., "grocery_list.txt").
+            :param filename: The name of the file. MUST end in .txt
+            :param content: The text to save.
+            :param mode: "append" to add to an existing list, or "overwrite" to replace.
+            """
+            if not filename.endswith('.txt'): filename += '.txt'
+            file_url = f"{self.base_url}/{urllib.parse.quote(filename)}"
+            current_content = ""
+            
+            if mode == "append":
+                try:
+                    res = requests.get(file_url, auth=(self.username, self.app_password))
+                    if res.status_code == 200: current_content = res.text + "\n"
+                except Exception: pass
+            
+            new_content = current_content + content
+            response = requests.put(file_url, auth=(self.username, self.app_password), data=new_content.encode('utf-8'))
+            
+            if response.status_code in[201, 204]: return f"Success: Saved to {filename}."
+            return f"Error saving file: {response.status_code} - {response.text}"
 
-**Prerequisite:** In Home Assistant, click your Profile picture (bottom left) → Security → **Create Long-Lived Access Token**.
+        def read_from_nextcloud(self, filename: str) -> str:
+            """
+            Reads the contents of a list or memory file. Use this BEFORE answering what is on a list.
+            :param filename: The name of the file (e.g., "grocery_list.txt")
+            """
+            if not filename.endswith('.txt'): filename += '.txt'
+            file_url = f"{self.base_url}/{urllib.parse.quote(filename)}"
+            response = requests.get(file_url, auth=(self.username, self.app_password))
+            
+            if response.status_code == 200: return f"Contents of {filename}:\n{response.text}"
+            return f"The file {filename} is empty or does not exist."
+    ```
 
-Create another tool, name it `smart_home_controller`. **Update lines 13 & 14**:
+=== "Home Assistant Tool"
 
-```python
-"""
-title: Smart Home Controller
-description: Control and check physical smart home devices like lights, blinds, and AC via REST API.
-author: LocalAdmin
-version: 1.1
-"""
-import requests
+    **Name:** `smart_home_controller`
+    **Description:** *Control smart home devices via REST API.*
+    **Prerequisite:** Generate a Long-Lived Access Token in Home Assistant.
 
-class Tools:
-    def __init__(self):
-        # UPDATE THESE 2 LINES
-        self.ha_url = "http://192.168.1.xxx:8123/api" # Your HA LAN IP
-        self.ha_token = "YOUR_LONG_LIVED_ACCESS_TOKEN"
-        
-        self.headers = {
-            "Authorization": f"Bearer {self.ha_token}", 
-            "Content-Type": "application/json"
-        }
+    ```python
+    """
+    title: Smart Home Controller
+    description: Control and check physical smart home devices like lights, blinds, and AC.
+    author: LocalAdmin
+    version: 1.1
+    """
+    import requests
 
-    def control_device(self, entity_id: str, action: str) -> str:
-        """
-        Controls a smart home device (turn on/off, open/close, toggle).
-        :param entity_id: The exact ID of the device (e.g., "light.living_room", "cover.blinds", "climate.ac")
-        :param action: The action to perform: "turn_on", "turn_off", "open_cover", "close_cover", or "toggle".
-        """
-        domain = entity_id.split('.')[0]
-        url = f"{self.ha_url}/services/{domain}/{action}"
-        
-        response = requests.post(url, headers=self.headers, json={"entity_id": entity_id})
-        if response.status_code == 200:
-            return f"Successfully triggered {action} on {entity_id}."
-        return f"Failed to control device: {response.text}"
+    class Tools:
+        def __init__(self):
+            # UPDATE THESE 2 LINES
+            self.ha_url = "http://192.168.1.xxx:8123/api" # Your HA LAN IP
+            self.ha_token = "YOUR_LONG_LIVED_ACCESS_TOKEN"
+            
+            self.headers = {
+                "Authorization": f"Bearer {self.ha_token}", 
+                "Content-Type": "application/json"
+            }
 
-    def get_device_state(self, entity_id: str) -> str:
-        """
-        Checks the current status of a smart home device. ALWAYS use this before assuming a device's state.
-        :param entity_id: The exact ID of the device (e.g., "light.living_room")
-        """
-        url = f"{self.ha_url}/states/{entity_id}"
-        response = requests.get(url, headers=self.headers)
-        
-        if response.status_code == 200:
-            state_data = response.json()
-            state = state_data.get('state', 'unknown')
-            return f"The current state of {entity_id} is '{state}'."
-        return f"Could not find device {entity_id}. Check if the entity_id is correct."
-```
-Click **Save**.
+        def control_device(self, entity_id: str, action: str) -> str:
+            """
+            Controls a smart home device.
+            :param entity_id: The exact ID of the device (e.g., "light.living_room", "climate.ac")
+            :param action: "turn_on", "turn_off", "open_cover", "close_cover", or "toggle".
+            """
+            domain = entity_id.split('.')[0]
+            url = f"{self.ha_url}/services/{domain}/{action}"
+            
+            response = requests.post(url, headers=self.headers, json={"entity_id": entity_id})
+            if response.status_code == 200: return f"Successfully triggered {action} on {entity_id}."
+            return f"Failed to control device: {response.text}"
+
+        def get_device_state(self, entity_id: str) -> str:
+            """
+            Checks the current status of a device. ALWAYS use this before assuming a device's state.
+            :param entity_id: The exact ID of the device (e.g., "light.living_room")
+            """
+            url = f"{self.ha_url}/states/{entity_id}"
+            response = requests.get(url, headers=self.headers)
+            
+            if response.status_code == 200:
+                state_data = response.json()
+                state = state_data.get('state', 'unknown')
+                return f"The current state of {entity_id} is '{state}'."
+            return f"Could not find device {entity_id}."
+    ```
 
 ---
 
-## Step 5 — Activate and Use
+## Step 6 — System Prompts & Model Setup
+
+We will create two separate System Personas in Open WebUI. Go to **Workspace** → **Models** and click the **+ (Create Model)** button for each.
+
+=== "1. The Secretary (iGPU)"
+
+    *   **Name:** `Secretary`
+    *   **Base Model:** `qwen2.5:3b`
+    *   **System Prompt:**
+        ```text
+        You are the Secretary, a hyper-fast, localized Smart Home and Memory Assistant.
+        You handle simple tasks immediately. If a task is too complex, you must call the Boss.
+
+        CORE DIRECTIVES:
+        1. HOME CONTROL: If asked to turn on/off devices, control AC, or open blinds, IMMEDIATELY use the Smart Home Controller tool.
+        2. MEMORY & LISTS: If asked to "remember" something or check a list, IMMEDIATELY use the Nextcloud Memory Manager tool. Filenames must always end in .txt and be simple (e.g., "groceries.txt").
+        3. ESCALATION (WAKE BOSS): If the user asks a highly complex question, asks for code, deep reasoning, or says "I need the boss", IMMEDIATELY use the Wake Boss AI tool.
+        4. NEVER HALLUCINATE: Never guess the state of a home device or the contents of a list. Use your tools to check first.
+        5. BE ULTRA-CONCISE: Once a tool executes successfully, confirm the action in ONE short sentence. Never explain how you did it.
+        ```
+    *   **Advanced Params (Click Show):** 
+        *   `num_ctx`: `4096`
+        *   `num_batch`: `256`
+        *   `Temperature`: `0.1`
+
+    *Click **Save & Update**.*
+
+=== "2. The Boss (eGPU)"
+
+    *   **Name:** `Boss`
+    *   **Base Model:** `qwen2.5:14b-instruct-q4_K_M`
+    *   **System Prompt:**
+        ```text
+        You are Jarvis, the Boss AI. You have been awakened because the user requires heavy computational reasoning, coding, or complex analysis. 
+        Provide highly detailed, intelligent, and accurate responses. You do not need to control the smart home; focus strictly on the complex task the user gives you.
+        ```
+    *   **Advanced Params (Click Show):** 
+        *   `num_ctx`: `8192`
+        *   `use_mmap`: `Enabled`
+        *   `num_batch`: `512`
+        *   `Temperature`: `0.3`
+
+    *Click **Save & Update**.*
+
+---
+
+## Step 7 — Activate the Workflow
 
 1. Go back to your main Chat window.
-2. Select your **Jarvis** model from the top-left dropdown.
-3. Click the **+** (Tools) icon next to the chat input and toggle **ON** both `nextcloud_memory` and `smart_home_controller`.
-4. Test the pipeline by asking: *"Create a list of groceries and add milk and bread."*
+2. Select the **Secretary** model from the top-left dropdown.
+3. Click the **+** (Tools) icon next to the chat input and toggle **ON** all three tools: `wake_boss`, `nextcloud_memory`, and `smart_home_controller`.
+4. Test the pipeline by saying: *"I need you to write a complex Python script for me."*
 
-!!! info "Mobile Voice Integration"
-    Open WebUI includes native Speech-to-Text. Navigate to `http://<your-server-ip>:3000` on your smartphone browser, tap your browser's menu, and select **"Add to Home Screen"**. You now have a native app with a microphone button to speak directly to Jarvis, who will automatically use your tools based on conversational intent.
+**Expected Result:**
+The Secretary will instantly execute the `wake_boss` tool, respond with *"Hold on, let me enable more computing power..."*, and behind the scenes, your eGPU will physically power up. In about 30 seconds, you can switch the top-left dropdown to **Boss** and continue your complex task. 
+
+When you are done, the 30-minute idle timer from Phase 11 will automatically power the eGPU back down, seamlessly leaving the Secretary running on your iGPU.
 
 ---
 
 ## ✅ Phase 12 Complete
 
-Your Ryzen 780M is now natively executing a 14B parameter AI, routed directly to your personal cloud and smart home hardware, with perfectly tuned VRAM management.
+You have successfully established a highly reliable, hardware-separated dual-GPU AI pipeline. Routine queries run at zero-latency on 35W of power, while heavy reasoning scales to 290W entirely on demand.
