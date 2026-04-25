@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#multi-user-vpn-isolated-stremio-setup-with-hardware-transcoding" class="md-skip">
+        <a href="#stremio-pia-auto-rotating-wireguard-stack" class="md-skip">
           Skip to content
         </a>
       
@@ -1194,10 +1194,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-project-preparation" class="md-nav__link">
+  <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Project Preparation
+        How It Works
       
     </span>
   </a>
@@ -1205,10 +1205,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-docker-compose-configuration" class="md-nav__link">
+  <a href="#prerequisites" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Docker Compose Configuration
+        Prerequisites
       
     </span>
   </a>
@@ -1216,49 +1216,87 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-nginx-proxy-manager-npm-setup" class="md-nav__link">
+  <a href="#step-1-create-the-project-folder" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Nginx Proxy Manager (NPM) Setup
+        Step 1 — Create the project folder
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="3. Nginx Proxy Manager (NPM) Setup">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#a-the-access-list-fixes-audiosubtitle-buttons" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        A. The Access List (Fixes Audio/Subtitle Buttons)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#b-proxy-hosts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        B. Proxy Hosts
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-final-app-configuration" class="md-nav__link">
+  <a href="#step-2-create-placeholder-conf-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Final App Configuration
+        Step 2 — Create placeholder conf files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-create-docker-composeyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Create docker-compose.yml
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-create-pia-watchersh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Create pia-watcher.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5-make-the-script-executable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5 — Make the script executable
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-6-start-the-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 6 — Start the stack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ports-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ports Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
       
     </span>
   </a>
@@ -1337,10 +1375,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-project-preparation" class="md-nav__link">
+  <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Project Preparation
+        How It Works
       
     </span>
   </a>
@@ -1348,10 +1386,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-docker-compose-configuration" class="md-nav__link">
+  <a href="#prerequisites" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Docker Compose Configuration
+        Prerequisites
       
     </span>
   </a>
@@ -1359,49 +1397,87 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-nginx-proxy-manager-npm-setup" class="md-nav__link">
+  <a href="#step-1-create-the-project-folder" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Nginx Proxy Manager (NPM) Setup
+        Step 1 — Create the project folder
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="3. Nginx Proxy Manager (NPM) Setup">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#a-the-access-list-fixes-audiosubtitle-buttons" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        A. The Access List (Fixes Audio/Subtitle Buttons)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#b-proxy-hosts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        B. Proxy Hosts
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-final-app-configuration" class="md-nav__link">
+  <a href="#step-2-create-placeholder-conf-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Final App Configuration
+        Step 2 — Create placeholder conf files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-create-docker-composeyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Create docker-compose.yml
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-create-pia-watchersh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Create pia-watcher.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5-make-the-script-executable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5 — Make the script executable
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-6-start-the-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 6 — Start the stack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ports-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ports Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
       
     </span>
   </a>
@@ -1428,113 +1504,473 @@
   
 
 
-<h1 id="multi-user-vpn-isolated-stremio-setup-with-hardware-transcoding">Multi-User VPN-Isolated Stremio Setup with Hardware Transcoding<a class="headerlink" href="#multi-user-vpn-isolated-stremio-setup-with-hardware-transcoding" title="Permanent link">&para;</a></h1>
-<h2 id="1-project-preparation">1. Project Preparation<a class="headerlink" href="#1-project-preparation" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/docker/stremio/stremio-data/<span class="o">{</span>dashboard,user1,user2<span class="o">}</span>
+<h1 id="stremio-pia-auto-rotating-wireguard-stack">Stremio + PIA Auto-Rotating WireGuard Stack<a class="headerlink" href="#stremio-pia-auto-rotating-wireguard-stack" title="Permanent link">&para;</a></h1>
+<p>Self-hosted Stremio with automatic PIA WireGuard key rotation, stream-safe restarts, and per-user VPN tunnels. No manual VPN management required after first setup.</p>
+<hr />
+<h2 id="how-it-works">How It Works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Container</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gluetun-user1/2</code></td>
+<td>WireGuard VPN tunnel per user</td>
+</tr>
+<tr>
+<td><code>stremio-user1/2</code></td>
+<td>Stremio server, routed through its gluetun</td>
+</tr>
+<tr>
+<td><code>pia-watcher</code></td>
+<td>Picks best PIA region by latency, generates WireGuard keys, rotates every 6h, waits for streams to finish before restarting</td>
+</tr>
+<tr>
+<td><code>stremio-dashboard</code></td>
+<td>Heimdall dashboard at port 11470</td>
+</tr>
+</tbody>
+</table>
+<p>The watcher writes <code>wg0.userN.conf</code> files directly to disk. Gluetun reads these on restart — no env variable rebaking, keys are always fresh.</p>
+<hr />
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Docker + Docker Compose installed</li>
+<li>A PIA subscription (username + password)</li>
+<li>Ports <code>11470–11472</code> available on the host</li>
+<li>A domain pointing to your server (e.g. via DuckDNS) — one per user</li>
+</ul>
+<hr />
+<h2 id="step-1-create-the-project-folder">Step 1 — Create the project folder<a class="headerlink" href="#step-1-create-the-project-folder" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/docker/stremio
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>~/docker/stremio
 </span></code></pre></div>
-<h2 id="2-docker-compose-configuration">2. Docker Compose Configuration<a class="headerlink" href="#2-docker-compose-configuration" title="Permanent link">&para;</a></h2>
-<p>Create <code>docker-compose.yml</code>. Replace subdomains and the <code>192.168.178.x</code> values with your local network data.</p>
-<p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># --- SHARED ANCHORS ---</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">x-vpn-env</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;vpn-env</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">VPN_SERVICE_PROVIDER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">private internet access</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">VPN_TYPE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">openvpn</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">OPENVPN_USER</span><span class="p">:</span><span class="w"> </span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">OPENVPN_PASSWORD</span><span class="p">:</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">VPN_PORT_FORWARDING</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;on&quot;</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">SERVER_REGIONS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Netherlands,Germany,Switzerland,Belgium,France,Austria</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">FIREWALL_OUTBOUND_SUBNETS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.178.0/24</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="nt">x-stremio-env</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;stremio-env</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="nt">FF_MPEG_FORCE_HW</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="nt">NO_CORS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="nt">x-stremio-base</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;stremio-base</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tsaridas/stremio-docker:latest</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">  </span><span class="nt">devices</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">/dev/dri</span><span class="p p-Indicator">:</span><span class="nv">/dev/dri</span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">  </span><span class="nt">group_add</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;39&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;105&quot;</span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">  </span><span class="c1"># Fixes the &quot;-1&quot; file index bug for HEVC/x265 streams automatically</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">  </span><span class="nt">entrypoint</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;sh&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;-c&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;sed</span><span class="nv"> </span><span class="s">-i</span><span class="nv"> </span><span class="s">&#39;s/\\[0-9\\]+)\\$$\&quot;/[-0-9]+)\\$$\&quot;/g&#39;</span><span class="nv"> </span><span class="s">/etc/nginx/http.d/default.conf</span><span class="nv"> </span><span class="s">/etc/nginx/https.conf</span><span class="nv"> </span><span class="s">&amp;&amp;</span><span class="nv"> </span><span class="s">/srv/stremio-server/stremio-web-service-run.sh&quot;</span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="nt">services</span><span class="p">:</span>
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">  </span><span class="nt">stremio-dashboard</span><span class="p">:</span>
-</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lscr.io/linuxserver/heimdall:latest</span>
-</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stremio-dashboard</span>
-</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> PUID</span><span class="p">:</span><span class="w"> </span><span class="nv">1000</span><span class="p p-Indicator">,</span><span class="nt"> PGID</span><span class="p">:</span><span class="w"> </span><span class="nv">1000</span><span class="p p-Indicator">,</span><span class="nt"> TZ</span><span class="p">:</span><span class="w"> </span><span class="nv">Europe/Berlin</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">./stremio-data/dashboard</span><span class="p p-Indicator">:</span><span class="nv">/config</span><span class="w"> </span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="s">&quot;11470:80&quot;</span><span class="w"> </span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
-</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
-</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="w">  </span><span class="c1"># --- USER 1 ---</span>
-</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">  </span><span class="nt">gluetun-user1</span><span class="p">:</span>
-</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qmcgaw/gluetun:latest</span>
-</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gluetun-user1</span>
-</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="w">    </span><span class="nt">cap_add</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">NET_ADMIN</span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="w">    </span><span class="nt">devices</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">/dev/net/tun</span><span class="p p-Indicator">:</span><span class="nv">/dev/net/tun</span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;11471:8080&quot;</span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"> </span><span class="nv">*vpn-env</span>
-</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="w">    </span><span class="nt">extra_hosts</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;user1stream.yourdomain.duckdns.org:192.168.178.139&quot;</span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
-</span><span id="__span-1-42"><a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
-</span><span id="__span-1-43"><a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="w">  </span><span class="nt">stremio-user1</span><span class="p">:</span>
-</span><span id="__span-1-44"><a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="w">    </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*stremio-base</span>
-</span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stremio-user1</span>
-</span><span id="__span-1-46"><a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="w">    </span><span class="nt">network_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;service:gluetun-user1&quot;</span>
-</span><span id="__span-1-47"><a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
-</span><span id="__span-1-48"><a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*stremio-env</span>
-</span><span id="__span-1-49"><a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="w">      </span><span class="nt">SERVER_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://user1stream.yourdomain.duckdns.org</span>
-</span><span id="__span-1-50"><a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">./stremio-data/user1</span><span class="p p-Indicator">:</span><span class="nv">/root/.stremio-server</span><span class="w"> </span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-51"><a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
-</span><span id="__span-1-52"><a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="w">  </span><span class="c1"># --- USER 2 ---</span>
-</span><span id="__span-1-53"><a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="w">  </span><span class="nt">gluetun-user2</span><span class="p">:</span>
-</span><span id="__span-1-54"><a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qmcgaw/gluetun:latest</span>
-</span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gluetun-user2</span>
-</span><span id="__span-1-56"><a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="w">    </span><span class="nt">cap_add</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">NET_ADMIN</span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-57"><a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="w">    </span><span class="nt">devices</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">/dev/net/tun</span><span class="p p-Indicator">:</span><span class="nv">/dev/net/tun</span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-58"><a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;11472:8080&quot;</span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-59"><a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"> </span><span class="nv">*vpn-env</span>
-</span><span id="__span-1-60"><a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="w">    </span><span class="nt">extra_hosts</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;user2stream.yourdomain.duckdns.org:192.168.178.139&quot;</span><span class="p p-Indicator">]</span>
-</span><span id="__span-1-61"><a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
-</span><span id="__span-1-62"><a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>
-</span><span id="__span-1-63"><a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="w">  </span><span class="nt">stremio-user2</span><span class="p">:</span>
-</span><span id="__span-1-64"><a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="w">    </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*stremio-base</span>
-</span><span id="__span-1-65"><a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stremio-user2</span>
-</span><span id="__span-1-66"><a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="w">    </span><span class="nt">network_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;service:gluetun-user2&quot;</span>
-</span><span id="__span-1-67"><a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
-</span><span id="__span-1-68"><a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*stremio-env</span>
-</span><span id="__span-1-69"><a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="w">      </span><span class="nt">SERVER_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://user2stream.yourdomain.duckdns.org</span>
-</span><span id="__span-1-70"><a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">./stremio-data/user2</span><span class="p p-Indicator">:</span><span class="nv">/root/.stremio-server</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<hr />
+<h2 id="step-2-create-placeholder-conf-files">Step 2 — Create placeholder conf files<a class="headerlink" href="#step-2-create-placeholder-conf-files" title="Permanent link">&para;</a></h2>
+<p>Docker will create these as <strong>directories</strong> on first start if they don't exist as files. Do this first:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>touch<span class="w"> </span>wg0.user1.conf<span class="w"> </span>wg0.user2.conf
 </span></code></pre></div>
-<strong>Deploy:</strong> <code>docker compose up -d</code></p>
-<h2 id="3-nginx-proxy-manager-npm-setup">3. Nginx Proxy Manager (NPM) Setup<a class="headerlink" href="#3-nginx-proxy-manager-npm-setup" title="Permanent link">&para;</a></h2>
-<h3 id="a-the-access-list-fixes-audiosubtitle-buttons">A. The Access List (Fixes Audio/Subtitle Buttons)<a class="headerlink" href="#a-the-access-list-fixes-audiosubtitle-buttons" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>Add Access List</strong>: Name it <code>Stremio-Auth</code>.</li>
-<li><strong>Details</strong>: Set <strong>Satisfy Any</strong> to <strong>ON</strong>.</li>
-<li><strong>Authorization</strong>: Set your preferred username/password.</li>
-<li><strong>Access</strong>: Add <code>172.16.0.0/12</code> set to <strong>Allow</strong> (whitelists Docker traffic).</li>
-</ol>
-<h3 id="b-proxy-hosts">B. Proxy Hosts<a class="headerlink" href="#b-proxy-hosts" title="Permanent link">&para;</a></h3>
-<p>For each user subdomain:
-1.  <strong>Details</strong>: Forward to local server IP on ports <code>11471</code> (User 1) and <code>11472</code> (User 2).
-2.  <strong>Details</strong>: Select <code>Stremio-Auth</code> Access List. Toggle <strong>Websockets Support</strong> ON.
-3.  <strong>SSL</strong>: Enable <strong>Force SSL</strong> and <strong>HSTS</strong>.
-4.  <strong>Advanced Tab</strong>: Paste the following to optimize streaming throughput:
-<div class="language-nginx highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">proxy_buffering</span><span class="w"> </span><span class="no">off</span><span class="p">;</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">proxy_request_buffering</span><span class="w"> </span><span class="no">off</span><span class="p">;</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">proxy_max_temp_file_size</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">proxy_read_timeout</span><span class="w"> </span><span class="s">3600s</span><span class="p">;</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">proxy_send_timeout</span><span class="w"> </span><span class="s">3600s</span><span class="p">;</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">send_timeout</span><span class="w"> </span><span class="s">3600s</span><span class="p">;</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="k">client_max_body_size</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<hr />
+<h2 id="step-3-create-docker-composeyml">Step 3 — Create <code>docker-compose.yml</code><a class="headerlink" href="#step-3-create-docker-composeyml" title="Permanent link">&para;</a></h2>
+<p>Replace every value marked <code>CHANGE_ME</code>.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># --- SHARED ANCHORS ---</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">x-vpn-env</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;vpn-env</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">VPN_SERVICE_PROVIDER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">VPN_TYPE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wireguard</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">FIREWALL_OUTBOUND_SUBNETS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.178.0/24</span><span class="w">   </span><span class="c1"># CHANGE_ME: your LAN subnet</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="nt">x-stremio-env</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;stremio-env</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">FF_MPEG_FORCE_HW</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">NO_CORS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="nt">x-stremio-base</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;stremio-base</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tsaridas/stremio-docker:latest</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">  </span><span class="nt">devices</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">/dev/dri</span><span class="p p-Indicator">:</span><span class="nv">/dev/dri</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="nt">group_add</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;39&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;105&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">  </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">  </span><span class="nt">entrypoint</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;sh&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;-c&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;sed</span><span class="nv"> </span><span class="s">-i</span><span class="nv"> </span><span class="s">&#39;s/\\[0-9\\]+)\\$$\&quot;/[-0-9]+)\\$$\&quot;/g&#39;</span><span class="nv"> </span><span class="s">/etc/nginx/http.d/default.conf</span><span class="nv"> </span><span class="s">/etc/nginx/https.conf</span><span class="nv"> </span><span class="s">&amp;&amp;</span><span class="nv"> </span><span class="s">/srv/stremio-server/stremio-web-service-run.sh&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="nt">services</span><span class="p">:</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">  </span><span class="nt">stremio-dashboard</span><span class="p">:</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lscr.io/linuxserver/heimdall:latest</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stremio-dashboard</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> PUID</span><span class="p">:</span><span class="w"> </span><span class="nv">1000</span><span class="p p-Indicator">,</span><span class="nt"> PGID</span><span class="p">:</span><span class="w"> </span><span class="nv">1000</span><span class="p p-Indicator">,</span><span class="nt"> TZ</span><span class="p">:</span><span class="w"> </span><span class="nv">Europe/Berlin</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w">  </span><span class="c1"># CHANGE_ME: your timezone</span>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./stremio-data/dashboard:/config</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;11470:80&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">  </span><span class="c1"># --- USER 1 ---</span>
+</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">  </span><span class="nt">gluetun-user1</span><span class="p">:</span>
+</span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qmcgaw/gluetun:latest</span>
+</span><span id="__span-2-31"><a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gluetun-user1</span>
+</span><span id="__span-2-32"><a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="w">    </span><span class="nt">cap_add</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">NET_ADMIN</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-33"><a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="w">    </span><span class="nt">devices</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">/dev/net/tun</span><span class="p p-Indicator">:</span><span class="nv">/dev/net/tun</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-34"><a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;11471:8080&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-35"><a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+</span><span id="__span-2-36"><a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a><span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*vpn-env</span>
+</span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+</span><span id="__span-2-38"><a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./wg0.user1.conf:/gluetun/wireguard/wg0.conf:ro</span>
+</span><span id="__span-2-39"><a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="w">    </span><span class="nt">extra_hosts</span><span class="p">:</span>
+</span><span id="__span-2-40"><a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;user1.yourdomain.com:192.168.1.100&quot;</span><span class="w">   </span><span class="c1"># CHANGE_ME: user1 domain + server LAN IP</span>
+</span><span id="__span-2-41"><a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+</span><span id="__span-2-42"><a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>
+</span><span id="__span-2-43"><a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a><span class="w">  </span><span class="nt">stremio-user1</span><span class="p">:</span>
+</span><span id="__span-2-44"><a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a><span class="w">    </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*stremio-base</span>
+</span><span id="__span-2-45"><a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stremio-user1</span>
+</span><span id="__span-2-46"><a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a><span class="w">    </span><span class="nt">network_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;service:gluetun-user1&quot;</span>
+</span><span id="__span-2-47"><a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+</span><span id="__span-2-48"><a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a><span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*stremio-env</span>
+</span><span id="__span-2-49"><a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a><span class="w">      </span><span class="nt">SERVER_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://user1.yourdomain.com</span><span class="w">  </span><span class="c1"># CHANGE_ME: user1 public URL</span>
+</span><span id="__span-2-50"><a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">./stremio-data/user1</span><span class="p p-Indicator">:</span><span class="nv">/root/.stremio-server</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-51"><a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a>
+</span><span id="__span-2-52"><a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a><span class="w">  </span><span class="c1"># --- USER 2 ---</span>
+</span><span id="__span-2-53"><a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a><span class="w">  </span><span class="nt">gluetun-user2</span><span class="p">:</span>
+</span><span id="__span-2-54"><a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qmcgaw/gluetun:latest</span>
+</span><span id="__span-2-55"><a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gluetun-user2</span>
+</span><span id="__span-2-56"><a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a><span class="w">    </span><span class="nt">cap_add</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">NET_ADMIN</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-57"><a id="__codelineno-2-57" name="__codelineno-2-57" href="#__codelineno-2-57"></a><span class="w">    </span><span class="nt">devices</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">/dev/net/tun</span><span class="p p-Indicator">:</span><span class="nv">/dev/net/tun</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-58"><a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;11472:8080&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-59"><a id="__codelineno-2-59" name="__codelineno-2-59" href="#__codelineno-2-59"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+</span><span id="__span-2-60"><a id="__codelineno-2-60" name="__codelineno-2-60" href="#__codelineno-2-60"></a><span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*vpn-env</span>
+</span><span id="__span-2-61"><a id="__codelineno-2-61" name="__codelineno-2-61" href="#__codelineno-2-61"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+</span><span id="__span-2-62"><a id="__codelineno-2-62" name="__codelineno-2-62" href="#__codelineno-2-62"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./wg0.user2.conf:/gluetun/wireguard/wg0.conf:ro</span>
+</span><span id="__span-2-63"><a id="__codelineno-2-63" name="__codelineno-2-63" href="#__codelineno-2-63"></a><span class="w">    </span><span class="nt">extra_hosts</span><span class="p">:</span>
+</span><span id="__span-2-64"><a id="__codelineno-2-64" name="__codelineno-2-64" href="#__codelineno-2-64"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;user2.yourdomain.com:192.168.1.100&quot;</span><span class="w">   </span><span class="c1"># CHANGE_ME: user2 domain + server LAN IP</span>
+</span><span id="__span-2-65"><a id="__codelineno-2-65" name="__codelineno-2-65" href="#__codelineno-2-65"></a><span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+</span><span id="__span-2-66"><a id="__codelineno-2-66" name="__codelineno-2-66" href="#__codelineno-2-66"></a>
+</span><span id="__span-2-67"><a id="__codelineno-2-67" name="__codelineno-2-67" href="#__codelineno-2-67"></a><span class="w">  </span><span class="nt">stremio-user2</span><span class="p">:</span>
+</span><span id="__span-2-68"><a id="__codelineno-2-68" name="__codelineno-2-68" href="#__codelineno-2-68"></a><span class="w">    </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*stremio-base</span>
+</span><span id="__span-2-69"><a id="__codelineno-2-69" name="__codelineno-2-69" href="#__codelineno-2-69"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stremio-user2</span>
+</span><span id="__span-2-70"><a id="__codelineno-2-70" name="__codelineno-2-70" href="#__codelineno-2-70"></a><span class="w">    </span><span class="nt">network_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;service:gluetun-user2&quot;</span>
+</span><span id="__span-2-71"><a id="__codelineno-2-71" name="__codelineno-2-71" href="#__codelineno-2-71"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+</span><span id="__span-2-72"><a id="__codelineno-2-72" name="__codelineno-2-72" href="#__codelineno-2-72"></a><span class="w">      </span><span class="nt">&lt;&lt;</span><span class="p">:</span><span class="w"> </span><span class="nv">*stremio-env</span>
+</span><span id="__span-2-73"><a id="__codelineno-2-73" name="__codelineno-2-73" href="#__codelineno-2-73"></a><span class="w">      </span><span class="nt">SERVER_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://user2.yourdomain.com</span><span class="w">  </span><span class="c1"># CHANGE_ME: user2 public URL</span>
+</span><span id="__span-2-74"><a id="__codelineno-2-74" name="__codelineno-2-74" href="#__codelineno-2-74"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">./stremio-data/user2</span><span class="p p-Indicator">:</span><span class="nv">/root/.stremio-server</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-75"><a id="__codelineno-2-75" name="__codelineno-2-75" href="#__codelineno-2-75"></a>
+</span><span id="__span-2-76"><a id="__codelineno-2-76" name="__codelineno-2-76" href="#__codelineno-2-76"></a><span class="w">  </span><span class="nt">pia-watcher</span><span class="p">:</span>
+</span><span id="__span-2-77"><a id="__codelineno-2-77" name="__codelineno-2-77" href="#__codelineno-2-77"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">alpine:latest</span>
+</span><span id="__span-2-78"><a id="__codelineno-2-78" name="__codelineno-2-78" href="#__codelineno-2-78"></a><span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pia-watcher</span>
+</span><span id="__span-2-79"><a id="__codelineno-2-79" name="__codelineno-2-79" href="#__codelineno-2-79"></a><span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+</span><span id="__span-2-80"><a id="__codelineno-2-80" name="__codelineno-2-80" href="#__codelineno-2-80"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+</span><span id="__span-2-81"><a id="__codelineno-2-81" name="__codelineno-2-81" href="#__codelineno-2-81"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/run/docker.sock:/var/run/docker.sock</span>
+</span><span id="__span-2-82"><a id="__codelineno-2-82" name="__codelineno-2-82" href="#__codelineno-2-82"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./:/work</span>
+</span><span id="__span-2-83"><a id="__codelineno-2-83" name="__codelineno-2-83" href="#__codelineno-2-83"></a><span class="w">    </span><span class="nt">working_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/work</span>
+</span><span id="__span-2-84"><a id="__codelineno-2-84" name="__codelineno-2-84" href="#__codelineno-2-84"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+</span><span id="__span-2-85"><a id="__codelineno-2-85" name="__codelineno-2-85" href="#__codelineno-2-85"></a><span class="w">      </span><span class="nt">PIA_USER</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;your_pia_username&quot;</span><span class="w">             </span><span class="c1"># CHANGE_ME</span>
+</span><span id="__span-2-86"><a id="__codelineno-2-86" name="__codelineno-2-86" href="#__codelineno-2-86"></a><span class="w">      </span><span class="nt">PIA_PASS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;your_pia_password&quot;</span><span class="w">             </span><span class="c1"># CHANGE_ME</span>
+</span><span id="__span-2-87"><a id="__codelineno-2-87" name="__codelineno-2-87" href="#__codelineno-2-87"></a><span class="w">      </span><span class="nt">REFRESH_HOURS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;6&quot;</span>
+</span><span id="__span-2-88"><a id="__codelineno-2-88" name="__codelineno-2-88" href="#__codelineno-2-88"></a><span class="w">      </span><span class="nt">REGIONS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;nl_netherlands-so,de_germany-so,nl_amsterdam,de-frankfurt,de_berlin,swiss,belgium,france,austria&quot;</span>
+</span><span id="__span-2-89"><a id="__codelineno-2-89" name="__codelineno-2-89" href="#__codelineno-2-89"></a><span class="w">      </span><span class="nt">HEALTH_POLL</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;60&quot;</span>
+</span><span id="__span-2-90"><a id="__codelineno-2-90" name="__codelineno-2-90" href="#__codelineno-2-90"></a><span class="w">      </span><span class="nt">STREAM_THRESHOLD_KBPS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;500&quot;</span>
+</span><span id="__span-2-91"><a id="__codelineno-2-91" name="__codelineno-2-91" href="#__codelineno-2-91"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+</span><span id="__span-2-92"><a id="__codelineno-2-92" name="__codelineno-2-92" href="#__codelineno-2-92"></a><span class="w">      </span><span class="no">sh -c &quot;apk add -q curl jq wireguard-tools iputils &amp;&amp;</span>
+</span><span id="__span-2-93"><a id="__codelineno-2-93" name="__codelineno-2-93" href="#__codelineno-2-93"></a><span class="w">             </span><span class="no">sh /work/pia-watcher.sh&quot;</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>Region IDs</strong> — these are exact PIA API identifiers. To find IDs for other countries run:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>pia-watcher<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;curl -sf &#39;https://serverlist.piaservers.net/vpninfo/servers/v5&#39; | head -1 | jq -r &#39;.regions[] | \&quot;\(.id) → \(.name)\&quot;&#39;&quot;</span>
 </span></code></pre></div></p>
-<h2 id="4-final-app-configuration">4. Final App Configuration<a class="headerlink" href="#4-final-app-configuration" title="Permanent link">&para;</a></h2>
-<p>Log into each Stremio URL and navigate to <strong>Settings -&gt; Streaming</strong>:
-1.  <strong>Streaming server URL</strong>: Ensure it shows "Online" at your subdomain.
-2.  <strong>Torrent Profile</strong>: <code>Ultra Fast</code>.
-3.  <strong>Transcoding</strong>: <code>Enabled</code>.
-4.  <strong>Transcode profile</strong>: <code>vaapi-renderD128</code> (Hardware Acceleration).</p>
+</blockquote>
+<hr />
+<h2 id="step-4-create-pia-watchersh">Step 4 — Create <code>pia-watcher.sh</code><a class="headerlink" href="#step-4-create-pia-watchersh" title="Permanent link">&para;</a></h2>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="ch">#!/bin/sh</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1"># pia-watcher.sh — Auto best-region WireGuard manager for PIA + Gluetun</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="nb">set</span><span class="w"> </span>-e
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># ── CONFIG ───────────────────────────────────────────────────────────────</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nv">PIA_USER</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PIA_USER</span><span class="k">:-</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="nv">PIA_PASS</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PIA_PASS</span><span class="k">:-</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="nv">REGIONS</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">REGIONS</span><span class="k">:-</span><span class="nv">nl_netherlands</span><span class="p">-so,de_germany-so,nl_amsterdam,de-frankfurt,de_berlin,swiss,belgium,france,austria</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="nv">REFRESH_SECONDS</span><span class="o">=</span><span class="k">$((</span><span class="w"> </span><span class="si">${</span><span class="nv">REFRESH_HOURS</span><span class="k">:-</span><span class="nv">6</span><span class="si">}</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="m">3600</span><span class="w"> </span><span class="k">))</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nv">HEALTH_POLL</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">HEALTH_POLL</span><span class="k">:-</span><span class="nv">60</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="nv">STREAM_THRESHOLD_KBPS</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">STREAM_THRESHOLD_KBPS</span><span class="k">:-</span><span class="nv">500</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="nv">WORK_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">WORK_DIR</span><span class="k">:-</span><span class="p">/work</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="nv">USERS</span><span class="o">=</span><span class="s2">&quot;user1 user2&quot;</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="nv">DOCKER_SOCK</span><span class="o">=</span><span class="s2">&quot;/var/run/docker.sock&quot;</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="c1"># ── HELPERS ──────────────────────────────────────────────────────────────</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>log<span class="o">()</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;[%s] %s\n&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>date<span class="w"> </span><span class="s1">&#39;+%H:%M:%S&#39;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$*</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="p">&amp;</span><span class="m">2</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>docker_post<span class="o">()</span><span class="w"> </span><span class="o">{</span><span class="w"> </span>curl<span class="w"> </span>-sf<span class="w"> </span>--unix-socket<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DOCKER_SOCK</span><span class="s2">&quot;</span><span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;http://localhost</span><span class="nv">$1</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>true<span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>docker_get<span class="o">()</span><span class="w">  </span><span class="o">{</span><span class="w"> </span>curl<span class="w"> </span>-sf<span class="w"> </span>--unix-socket<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DOCKER_SOCK</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;http://localhost</span><span class="nv">$1</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>container_health<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="w">  </span>docker_get<span class="w"> </span><span class="s2">&quot;/containers/</span><span class="nv">$1</span><span class="s2">/json&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.State.Health.Status // &quot;unknown&quot;&#39;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;unknown&quot;</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="o">}</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>wait_healthy<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">CONTAINER</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span>
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">TIMEOUT</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">2</span><span class="k">:-</span><span class="nv">90</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">ELAPSED</span><span class="o">=</span><span class="m">0</span>
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a><span class="w">  </span>log<span class="w"> </span><span class="s2">&quot; Waiting for </span><span class="nv">$CONTAINER</span><span class="s2"> to become healthy (max </span><span class="si">${</span><span class="nv">TIMEOUT</span><span class="si">}</span><span class="s2">s)...&quot;</span>
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$ELAPSED</span><span class="s2">&quot;</span><span class="w"> </span>-lt<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$TIMEOUT</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a><span class="w">    </span><span class="nv">STATUS</span><span class="o">=</span><span class="k">$(</span>container_health<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CONTAINER</span><span class="s2">&quot;</span><span class="k">)</span>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$STATUS</span><span class="s2">&quot;</span><span class="w"> </span><span class="k">in</span>
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a><span class="w">      </span>healthy<span class="o">)</span><span class="w">   </span>log<span class="w"> </span><span class="s2">&quot; [OK] </span><span class="nv">$CONTAINER</span><span class="s2"> is healthy.&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="p">;;</span>
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a><span class="w">      </span>unhealthy<span class="o">)</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot; [FAIL] </span><span class="nv">$CONTAINER</span><span class="s2"> unhealthy after restart.&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="p">;;</span>
+</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a><span class="w">    </span><span class="k">esac</span>
+</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a><span class="w">    </span>sleep<span class="w"> </span><span class="m">4</span>
+</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a><span class="w">    </span><span class="nv">ELAPSED</span><span class="o">=</span><span class="k">$((</span><span class="w"> </span><span class="nv">ELAPSED</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="k">))</span>
+</span><span id="__span-4-39"><a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a><span class="w">  </span><span class="k">done</span>
+</span><span id="__span-4-40"><a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a><span class="w">  </span>log<span class="w"> </span><span class="s2">&quot; [WARN] </span><span class="nv">$CONTAINER</span><span class="s2"> did not become healthy within </span><span class="si">${</span><span class="nv">TIMEOUT</span><span class="si">}</span><span class="s2">s&quot;</span>
+</span><span id="__span-4-41"><a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="m">1</span>
+</span><span id="__span-4-42"><a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a><span class="o">}</span>
+</span><span id="__span-4-43"><a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>
+</span><span id="__span-4-44"><a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>stop_container<span class="o">()</span><span class="w">    </span><span class="o">{</span><span class="w"> </span>docker_post<span class="w"> </span><span class="s2">&quot;/containers/</span><span class="nv">$1</span><span class="s2">/stop?t=10&quot;</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span id="__span-4-45"><a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>start_container<span class="o">()</span><span class="w">   </span><span class="o">{</span><span class="w"> </span>docker_post<span class="w"> </span><span class="s2">&quot;/containers/</span><span class="nv">$1</span><span class="s2">/start&quot;</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span id="__span-4-46"><a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a>restart_container<span class="o">()</span><span class="w"> </span><span class="o">{</span><span class="w"> </span>docker_post<span class="w"> </span><span class="s2">&quot;/containers/</span><span class="nv">$1</span><span class="s2">/restart?t=10&quot;</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span id="__span-4-47"><a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a>
+</span><span id="__span-4-48"><a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a><span class="c1"># ── STREAM DETECTION ─────────────────────────────────────────────────────</span>
+</span><span id="__span-4-49"><a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a>exec_in<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+</span><span id="__span-4-50"><a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">CONTAINER</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span>
+</span><span id="__span-4-51"><a id="__codelineno-4-51" name="__codelineno-4-51" href="#__codelineno-4-51"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">CMD</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$2</span><span class="s2">&quot;</span>
+</span><span id="__span-4-52"><a id="__codelineno-4-52" name="__codelineno-4-52" href="#__codelineno-4-52"></a><span class="w">  </span><span class="nv">EXEC_ID</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-sf<span class="w"> </span>--unix-socket<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DOCKER_SOCK</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-53"><a id="__codelineno-4-53" name="__codelineno-4-53" href="#__codelineno-4-53"></a><span class="w">    </span>-X<span class="w"> </span>POST<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-54"><a id="__codelineno-4-54" name="__codelineno-4-54" href="#__codelineno-4-54"></a><span class="w">    </span><span class="s2">&quot;http://localhost/containers/</span><span class="nv">$CONTAINER</span><span class="s2">/exec&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-55"><a id="__codelineno-4-55" name="__codelineno-4-55" href="#__codelineno-4-55"></a><span class="w">    </span>-d<span class="w"> </span><span class="s2">&quot;{\&quot;AttachStdout\&quot;:true,\&quot;AttachStderr\&quot;:false,\&quot;Tty\&quot;:true,\&quot;Cmd\&quot;:[\&quot;sh\&quot;,\&quot;-c\&quot;,\&quot;</span><span class="nv">$CMD</span><span class="s2">\&quot;]}&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.Id&#39;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span>
+</span><span id="__span-4-56"><a id="__codelineno-4-56" name="__codelineno-4-56" href="#__codelineno-4-56"></a><span class="w">  </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$EXEC_ID</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$EXEC_ID</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">1</span>
+</span><span id="__span-4-57"><a id="__codelineno-4-57" name="__codelineno-4-57" href="#__codelineno-4-57"></a><span class="w">  </span>curl<span class="w"> </span>-sf<span class="w"> </span>--unix-socket<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DOCKER_SOCK</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-58"><a id="__codelineno-4-58" name="__codelineno-4-58" href="#__codelineno-4-58"></a><span class="w">    </span>-X<span class="w"> </span>POST<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-59"><a id="__codelineno-4-59" name="__codelineno-4-59" href="#__codelineno-4-59"></a><span class="w">    </span><span class="s2">&quot;http://localhost/exec/</span><span class="nv">$EXEC_ID</span><span class="s2">/start&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-60"><a id="__codelineno-4-60" name="__codelineno-4-60" href="#__codelineno-4-60"></a><span class="w">    </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;Detach&quot;:false,&quot;Tty&quot;:true}&#39;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null
+</span><span id="__span-4-61"><a id="__codelineno-4-61" name="__codelineno-4-61" href="#__codelineno-4-61"></a><span class="o">}</span>
+</span><span id="__span-4-62"><a id="__codelineno-4-62" name="__codelineno-4-62" href="#__codelineno-4-62"></a>
+</span><span id="__span-4-63"><a id="__codelineno-4-63" name="__codelineno-4-63" href="#__codelineno-4-63"></a>get_eth0_bytes<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+</span><span id="__span-4-64"><a id="__codelineno-4-64" name="__codelineno-4-64" href="#__codelineno-4-64"></a><span class="w">  </span>exec_in<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;awk &#39;/eth0/{print \$2+\$10}&#39; /proc/net/dev&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;[:space:][:cntrl:]&#39;</span>
+</span><span id="__span-4-65"><a id="__codelineno-4-65" name="__codelineno-4-65" href="#__codelineno-4-65"></a><span class="o">}</span>
+</span><span id="__span-4-66"><a id="__codelineno-4-66" name="__codelineno-4-66" href="#__codelineno-4-66"></a>
+</span><span id="__span-4-67"><a id="__codelineno-4-67" name="__codelineno-4-67" href="#__codelineno-4-67"></a>is_streaming<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+</span><span id="__span-4-68"><a id="__codelineno-4-68" name="__codelineno-4-68" href="#__codelineno-4-68"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">CONTAINER</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span>
+</span><span id="__span-4-69"><a id="__codelineno-4-69" name="__codelineno-4-69" href="#__codelineno-4-69"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">THRESHOLD</span><span class="o">=</span><span class="k">$((</span><span class="w"> </span><span class="nv">STREAM_THRESHOLD_KBPS</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="k">))</span>
+</span><span id="__span-4-70"><a id="__codelineno-4-70" name="__codelineno-4-70" href="#__codelineno-4-70"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">SAMPLE_SECS</span><span class="o">=</span><span class="m">3</span>
+</span><span id="__span-4-71"><a id="__codelineno-4-71" name="__codelineno-4-71" href="#__codelineno-4-71"></a><span class="w">  </span><span class="nv">BYTES1</span><span class="o">=</span><span class="k">$(</span>get_eth0_bytes<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CONTAINER</span><span class="s2">&quot;</span><span class="k">)</span>
+</span><span id="__span-4-72"><a id="__codelineno-4-72" name="__codelineno-4-72" href="#__codelineno-4-72"></a><span class="w">  </span>sleep<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SAMPLE_SECS</span><span class="s2">&quot;</span>
+</span><span id="__span-4-73"><a id="__codelineno-4-73" name="__codelineno-4-73" href="#__codelineno-4-73"></a><span class="w">  </span><span class="nv">BYTES2</span><span class="o">=</span><span class="k">$(</span>get_eth0_bytes<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CONTAINER</span><span class="s2">&quot;</span><span class="k">)</span>
+</span><span id="__span-4-74"><a id="__codelineno-4-74" name="__codelineno-4-74" href="#__codelineno-4-74"></a><span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">BYTES1</span><span class="si">}${</span><span class="nv">BYTES2</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="k">in</span>
+</span><span id="__span-4-75"><a id="__codelineno-4-75" name="__codelineno-4-75" href="#__codelineno-4-75"></a><span class="w">    </span>*<span class="o">[</span>!0-9<span class="o">]</span>*<span class="p">|</span><span class="s2">&quot;&quot;</span><span class="o">)</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot; [stream check] Could not read stats from </span><span class="nv">$CONTAINER</span><span class="s2"> -- assuming idle.&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="p">;;</span>
+</span><span id="__span-4-76"><a id="__codelineno-4-76" name="__codelineno-4-76" href="#__codelineno-4-76"></a><span class="w">  </span><span class="k">esac</span>
+</span><span id="__span-4-77"><a id="__codelineno-4-77" name="__codelineno-4-77" href="#__codelineno-4-77"></a><span class="w">  </span><span class="nv">RATE</span><span class="o">=</span><span class="k">$((</span><span class="w"> </span><span class="o">(</span><span class="nv">BYTES2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nv">BYTES1</span><span class="o">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nv">SAMPLE_SECS</span><span class="w"> </span><span class="k">))</span>
+</span><span id="__span-4-78"><a id="__codelineno-4-78" name="__codelineno-4-78" href="#__codelineno-4-78"></a><span class="w">  </span><span class="nv">RATE_KBPS</span><span class="o">=</span><span class="k">$((</span><span class="w"> </span><span class="nv">RATE</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="k">))</span>
+</span><span id="__span-4-79"><a id="__codelineno-4-79" name="__codelineno-4-79" href="#__codelineno-4-79"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$RATE</span><span class="s2">&quot;</span><span class="w"> </span>-gt<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$THRESHOLD</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+</span><span id="__span-4-80"><a id="__codelineno-4-80" name="__codelineno-4-80" href="#__codelineno-4-80"></a><span class="w">    </span>log<span class="w"> </span><span class="s2">&quot; [stream check] </span><span class="nv">$CONTAINER</span><span class="s2">: </span><span class="si">${</span><span class="nv">RATE_KBPS</span><span class="si">}</span><span class="s2"> KB/s -- STREAMING&quot;</span>
+</span><span id="__span-4-81"><a id="__codelineno-4-81" name="__codelineno-4-81" href="#__codelineno-4-81"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="m">0</span>
+</span><span id="__span-4-82"><a id="__codelineno-4-82" name="__codelineno-4-82" href="#__codelineno-4-82"></a><span class="w">  </span><span class="k">else</span>
+</span><span id="__span-4-83"><a id="__codelineno-4-83" name="__codelineno-4-83" href="#__codelineno-4-83"></a><span class="w">    </span>log<span class="w"> </span><span class="s2">&quot;[stream check] </span><span class="nv">$CONTAINER</span><span class="s2">: </span><span class="si">${</span><span class="nv">RATE_KBPS</span><span class="si">}</span><span class="s2"> KB/s -- idle&quot;</span>
+</span><span id="__span-4-84"><a id="__codelineno-4-84" name="__codelineno-4-84" href="#__codelineno-4-84"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="m">1</span>
+</span><span id="__span-4-85"><a id="__codelineno-4-85" name="__codelineno-4-85" href="#__codelineno-4-85"></a><span class="w">  </span><span class="k">fi</span>
+</span><span id="__span-4-86"><a id="__codelineno-4-86" name="__codelineno-4-86" href="#__codelineno-4-86"></a><span class="o">}</span>
+</span><span id="__span-4-87"><a id="__codelineno-4-87" name="__codelineno-4-87" href="#__codelineno-4-87"></a>
+</span><span id="__span-4-88"><a id="__codelineno-4-88" name="__codelineno-4-88" href="#__codelineno-4-88"></a>any_user_streaming<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+</span><span id="__span-4-89"><a id="__codelineno-4-89" name="__codelineno-4-89" href="#__codelineno-4-89"></a><span class="w">  </span><span class="k">for</span><span class="w"> </span>USER<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nv">$USERS</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-4-90"><a id="__codelineno-4-90" name="__codelineno-4-90" href="#__codelineno-4-90"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span>is_streaming<span class="w"> </span><span class="s2">&quot;gluetun-</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">0</span><span class="p">;</span><span class="w"> </span><span class="k">fi</span>
+</span><span id="__span-4-91"><a id="__codelineno-4-91" name="__codelineno-4-91" href="#__codelineno-4-91"></a><span class="w">  </span><span class="k">done</span>
+</span><span id="__span-4-92"><a id="__codelineno-4-92" name="__codelineno-4-92" href="#__codelineno-4-92"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="m">1</span>
+</span><span id="__span-4-93"><a id="__codelineno-4-93" name="__codelineno-4-93" href="#__codelineno-4-93"></a><span class="o">}</span>
+</span><span id="__span-4-94"><a id="__codelineno-4-94" name="__codelineno-4-94" href="#__codelineno-4-94"></a>
+</span><span id="__span-4-95"><a id="__codelineno-4-95" name="__codelineno-4-95" href="#__codelineno-4-95"></a><span class="c1"># ── LATENCY TEST ─────────────────────────────────────────────────────────</span>
+</span><span id="__span-4-96"><a id="__codelineno-4-96" name="__codelineno-4-96" href="#__codelineno-4-96"></a>ping_ms<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+</span><span id="__span-4-97"><a id="__codelineno-4-97" name="__codelineno-4-97" href="#__codelineno-4-97"></a><span class="w">  </span><span class="nv">RESULT</span><span class="o">=</span><span class="k">$(</span>ping<span class="w"> </span>-c<span class="w"> </span><span class="m">3</span><span class="w"> </span>-W<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-98"><a id="__codelineno-4-98" name="__codelineno-4-98" href="#__codelineno-4-98"></a><span class="w">    </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;round-trip\|rtt&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-99"><a id="__codelineno-4-99" name="__codelineno-4-99" href="#__codelineno-4-99"></a><span class="w">    </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-oE<span class="w"> </span><span class="s1">&#39;[0-9]+\.[0-9]+&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-1<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print int($1)}&#39;</span><span class="k">)</span>
+</span><span id="__span-4-100"><a id="__codelineno-4-100" name="__codelineno-4-100" href="#__codelineno-4-100"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">RESULT</span><span class="k">:-</span><span class="nv">9999</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-101"><a id="__codelineno-4-101" name="__codelineno-4-101" href="#__codelineno-4-101"></a><span class="o">}</span>
+</span><span id="__span-4-102"><a id="__codelineno-4-102" name="__codelineno-4-102" href="#__codelineno-4-102"></a>
+</span><span id="__span-4-103"><a id="__codelineno-4-103" name="__codelineno-4-103" href="#__codelineno-4-103"></a>pick_best_region<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+</span><span id="__span-4-104"><a id="__codelineno-4-104" name="__codelineno-4-104" href="#__codelineno-4-104"></a><span class="w">  </span>log<span class="w"> </span><span class="s2">&quot;Fetching PIA server list...&quot;</span>
+</span><span id="__span-4-105"><a id="__codelineno-4-105" name="__codelineno-4-105" href="#__codelineno-4-105"></a><span class="w">  </span><span class="nv">SERVERS</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-sf<span class="w"> </span><span class="s2">&quot;https://serverlist.piaservers.net/vpninfo/servers/v5&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-1<span class="k">)</span>
+</span><span id="__span-4-106"><a id="__codelineno-4-106" name="__codelineno-4-106" href="#__codelineno-4-106"></a><span class="w">  </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SERVERS</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot;ERROR: Could not reach PIA server list API.&quot;</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span id="__span-4-107"><a id="__codelineno-4-107" name="__codelineno-4-107" href="#__codelineno-4-107"></a>
+</span><span id="__span-4-108"><a id="__codelineno-4-108" name="__codelineno-4-108" href="#__codelineno-4-108"></a><span class="w">  </span><span class="nv">BEST_REGION</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="nv">BEST_RTT</span><span class="o">=</span><span class="m">9999</span><span class="w"> </span><span class="nv">BEST_NAME</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="nv">FIRST_REGION</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+</span><span id="__span-4-109"><a id="__codelineno-4-109" name="__codelineno-4-109" href="#__codelineno-4-109"></a>
+</span><span id="__span-4-110"><a id="__codelineno-4-110" name="__codelineno-4-110" href="#__codelineno-4-110"></a><span class="w">  </span><span class="k">for</span><span class="w"> </span>REGION<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$REGIONS</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;,&#39;</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-4-111"><a id="__codelineno-4-111" name="__codelineno-4-111" href="#__codelineno-4-111"></a><span class="w">    </span><span class="nv">WG_IP</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SERVERS</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;.regions[] | select(.id == \&quot;</span><span class="nv">$REGION</span><span class="s2">\&quot;) | .servers.wg[0].ip&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span>
+</span><span id="__span-4-112"><a id="__codelineno-4-112" name="__codelineno-4-112" href="#__codelineno-4-112"></a><span class="w">    </span><span class="nv">WG_NAME</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SERVERS</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;.regions[] | select(.id == \&quot;</span><span class="nv">$REGION</span><span class="s2">\&quot;) | .name&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span>
+</span><span id="__span-4-113"><a id="__codelineno-4-113" name="__codelineno-4-113" href="#__codelineno-4-113"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$WG_IP</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$WG_IP</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+</span><span id="__span-4-114"><a id="__codelineno-4-114" name="__codelineno-4-114" href="#__codelineno-4-114"></a><span class="w">      </span>log<span class="w"> </span><span class="s2">&quot;[</span><span class="nv">$REGION</span><span class="s2">] Not found in server list -- skipping.&quot;</span>
+</span><span id="__span-4-115"><a id="__codelineno-4-115" name="__codelineno-4-115" href="#__codelineno-4-115"></a><span class="w">      </span><span class="k">continue</span>
+</span><span id="__span-4-116"><a id="__codelineno-4-116" name="__codelineno-4-116" href="#__codelineno-4-116"></a><span class="w">    </span><span class="k">fi</span>
+</span><span id="__span-4-117"><a id="__codelineno-4-117" name="__codelineno-4-117" href="#__codelineno-4-117"></a><span class="w">    </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$FIRST_REGION</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nv">FIRST_REGION</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$REGION</span><span class="s2">&quot;</span>
+</span><span id="__span-4-118"><a id="__codelineno-4-118" name="__codelineno-4-118" href="#__codelineno-4-118"></a><span class="w">    </span><span class="nv">RTT</span><span class="o">=</span><span class="k">$(</span>ping_ms<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$WG_IP</span><span class="s2">&quot;</span><span class="k">)</span>
+</span><span id="__span-4-119"><a id="__codelineno-4-119" name="__codelineno-4-119" href="#__codelineno-4-119"></a><span class="w">    </span>log<span class="w"> </span><span class="s2">&quot;  </span><span class="nv">$WG_NAME</span><span class="s2"> (</span><span class="nv">$REGION</span><span class="s2">): </span><span class="si">${</span><span class="nv">RTT</span><span class="si">}</span><span class="s2">ms&quot;</span>
+</span><span id="__span-4-120"><a id="__codelineno-4-120" name="__codelineno-4-120" href="#__codelineno-4-120"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$RTT</span><span class="s2">&quot;</span><span class="w"> </span>-lt<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BEST_RTT</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="p">;</span><span class="w"> </span><span class="k">then</span>
+</span><span id="__span-4-121"><a id="__codelineno-4-121" name="__codelineno-4-121" href="#__codelineno-4-121"></a><span class="w">      </span><span class="nv">BEST_REGION</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$REGION</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="nv">BEST_RTT</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$RTT</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="nv">BEST_NAME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$WG_NAME</span><span class="s2">&quot;</span>
+</span><span id="__span-4-122"><a id="__codelineno-4-122" name="__codelineno-4-122" href="#__codelineno-4-122"></a><span class="w">    </span><span class="k">fi</span>
+</span><span id="__span-4-123"><a id="__codelineno-4-123" name="__codelineno-4-123" href="#__codelineno-4-123"></a><span class="w">  </span><span class="k">done</span>
+</span><span id="__span-4-124"><a id="__codelineno-4-124" name="__codelineno-4-124" href="#__codelineno-4-124"></a>
+</span><span id="__span-4-125"><a id="__codelineno-4-125" name="__codelineno-4-125" href="#__codelineno-4-125"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BEST_REGION</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+</span><span id="__span-4-126"><a id="__codelineno-4-126" name="__codelineno-4-126" href="#__codelineno-4-126"></a><span class="w">    </span><span class="o">[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$FIRST_REGION</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nv">BEST_REGION</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$FIRST_REGION</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot;WARNING: Could not ping any region. Falling back to </span><span class="nv">$BEST_REGION</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="o">}</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-127"><a id="__codelineno-4-127" name="__codelineno-4-127" href="#__codelineno-4-127"></a><span class="w">      </span><span class="o">||</span><span class="w"> </span><span class="o">{</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot;ERROR: No valid regions found.&quot;</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span id="__span-4-128"><a id="__codelineno-4-128" name="__codelineno-4-128" href="#__codelineno-4-128"></a><span class="w">  </span><span class="k">else</span>
+</span><span id="__span-4-129"><a id="__codelineno-4-129" name="__codelineno-4-129" href="#__codelineno-4-129"></a><span class="w">    </span>log<span class="w"> </span><span class="s2">&quot;* Best region: </span><span class="nv">$BEST_NAME</span><span class="s2"> (</span><span class="nv">$BEST_REGION</span><span class="s2">) -- </span><span class="si">${</span><span class="nv">BEST_RTT</span><span class="si">}</span><span class="s2">ms&quot;</span>
+</span><span id="__span-4-130"><a id="__codelineno-4-130" name="__codelineno-4-130" href="#__codelineno-4-130"></a><span class="w">  </span><span class="k">fi</span>
+</span><span id="__span-4-131"><a id="__codelineno-4-131" name="__codelineno-4-131" href="#__codelineno-4-131"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BEST_REGION</span><span class="s2">&quot;</span>
+</span><span id="__span-4-132"><a id="__codelineno-4-132" name="__codelineno-4-132" href="#__codelineno-4-132"></a><span class="o">}</span>
+</span><span id="__span-4-133"><a id="__codelineno-4-133" name="__codelineno-4-133" href="#__codelineno-4-133"></a>
+</span><span id="__span-4-134"><a id="__codelineno-4-134" name="__codelineno-4-134" href="#__codelineno-4-134"></a><span class="c1"># ── CREDENTIAL GENERATION ────────────────────────────────────────────────</span>
+</span><span id="__span-4-135"><a id="__codelineno-4-135" name="__codelineno-4-135" href="#__codelineno-4-135"></a>generate_creds<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+</span><span id="__span-4-136"><a id="__codelineno-4-136" name="__codelineno-4-136" href="#__codelineno-4-136"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">REGION</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span><span class="w"> </span><span class="nv">LABEL</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$2</span><span class="s2">&quot;</span>
+</span><span id="__span-4-137"><a id="__codelineno-4-137" name="__codelineno-4-137" href="#__codelineno-4-137"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">OUT</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">WORK_DIR</span><span class="si">}</span><span class="s2">/wg0.</span><span class="si">${</span><span class="nv">LABEL</span><span class="si">}</span><span class="s2">.conf&quot;</span>
+</span><span id="__span-4-138"><a id="__codelineno-4-138" name="__codelineno-4-138" href="#__codelineno-4-138"></a>
+</span><span id="__span-4-139"><a id="__codelineno-4-139" name="__codelineno-4-139" href="#__codelineno-4-139"></a><span class="w">  </span>log<span class="w"> </span><span class="s2">&quot;[</span><span class="nv">$LABEL</span><span class="s2">] Authenticating with PIA...&quot;</span>
+</span><span id="__span-4-140"><a id="__codelineno-4-140" name="__codelineno-4-140" href="#__codelineno-4-140"></a><span class="w">  </span><span class="nv">TOKEN</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-sf<span class="w"> </span>-u<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PIA_USER</span><span class="s2">:</span><span class="nv">$PIA_PASS</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;https://privateinternetaccess.com/gtoken/generateToken&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.token&#39;</span><span class="k">)</span>
+</span><span id="__span-4-141"><a id="__codelineno-4-141" name="__codelineno-4-141" href="#__codelineno-4-141"></a><span class="w">  </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$TOKEN</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$TOKEN</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot;ERROR: PIA auth failed.&quot;</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span id="__span-4-142"><a id="__codelineno-4-142" name="__codelineno-4-142" href="#__codelineno-4-142"></a>
+</span><span id="__span-4-143"><a id="__codelineno-4-143" name="__codelineno-4-143" href="#__codelineno-4-143"></a><span class="w">  </span><span class="nv">SERVERS</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-sf<span class="w"> </span><span class="s2">&quot;https://serverlist.piaservers.net/vpninfo/servers/v5&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-1<span class="k">)</span>
+</span><span id="__span-4-144"><a id="__codelineno-4-144" name="__codelineno-4-144" href="#__codelineno-4-144"></a><span class="w">  </span><span class="nv">WG_IP</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SERVERS</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;.regions[] | select(.id == \&quot;</span><span class="nv">$REGION</span><span class="s2">\&quot;) | .servers.wg[0].ip&quot;</span><span class="k">)</span>
+</span><span id="__span-4-145"><a id="__codelineno-4-145" name="__codelineno-4-145" href="#__codelineno-4-145"></a><span class="w">  </span><span class="nv">WG_CN</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SERVERS</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;.regions[] | select(.id == \&quot;</span><span class="nv">$REGION</span><span class="s2">\&quot;) | .servers.wg[0].cn&quot;</span><span class="k">)</span>
+</span><span id="__span-4-146"><a id="__codelineno-4-146" name="__codelineno-4-146" href="#__codelineno-4-146"></a><span class="w">  </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$WG_IP</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$WG_CN</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot;ERROR: Could not fetch IP/CN for &#39;</span><span class="nv">$REGION</span><span class="s2">&#39;.&quot;</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span id="__span-4-147"><a id="__codelineno-4-147" name="__codelineno-4-147" href="#__codelineno-4-147"></a>
+</span><span id="__span-4-148"><a id="__codelineno-4-148" name="__codelineno-4-148" href="#__codelineno-4-148"></a><span class="w">  </span>log<span class="w"> </span><span class="s2">&quot;[</span><span class="nv">$LABEL</span><span class="s2">] Generating WireGuard keypair...&quot;</span>
+</span><span id="__span-4-149"><a id="__codelineno-4-149" name="__codelineno-4-149" href="#__codelineno-4-149"></a><span class="w">  </span><span class="nv">PRIVATE_KEY</span><span class="o">=</span><span class="k">$(</span>wg<span class="w"> </span>genkey<span class="k">)</span>
+</span><span id="__span-4-150"><a id="__codelineno-4-150" name="__codelineno-4-150" href="#__codelineno-4-150"></a><span class="w">  </span><span class="nv">PUBLIC_KEY</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PRIVATE_KEY</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>wg<span class="w"> </span>pubkey<span class="k">)</span>
+</span><span id="__span-4-151"><a id="__codelineno-4-151" name="__codelineno-4-151" href="#__codelineno-4-151"></a>
+</span><span id="__span-4-152"><a id="__codelineno-4-152" name="__codelineno-4-152" href="#__codelineno-4-152"></a><span class="w">  </span>log<span class="w"> </span><span class="s2">&quot;[</span><span class="nv">$LABEL</span><span class="s2">] Registering key with PIA (</span><span class="nv">$WG_IP</span><span class="s2"> / </span><span class="nv">$WG_CN</span><span class="s2">)...&quot;</span>
+</span><span id="__span-4-153"><a id="__codelineno-4-153" name="__codelineno-4-153" href="#__codelineno-4-153"></a><span class="w">  </span>curl<span class="w"> </span>-sLo<span class="w"> </span>/tmp/pia-ca.crt<span class="w"> </span><span class="s2">&quot;https://raw.githubusercontent.com/pia-foss/manual-connections/master/ca.rsa.4096.crt&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+</span><span id="__span-4-154"><a id="__codelineno-4-154" name="__codelineno-4-154" href="#__codelineno-4-154"></a>
+</span><span id="__span-4-155"><a id="__codelineno-4-155" name="__codelineno-4-155" href="#__codelineno-4-155"></a><span class="w">  </span><span class="nv">RESULT</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-sf<span class="w"> </span>-G<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-156"><a id="__codelineno-4-156" name="__codelineno-4-156" href="#__codelineno-4-156"></a><span class="w">    </span>--cacert<span class="w"> </span>/tmp/pia-ca.crt<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-157"><a id="__codelineno-4-157" name="__codelineno-4-157" href="#__codelineno-4-157"></a><span class="w">    </span>--resolve<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$WG_CN</span><span class="s2">:1337:</span><span class="nv">$WG_IP</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-158"><a id="__codelineno-4-158" name="__codelineno-4-158" href="#__codelineno-4-158"></a><span class="w">    </span>--data-urlencode<span class="w"> </span><span class="s2">&quot;pt=</span><span class="nv">$TOKEN</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-159"><a id="__codelineno-4-159" name="__codelineno-4-159" href="#__codelineno-4-159"></a><span class="w">    </span>--data-urlencode<span class="w"> </span><span class="s2">&quot;pubkey=</span><span class="nv">$PUBLIC_KEY</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-160"><a id="__codelineno-4-160" name="__codelineno-4-160" href="#__codelineno-4-160"></a><span class="w">    </span><span class="s2">&quot;https://</span><span class="nv">$WG_CN</span><span class="s2">:1337/addKey&quot;</span><span class="k">)</span>
+</span><span id="__span-4-161"><a id="__codelineno-4-161" name="__codelineno-4-161" href="#__codelineno-4-161"></a>
+</span><span id="__span-4-162"><a id="__codelineno-4-162" name="__codelineno-4-162" href="#__codelineno-4-162"></a><span class="w">  </span><span class="nv">SERVER_KEY</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$RESULT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.server_key&#39;</span><span class="k">)</span>
+</span><span id="__span-4-163"><a id="__codelineno-4-163" name="__codelineno-4-163" href="#__codelineno-4-163"></a><span class="w">  </span><span class="nv">PEER_IP</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$RESULT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.peer_ip&#39;</span><span class="k">)</span>
+</span><span id="__span-4-164"><a id="__codelineno-4-164" name="__codelineno-4-164" href="#__codelineno-4-164"></a><span class="w">  </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SERVER_KEY</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SERVER_KEY</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot;ERROR: Key registration failed. Response: </span><span class="nv">$RESULT</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span id="__span-4-165"><a id="__codelineno-4-165" name="__codelineno-4-165" href="#__codelineno-4-165"></a>
+</span><span id="__span-4-166"><a id="__codelineno-4-166" name="__codelineno-4-166" href="#__codelineno-4-166"></a><span class="w">  </span>cat<span class="w"> </span>&gt;<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$OUT</span><span class="s2">&quot;</span><span class="w"> </span><span class="s">&lt;&lt; EOF</span>
+</span><span id="__span-4-167"><a id="__codelineno-4-167" name="__codelineno-4-167" href="#__codelineno-4-167"></a><span class="s">[Interface]</span>
+</span><span id="__span-4-168"><a id="__codelineno-4-168" name="__codelineno-4-168" href="#__codelineno-4-168"></a><span class="s">PrivateKey = $PRIVATE_KEY</span>
+</span><span id="__span-4-169"><a id="__codelineno-4-169" name="__codelineno-4-169" href="#__codelineno-4-169"></a><span class="s">Address = $PEER_IP/32</span>
+</span><span id="__span-4-170"><a id="__codelineno-4-170" name="__codelineno-4-170" href="#__codelineno-4-170"></a>
+</span><span id="__span-4-171"><a id="__codelineno-4-171" name="__codelineno-4-171" href="#__codelineno-4-171"></a><span class="s">[Peer]</span>
+</span><span id="__span-4-172"><a id="__codelineno-4-172" name="__codelineno-4-172" href="#__codelineno-4-172"></a><span class="s">PublicKey = $SERVER_KEY</span>
+</span><span id="__span-4-173"><a id="__codelineno-4-173" name="__codelineno-4-173" href="#__codelineno-4-173"></a><span class="s">Endpoint = $WG_IP:1337</span>
+</span><span id="__span-4-174"><a id="__codelineno-4-174" name="__codelineno-4-174" href="#__codelineno-4-174"></a><span class="s">AllowedIPs = 0.0.0.0/0</span>
+</span><span id="__span-4-175"><a id="__codelineno-4-175" name="__codelineno-4-175" href="#__codelineno-4-175"></a><span class="s">EOF</span>
+</span><span id="__span-4-176"><a id="__codelineno-4-176" name="__codelineno-4-176" href="#__codelineno-4-176"></a><span class="w">  </span>log<span class="w"> </span><span class="s2">&quot;[</span><span class="nv">$LABEL</span><span class="s2">] [OK] Written -- VPN IP: </span><span class="nv">$PEER_IP</span><span class="s2">&quot;</span>
+</span><span id="__span-4-177"><a id="__codelineno-4-177" name="__codelineno-4-177" href="#__codelineno-4-177"></a><span class="o">}</span>
+</span><span id="__span-4-178"><a id="__codelineno-4-178" name="__codelineno-4-178" href="#__codelineno-4-178"></a>
+</span><span id="__span-4-179"><a id="__codelineno-4-179" name="__codelineno-4-179" href="#__codelineno-4-179"></a><span class="c1"># ── STACK CYCLE ──────────────────────────────────────────────────────────</span>
+</span><span id="__span-4-180"><a id="__codelineno-4-180" name="__codelineno-4-180" href="#__codelineno-4-180"></a>cycle_user<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+</span><span id="__span-4-181"><a id="__codelineno-4-181" name="__codelineno-4-181" href="#__codelineno-4-181"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">USER</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span>
+</span><span id="__span-4-182"><a id="__codelineno-4-182" name="__codelineno-4-182" href="#__codelineno-4-182"></a><span class="w">  </span>log<span class="w"> </span><span class="s2">&quot;Cycling </span><span class="nv">$USER</span><span class="s2"> stack...&quot;</span>
+</span><span id="__span-4-183"><a id="__codelineno-4-183" name="__codelineno-4-183" href="#__codelineno-4-183"></a><span class="w">  </span>stop_container<span class="w"> </span><span class="s2">&quot;stremio-</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-184"><a id="__codelineno-4-184" name="__codelineno-4-184" href="#__codelineno-4-184"></a><span class="w">  </span>sleep<span class="w"> </span><span class="m">2</span>
+</span><span id="__span-4-185"><a id="__codelineno-4-185" name="__codelineno-4-185" href="#__codelineno-4-185"></a><span class="w">  </span>restart_container<span class="w"> </span><span class="s2">&quot;gluetun-</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-186"><a id="__codelineno-4-186" name="__codelineno-4-186" href="#__codelineno-4-186"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span>wait_healthy<span class="w"> </span><span class="s2">&quot;gluetun-</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">90</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+</span><span id="__span-4-187"><a id="__codelineno-4-187" name="__codelineno-4-187" href="#__codelineno-4-187"></a><span class="w">    </span>start_container<span class="w"> </span><span class="s2">&quot;stremio-</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-188"><a id="__codelineno-4-188" name="__codelineno-4-188" href="#__codelineno-4-188"></a><span class="w">    </span>log<span class="w"> </span><span class="s2">&quot;[</span><span class="nv">$USER</span><span class="s2">] [OK] Stack back online.&quot;</span>
+</span><span id="__span-4-189"><a id="__codelineno-4-189" name="__codelineno-4-189" href="#__codelineno-4-189"></a><span class="w">  </span><span class="k">else</span>
+</span><span id="__span-4-190"><a id="__codelineno-4-190" name="__codelineno-4-190" href="#__codelineno-4-190"></a><span class="w">    </span>log<span class="w"> </span><span class="s2">&quot;[</span><span class="nv">$USER</span><span class="s2">] WARNING: gluetun unhealthy -- stremio not started. Check: docker logs gluetun-</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-191"><a id="__codelineno-4-191" name="__codelineno-4-191" href="#__codelineno-4-191"></a><span class="w">  </span><span class="k">fi</span>
+</span><span id="__span-4-192"><a id="__codelineno-4-192" name="__codelineno-4-192" href="#__codelineno-4-192"></a><span class="o">}</span>
+</span><span id="__span-4-193"><a id="__codelineno-4-193" name="__codelineno-4-193" href="#__codelineno-4-193"></a>
+</span><span id="__span-4-194"><a id="__codelineno-4-194" name="__codelineno-4-194" href="#__codelineno-4-194"></a><span class="c1"># ── FULL REFRESH ─────────────────────────────────────────────────────────</span>
+</span><span id="__span-4-195"><a id="__codelineno-4-195" name="__codelineno-4-195" href="#__codelineno-4-195"></a>refresh_all<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+</span><span id="__span-4-196"><a id="__codelineno-4-196" name="__codelineno-4-196" href="#__codelineno-4-196"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">REASON</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">1</span><span class="k">:-</span><span class="nv">scheduled</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="nv">FORCE</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">2</span><span class="k">:-</span><span class="nv">0</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-197"><a id="__codelineno-4-197" name="__codelineno-4-197" href="#__codelineno-4-197"></a><span class="w">  </span>log<span class="w"> </span><span class="s2">&quot;========================================&quot;</span><span class="p">;</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot;REFRESH triggered: </span><span class="nv">$REASON</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot;========================================&quot;</span>
+</span><span id="__span-4-198"><a id="__codelineno-4-198" name="__codelineno-4-198" href="#__codelineno-4-198"></a>
+</span><span id="__span-4-199"><a id="__codelineno-4-199" name="__codelineno-4-199" href="#__codelineno-4-199"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$FORCE</span><span class="s2">&quot;</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+</span><span id="__span-4-200"><a id="__codelineno-4-200" name="__codelineno-4-200" href="#__codelineno-4-200"></a><span class="w">    </span>log<span class="w"> </span><span class="s2">&quot;Checking for active streams...&quot;</span>
+</span><span id="__span-4-201"><a id="__codelineno-4-201" name="__codelineno-4-201" href="#__codelineno-4-201"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span>any_user_streaming<span class="p">;</span><span class="w"> </span><span class="k">then</span>
+</span><span id="__span-4-202"><a id="__codelineno-4-202" name="__codelineno-4-202" href="#__codelineno-4-202"></a><span class="w">      </span>log<span class="w"> </span><span class="s2">&quot;Active stream detected -- waiting until stream ends before restarting...&quot;</span>
+</span><span id="__span-4-203"><a id="__codelineno-4-203" name="__codelineno-4-203" href="#__codelineno-4-203"></a><span class="w">      </span><span class="k">while</span><span class="w"> </span>any_user_streaming<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-4-204"><a id="__codelineno-4-204" name="__codelineno-4-204" href="#__codelineno-4-204"></a><span class="w">        </span>log<span class="w"> </span><span class="s2">&quot;  Still streaming... rechecking in 30s&quot;</span>
+</span><span id="__span-4-205"><a id="__codelineno-4-205" name="__codelineno-4-205" href="#__codelineno-4-205"></a><span class="w">        </span>sleep<span class="w"> </span><span class="m">30</span>
+</span><span id="__span-4-206"><a id="__codelineno-4-206" name="__codelineno-4-206" href="#__codelineno-4-206"></a><span class="w">      </span><span class="k">done</span>
+</span><span id="__span-4-207"><a id="__codelineno-4-207" name="__codelineno-4-207" href="#__codelineno-4-207"></a><span class="w">      </span>log<span class="w"> </span><span class="s2">&quot;Stream ended -- proceeding.&quot;</span>
+</span><span id="__span-4-208"><a id="__codelineno-4-208" name="__codelineno-4-208" href="#__codelineno-4-208"></a><span class="w">    </span><span class="k">else</span>
+</span><span id="__span-4-209"><a id="__codelineno-4-209" name="__codelineno-4-209" href="#__codelineno-4-209"></a><span class="w">      </span>log<span class="w"> </span><span class="s2">&quot;No active streams -- proceeding immediately.&quot;</span>
+</span><span id="__span-4-210"><a id="__codelineno-4-210" name="__codelineno-4-210" href="#__codelineno-4-210"></a><span class="w">    </span><span class="k">fi</span>
+</span><span id="__span-4-211"><a id="__codelineno-4-211" name="__codelineno-4-211" href="#__codelineno-4-211"></a><span class="w">  </span><span class="k">else</span>
+</span><span id="__span-4-212"><a id="__codelineno-4-212" name="__codelineno-4-212" href="#__codelineno-4-212"></a><span class="w">    </span>log<span class="w"> </span><span class="s2">&quot;(Forced refresh -- stream check skipped)&quot;</span>
+</span><span id="__span-4-213"><a id="__codelineno-4-213" name="__codelineno-4-213" href="#__codelineno-4-213"></a><span class="w">  </span><span class="k">fi</span>
+</span><span id="__span-4-214"><a id="__codelineno-4-214" name="__codelineno-4-214" href="#__codelineno-4-214"></a>
+</span><span id="__span-4-215"><a id="__codelineno-4-215" name="__codelineno-4-215" href="#__codelineno-4-215"></a><span class="w">  </span><span class="nv">BEST_REGION</span><span class="o">=</span><span class="k">$(</span>pick_best_region<span class="k">)</span>
+</span><span id="__span-4-216"><a id="__codelineno-4-216" name="__codelineno-4-216" href="#__codelineno-4-216"></a><span class="w">  </span><span class="k">for</span><span class="w"> </span>USER<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nv">$USERS</span><span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>generate_creds<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BEST_REGION</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$USER</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">done</span>
+</span><span id="__span-4-217"><a id="__codelineno-4-217" name="__codelineno-4-217" href="#__codelineno-4-217"></a><span class="w">  </span><span class="k">for</span><span class="w"> </span>USER<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nv">$USERS</span><span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>cycle_user<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$USER</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">done</span>
+</span><span id="__span-4-218"><a id="__codelineno-4-218" name="__codelineno-4-218" href="#__codelineno-4-218"></a>
+</span><span id="__span-4-219"><a id="__codelineno-4-219" name="__codelineno-4-219" href="#__codelineno-4-219"></a><span class="w">  </span>log<span class="w"> </span><span class="s2">&quot;========================================&quot;</span><span class="p">;</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot;Refresh complete. Next in </span><span class="si">${</span><span class="nv">REFRESH_HOURS</span><span class="k">:-</span><span class="nv">6</span><span class="si">}</span><span class="s2">h.&quot;</span><span class="p">;</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot;========================================&quot;</span>
+</span><span id="__span-4-220"><a id="__codelineno-4-220" name="__codelineno-4-220" href="#__codelineno-4-220"></a><span class="o">}</span>
+</span><span id="__span-4-221"><a id="__codelineno-4-221" name="__codelineno-4-221" href="#__codelineno-4-221"></a>
+</span><span id="__span-4-222"><a id="__codelineno-4-222" name="__codelineno-4-222" href="#__codelineno-4-222"></a><span class="c1"># ── ENTRY POINT ──────────────────────────────────────────────────────────</span>
+</span><span id="__span-4-223"><a id="__codelineno-4-223" name="__codelineno-4-223" href="#__codelineno-4-223"></a><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PIA_USER</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PIA_PASS</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span>log<span class="w"> </span><span class="s2">&quot;FATAL: PIA_USER and PIA_PASS must be set.&quot;</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+</span><span id="__span-4-224"><a id="__codelineno-4-224" name="__codelineno-4-224" href="#__codelineno-4-224"></a>
+</span><span id="__span-4-225"><a id="__codelineno-4-225" name="__codelineno-4-225" href="#__codelineno-4-225"></a>log<span class="w"> </span><span class="s2">&quot;PIA WireGuard Watcher v2.0 starting&quot;</span>
+</span><span id="__span-4-226"><a id="__codelineno-4-226" name="__codelineno-4-226" href="#__codelineno-4-226"></a>log<span class="w"> </span><span class="s2">&quot;Candidates : </span><span class="nv">$REGIONS</span><span class="s2">&quot;</span>
+</span><span id="__span-4-227"><a id="__codelineno-4-227" name="__codelineno-4-227" href="#__codelineno-4-227"></a>log<span class="w"> </span><span class="s2">&quot;Refresh    : every </span><span class="si">${</span><span class="nv">REFRESH_HOURS</span><span class="k">:-</span><span class="nv">6</span><span class="si">}</span><span class="s2">h&quot;</span>
+</span><span id="__span-4-228"><a id="__codelineno-4-228" name="__codelineno-4-228" href="#__codelineno-4-228"></a>log<span class="w"> </span><span class="s2">&quot;Stream guard: wait indefinitely for stream to end before refresh&quot;</span>
+</span><span id="__span-4-229"><a id="__codelineno-4-229" name="__codelineno-4-229" href="#__codelineno-4-229"></a>log<span class="w"> </span><span class="s2">&quot;Health poll: every </span><span class="si">${</span><span class="nv">HEALTH_POLL</span><span class="si">}</span><span class="s2">s&quot;</span>
+</span><span id="__span-4-230"><a id="__codelineno-4-230" name="__codelineno-4-230" href="#__codelineno-4-230"></a>
+</span><span id="__span-4-231"><a id="__codelineno-4-231" name="__codelineno-4-231" href="#__codelineno-4-231"></a>refresh_all<span class="w"> </span><span class="s2">&quot;startup&quot;</span><span class="w"> </span><span class="m">1</span>
+</span><span id="__span-4-232"><a id="__codelineno-4-232" name="__codelineno-4-232" href="#__codelineno-4-232"></a><span class="nv">LAST_REFRESH</span><span class="o">=</span><span class="k">$(</span>date<span class="w"> </span>+%s<span class="k">)</span>
+</span><span id="__span-4-233"><a id="__codelineno-4-233" name="__codelineno-4-233" href="#__codelineno-4-233"></a>
+</span><span id="__span-4-234"><a id="__codelineno-4-234" name="__codelineno-4-234" href="#__codelineno-4-234"></a><span class="k">while</span><span class="w"> </span>true<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-4-235"><a id="__codelineno-4-235" name="__codelineno-4-235" href="#__codelineno-4-235"></a><span class="w">  </span>sleep<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HEALTH_POLL</span><span class="s2">&quot;</span>
+</span><span id="__span-4-236"><a id="__codelineno-4-236" name="__codelineno-4-236" href="#__codelineno-4-236"></a><span class="w">  </span><span class="nv">NOW</span><span class="o">=</span><span class="k">$(</span>date<span class="w"> </span>+%s<span class="k">)</span>
+</span><span id="__span-4-237"><a id="__codelineno-4-237" name="__codelineno-4-237" href="#__codelineno-4-237"></a><span class="w">  </span><span class="nv">TRIGGERED</span><span class="o">=</span><span class="m">0</span>
+</span><span id="__span-4-238"><a id="__codelineno-4-238" name="__codelineno-4-238" href="#__codelineno-4-238"></a><span class="w">  </span><span class="k">for</span><span class="w"> </span>USER<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nv">$USERS</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-4-239"><a id="__codelineno-4-239" name="__codelineno-4-239" href="#__codelineno-4-239"></a><span class="w">    </span><span class="nv">GLUETUN</span><span class="o">=</span><span class="s2">&quot;gluetun-</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-4-240"><a id="__codelineno-4-240" name="__codelineno-4-240" href="#__codelineno-4-240"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>container_health<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$GLUETUN</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;unhealthy&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$TRIGGERED</span><span class="s2">&quot;</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+</span><span id="__span-4-241"><a id="__codelineno-4-241" name="__codelineno-4-241" href="#__codelineno-4-241"></a><span class="w">      </span>log<span class="w"> </span><span class="s2">&quot;ALERT: </span><span class="nv">$GLUETUN</span><span class="s2"> is UNHEALTHY -- emergency refresh&quot;</span>
+</span><span id="__span-4-242"><a id="__codelineno-4-242" name="__codelineno-4-242" href="#__codelineno-4-242"></a><span class="w">      </span>refresh_all<span class="w"> </span><span class="s2">&quot;health failure (</span><span class="nv">$GLUETUN</span><span class="s2">)&quot;</span><span class="w"> </span><span class="m">1</span>
+</span><span id="__span-4-243"><a id="__codelineno-4-243" name="__codelineno-4-243" href="#__codelineno-4-243"></a><span class="w">      </span><span class="nv">LAST_REFRESH</span><span class="o">=</span><span class="k">$(</span>date<span class="w"> </span>+%s<span class="k">)</span>
+</span><span id="__span-4-244"><a id="__codelineno-4-244" name="__codelineno-4-244" href="#__codelineno-4-244"></a><span class="w">      </span><span class="nv">TRIGGERED</span><span class="o">=</span><span class="m">1</span>
+</span><span id="__span-4-245"><a id="__codelineno-4-245" name="__codelineno-4-245" href="#__codelineno-4-245"></a><span class="w">    </span><span class="k">fi</span>
+</span><span id="__span-4-246"><a id="__codelineno-4-246" name="__codelineno-4-246" href="#__codelineno-4-246"></a><span class="w">  </span><span class="k">done</span>
+</span><span id="__span-4-247"><a id="__codelineno-4-247" name="__codelineno-4-247" href="#__codelineno-4-247"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$TRIGGERED</span><span class="s2">&quot;</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="k">$((</span><span class="w"> </span><span class="nv">NOW</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nv">LAST_REFRESH</span><span class="w"> </span><span class="k">))</span><span class="w"> </span>-ge<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$REFRESH_SECONDS</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+</span><span id="__span-4-248"><a id="__codelineno-4-248" name="__codelineno-4-248" href="#__codelineno-4-248"></a><span class="w">    </span>refresh_all<span class="w"> </span><span class="s2">&quot;scheduled </span><span class="si">${</span><span class="nv">REFRESH_HOURS</span><span class="k">:-</span><span class="nv">6</span><span class="si">}</span><span class="s2">h interval&quot;</span><span class="w"> </span><span class="m">0</span>
+</span><span id="__span-4-249"><a id="__codelineno-4-249" name="__codelineno-4-249" href="#__codelineno-4-249"></a><span class="w">    </span><span class="nv">LAST_REFRESH</span><span class="o">=</span><span class="k">$(</span>date<span class="w"> </span>+%s<span class="k">)</span>
+</span><span id="__span-4-250"><a id="__codelineno-4-250" name="__codelineno-4-250" href="#__codelineno-4-250"></a><span class="w">  </span><span class="k">fi</span>
+</span><span id="__span-4-251"><a id="__codelineno-4-251" name="__codelineno-4-251" href="#__codelineno-4-251"></a><span class="k">done</span>
+</span></code></pre></div>
+<hr />
+<h2 id="step-5-make-the-script-executable">Step 5 — Make the script executable<a class="headerlink" href="#step-5-make-the-script-executable" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>chmod<span class="w"> </span>+x<span class="w"> </span>pia-watcher.sh
+</span></code></pre></div>
+<hr />
+<h2 id="step-6-start-the-stack">Step 6 — Start the stack<a class="headerlink" href="#step-6-start-the-stack" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+</span></code></pre></div>
+<p>Watch the watcher initialize:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>docker<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span>pia-watcher
+</span></code></pre></div>
+<p>Expected output on a healthy start:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>[07:29:05] PIA WireGuard Watcher v2.0 starting
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>[07:29:08]   Switzerland (swiss): 9ms
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>[07:29:14] * Best region: Switzerland (swiss) -- 9ms
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>[07:29:14] [user1] [OK] Credentials written -- assigned VPN IP: 10.x.x.x
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>[07:29:35]  [OK] gluetun-user1 is healthy.
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>[07:29:56]  [OK] gluetun-user2 is healthy.
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>[07:29:56] Refresh complete. Next in 6h.
+</span></code></pre></div>
+<hr />
+<h2 id="ports-reference">Ports Reference<a class="headerlink" href="#ports-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Port</th>
+<th>Service</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>11470</code></td>
+<td>Stremio dashboard (Heimdall)</td>
+</tr>
+<tr>
+<td><code>11471</code></td>
+<td>Stremio user1 (via gluetun-user1)</td>
+</tr>
+<tr>
+<td><code>11472</code></td>
+<td>Stremio user2 (via gluetun-user2)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<p><strong>Gluetun unhealthy after restart</strong>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>docker<span class="w"> </span>logs<span class="w"> </span>gluetun-user1
+</span></code></pre></div>
+Usually means the conf file is empty (placeholder wasn't overwritten yet) or PIA auth failed. Check <code>docker logs pia-watcher</code>.</p>
+<p><strong>Region skipped with "Not found in server list"</strong>
+The region ID is wrong. Find correct IDs:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>pia-watcher<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;curl -sf &#39;https://serverlist.piaservers.net/vpninfo/servers/v5&#39; | head -1 | jq -r &#39;.regions[] | \&quot;\(.id) → \(.name)\&quot;&#39;&quot;</span>
+</span></code></pre></div></p>
+<p><strong>Watcher crashing on start</strong>
+Confirm <code>wg0.user1.conf</code> and <code>wg0.user2.conf</code> exist as <strong>files</strong> (not directories):
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>ls<span class="w"> </span>-la<span class="w"> </span>wg0.*.conf
+</span></code></pre></div>
+If they're directories, remove them and re-run Step 2.</p>
+<p><strong>Force an immediate refresh</strong>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>docker<span class="w"> </span>restart<span class="w"> </span>pia-watcher
+</span></code></pre></div></p>
 
 
 
