@@ -106,7 +106,7 @@ nav:
     - "Troubleshooting": reference/troubleshooting.md
     - "AMD GPU Acceleration": reference/amd-gpu.md
     - "OS Updates & Rollbacks": reference/updates.md
-    - "Server Health Monitor": reference/health-monitor.md
+    - "Control Panel": reference/control-panel.md
   - "Add-ons":
     - "Stremio WebUI": extensions/stremio.md
   - "Maintaining This Site": site-maintenance.md
