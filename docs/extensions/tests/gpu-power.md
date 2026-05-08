@@ -1,41 +1,41 @@
 # GPU Power Management (OCuLink)
 
-Fully automated eGPU on-demand power lifecycle designed to bypass OCuLink hardware limitations without requiring system reboots.
+Fully automated eGPU on-demand power lifecycle. Bypass OCuLink hardware limits without reboot.
 
-!!! abstract "How this approach works"
-    OCuLink provides a raw PCIe connection. Unlike Thunderbolt, the motherboard BIOS completely drops the PCIe link when external power is cut and refuses to renegotiate the link while the OS is running. 
+!!! abstract "How approach works"
+    OCuLink use raw PCIe. Motherboard BIOS drop link when power cut. BIOS refuse renegotiate while OS run. 
     
-    To bypass this without a full reboot, we use a **micro-sleep cycle (9 seconds)**. 
-    - **GPU off:** Standard PCIe device removal via sysfs, followed by a physical smart plug power cut.
-    - **GPU on:** Smart plug restores power, then the OS suspends to memory. Upon waking, the BIOS is forced to perform a hardware-level PCIe initialization, seamlessly restoring the eGPU connection.
+    Bypass use micro-sleep cycle (9s).
+    - **GPU off:** OS remove PCIe device → smart plug cut power.
+    - **GPU on:** Smart plug restore power → OS suspend → BIOS hardware init → OS wake → eGPU ready.
 
 !!! warning "Hardware required"
-    A **smart plug** on the eGPU PSU power cord is mandatory for full automation. Supports **Shelly Plug S**, **TP-Link Kasa**, or **manual** switching.  
-    Setup uses **GMKTec NucBox K8 Plus** (mini PC) and **Minisforum DEG1** (eGPU dock).
+    Smart plug on eGPU PSU cord mandatory. Support **Shelly Plug S**, **TP-Link Kasa**, or **manual** switch.  
+    Setup built for **GMKTec NucBox K8 Plus** (mini PC) and **Minisforum DEG1** (eGPU dock).
 
 ---
 
 ## 1 — BIOS Configuration
 
-Change the **UMA Frame Buffer Size** (iGPU dedicated RAM) to **4G** or **Auto** in the BIOS. 
+Set **UMA Frame Buffer Size** to **4G** or **Auto** in BIOS.
 
-*Reason:* Reserving 16GB exclusively for the iGPU permanently removes that memory from the system pool. By reducing it, the OS reclaims ~12GB of RAM. The system will dynamically allocate system RAM to the iGPU if needed, while leaving plenty of memory for the external RX 9070 XT during heavy AAA gaming.
+*Reason:* 16GB UMA lock memory from system pool. 4G free ~12GB RAM for OS. Linux auto-share RAM to iGPU if needed. AAA games on eGPU get max system RAM.
 
 ---
 
 ## 2 — Pin iGPU for Docker Containers
 
-If you use Docker containers that require hardware acceleration (like Stremio or Nextcloud), dynamically assigned render nodes (like `/dev/dri/renderD128`) will shift when the eGPU is connected or disconnected, crashing your containers.
+Dynamic nodes (`renderD128`, `renderD129`) shift on reboot/eGPU switch. Break Docker containers (Stremio, Nextcloud).
 
-Create a permanent symlink (`/dev/igpu`) bound exactly to the GMKTec NucBox K8 Plus iGPU's PCIe address.
+Create permanent symlink (`/dev/igpu`) pinned to exact HawkPoint iGPU hardware ID (`0x1900`). Survive reboots forever.
 
 ```bash
-echo 'SUBSYSTEM=="drm", KERNEL=="renderD*", KERNELS=="0000:c9:00.0", SYMLINK+="igpu"' | sudo tee /etc/udev/rules.d/99-igpu.rules
+echo 'ACTION=="add|change", SUBSYSTEM=="drm", KERNEL=="renderD*", ATTRS{device}=="0x1900", SYMLINK+="igpu"' | sudo tee /etc/udev/rules.d/99-igpu.rules
 sudo udevadm control --reload-rules
-sudo udevadm trigger --subsystem-match=drm --action=add
+sudo udevadm trigger --subsystem-match=drm
 ```
 
-Update your `docker-compose.yml` files to use the new permanent symlink:
+Update `docker-compose.yml` files:
 ```yaml
     devices:
       - "/dev/igpu:/dev/dri/renderD128"
@@ -45,14 +45,12 @@ Update your `docker-compose.yml` files to use the new permanent symlink:
 
 ## 3 — Install Dependencies
 
-Install LACT (for GPU undervolting/power limiting) and Ryzenadj (for CPU TDP scaling).
+Install LACT (GPU tune) and Ryzenadj (CPU TDP scale).
 
 ```bash
-# Install LACT
 flatpak install flathub io.github.ilya_zlobintsev.LACT
 sudo systemctl enable --now lact
 
-# Install ryzenadj
 rpm-ostree install ryzenadj
 systemctl reboot
 ```
@@ -61,7 +59,7 @@ systemctl reboot
 
 ## 4 — Core Structure & Configuration
 
-Create the centralized directory and configuration file.
+Create directory and config file.
 
 ```bash
 sudo mkdir -p /opt/gpu-power
@@ -69,14 +67,10 @@ sudo nano /opt/gpu-power/config
 ```
 
 ```bash
-# eGPU hardware address
 EGPU_PCI="0000:03:00.0"
-
-# Smart Plug config ("shelly", "kasa", or "manual")
 PLUG_TYPE="manual"          
 PLUG_IP="192.168.1.50"
 
-# CPU TDP (mW) - Drops to 35W idle, boosts to 65W for eGPU gaming
 CPU_IDLE_STAPM=35000
 CPU_IDLE_SLOW=38000
 CPU_IDLE_FAST=42000
@@ -94,7 +88,7 @@ sudo chmod 640 /opt/gpu-power/config
 
 ## 5 — Core Library Script
 
-This script contains the shared logic for plug control, hardware state detection, and tuning.
+Shared logic. Hardware state, plug control, GPU tuning.
 
 ```bash
 sudo nano /opt/gpu-power/gpu-power-lib.sh
@@ -165,13 +159,11 @@ set_cpu_tdp_gaming() {
 apply_gpu_settings() {
     local drm_dev="$(egpu_drm_path)" || return 1
     
-    # 290W Power limit
     local hwmon_path="${drm_dev}/hwmon/$(ls "${drm_dev}/hwmon/" | head -n 1)"
     if [[ -n "${hwmon_path}" && -f "${hwmon_path}/power1_cap" ]]; then
         echo 290000000 | tee "${hwmon_path}/power1_cap" > /dev/null 2>&1
     fi
 
-    # -70mV Undervolt
     local od_path="${drm_dev}/pp_od_clk_voltage"
     if [[ -f "${od_path}" ]]; then
         echo "vo -70" | tee "${od_path}" > /dev/null 2>&1 || true
@@ -186,7 +178,7 @@ apply_gpu_settings() {
 ## 6 — Control Scripts
 
 ### Turn ON (`gpu-on.sh`)
-Restores power, forces the 9-second micro-sleep to negotiate the PCIe link, applies overclocks, and shifts the CPU to 65W gaming mode.
+Restore power, force 9s micro-sleep for PCIe sync, trigger udev, apply GPU tune, boost CPU TDP.
 
 ```bash
 sudo nano /opt/gpu-power/gpu-on.sh
@@ -218,6 +210,9 @@ sleep 2
 echo 1 > /sys/bus/pci/rescan 2>/dev/null || true
 sleep 2
 
+udevadm trigger --subsystem-match=drm
+sleep 1
+
 egpu_is_online || { echo "ERROR: eGPU did not appear after wake"; exit 1; }
 
 apply_gpu_settings
@@ -228,7 +223,7 @@ echo -e "\n✓ eGPU online. CPU at performance TDP."
 ```
 
 ### Turn OFF (`gpu-off.sh`)
-Safely unbinds the AMD driver, drops the PCIe device from the kernel, cuts physical power via the smart plug, and restricts CPU back to 35W.
+Unbind AMD driver, remove PCIe device, cut smart plug power, drop CPU TDP, enforce sleep mask.
 
 ```bash
 sudo nano /opt/gpu-power/gpu-off.sh
@@ -271,8 +266,10 @@ systemctl start lact 2>/dev/null || true
 set_cpu_tdp_idle
 rm -f /run/gpu-idle-timer.pid /run/gpu-idle-since
 
-# Bulletproof mask enforcement
 systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target >/dev/null 2>&1 || true
+
+udevadm trigger --subsystem-match=drm
+sleep 1
 
 echo -e "\n✓ eGPU offline. CPU at idle TDP."
 ```
@@ -281,7 +278,7 @@ echo -e "\n✓ eGPU offline. CPU at idle TDP."
 
 ## 7 — Permissions & System Integration
 
-Set executable permissions, symlink into the user binary path, and configure passwordless sudo execution.
+Set executable rights. Symlink binaries. Config passwordless sudo.
 
 ```bash
 sudo chmod 644 /opt/gpu-power/gpu-power-lib.sh
@@ -291,21 +288,19 @@ sudo chmod 755 /opt/gpu-power/gpu-off.sh
 sudo ln -sf /opt/gpu-power/gpu-on.sh /usr/local/bin/gpu-on.sh
 sudo ln -sf /opt/gpu-power/gpu-off.sh /usr/local/bin/gpu-off.sh
 
-# Passwordless Sudo for commands
 sudo tee /etc/sudoers.d/gpu-power > /dev/null << 'EOF'
 sotohome ALL=(ALL) NOPASSWD: /usr/local/bin/gpu-on.sh
 sotohome ALL=(ALL) NOPASSWD: /usr/local/bin/gpu-off.sh
 EOF
 sudo chmod 440 /etc/sudoers.d/gpu-power
 
-# Passwordless Sudo for ryzenadj
 RYADJ_PATH="$(which ryzenadj)"
 printf "sotohome ALL=(ALL) NOPASSWD: %s\n" "$RYADJ_PATH" | sudo tee /etc/sudoers.d/ryzenadj > /dev/null
 sudo chmod 440 /etc/sudoers.d/ryzenadj
 ```
 
 **Workflow:**
-1. Run `gpu-on.sh` from SSH/Terminal before launching heavy workloads or Gamescope.
-2. Launch your desired graphical session (`start-gaming.sh` or `start-kde.sh`).
-3. When finished, end the session (`stop-session.sh`).
-4. Run `gpu-off.sh` to return to low-power idle mode.
+1. Run `gpu-on.sh` before heavy workload.
+2. Launch graphical session (`start-gaming.sh`).
+3. End session (`stop-session.sh`).
+4. Run `gpu-off.sh` return low-power idle.
