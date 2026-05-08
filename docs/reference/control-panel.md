@@ -1,6 +1,6 @@
-# 🖥 Server Control Panel — Complete Build Guide
+# 🖥 Server Control Panel — Complete Build Guide (v2 w/ eGPU)
 
-A purpose-built, single-page admin dashboard for a Linux home server. Live system metrics, full container management, custom command shortcuts, scheduled reboots, and display-session monitoring (KDE / Gamescope / Idle) — all in one professional interface running on `http://<server-ip>:3000`.
+A purpose-built, single-page admin dashboard for a Linux home server. Live system metrics, full container management, custom command shortcuts, scheduled reboots, display-session monitoring (KDE / Gamescope / Idle), and **hot-pluggable eGPU tracking** — all in one professional interface running on `http://<server-ip>:3000`.
 
 ---
 
@@ -9,8 +9,8 @@ A purpose-built, single-page admin dashboard for a Linux home server. Live syste
 1. [Overview & Architecture](#-overview--architecture)
 2. [Prerequisites](#-prerequisites)
 3. [Step 1 — Directory Setup](#step-1--directory-setup)
-4. [Step 2 — Docker Compose Stack](#step-2--docker-compose-stack)
-5. [Step 3 — Host Metrics Collector](#step-3--host-metrics-collector)
+4.[Step 2 — Docker Compose Stack](#step-2--docker-compose-stack)
+5.[Step 3 — Host Metrics Collector](#step-3--host-metrics-collector)
 6. [Step 4 — Systemd Service](#step-4--systemd-service)
 7. [Step 5 — Panel: Dockerfile](#step-5--panel-dockerfile)
 8. [Step 6 — Panel: Python Backend](#step-6--panel-python-backend)
@@ -20,7 +20,7 @@ A purpose-built, single-page admin dashboard for a Linux home server. Live syste
 12. [Step 10 — Quick Commands](#step-10--quick-commands)
 13. [Step 11 — Build & Launch](#step-11--build--launch)
 14. [Step 12 — Verification](#step-12--verification)
-15. [Customization](#-customization)
+15.[Customization](#-customization)
 16. [Troubleshooting](#-troubleshooting)
 
 ---
@@ -33,42 +33,13 @@ The control panel consists of **three Docker services** plus **one host-side scr
 |---|---|---|
 | **`server-panel`** | Web UI + REST API (Flask + vanilla JS) | Docker container |
 | **`host-runner`** | Privileged sidecar to execute commands on the host (via `nsenter`) | Docker container, `pid=host`, `privileged` |
-| **metrics collector** | Bash script that samples CPU/GPU/disk/services/sessions | Host systemd service |
-
-```
-┌────────────────────── Browser :3000 ──────────────────────┐
-│  Overview · Containers · Commands                          │
-└────────────────────────────┬───────────────────────────────┘
-                             │ HTTP
-                ┌────────────▼────────────┐
-                │   server-panel (Flask)  │
-                │   - reads docker.sock   │
-                │   - reads metrics JSON  │
-                └────┬──────────────┬─────┘
-                     │              │
-       /var/run/docker.sock    docker exec host-runner
-                     │              │
-              [Docker daemon]   [nsenter → host PID 1]
-                                    │
-                      ┌─────────────┴─────────────┐
-                      │  host: shutdown, systemctl │
-                      │   /usr/local/bin/*.sh      │
-                      └────────────────────────────┘
-                             ▲
-                             │ writes data.json every 2 s
-                  ┌──────────┴────────────┐
-                  │  metrics-collector.sh │
-                  │   (systemd service)   │
-                  └───────────────────────┘
-```
+| **metrics collector** | Bash script that samples CPU/iGPU/eGPU/disk/sessions | Host systemd service |
 
 ### Why this architecture?
-
-- **No external dashboards** to wrestle with (no Homepage, no Portainer)
-- **No iframes**, no nested UIs — one cohesive page
-- **Host-runner sidecar** safely exposes host capabilities to the container without giving the panel itself privileged access
-- **Metrics on the host** (systemd) means full access to `sensors`, `RAPL`, `loginctl`, `/sys`, etc. without container quirks
-- **JSON file** as IPC between collector and panel is dead-simple, atomic, and survives panel restarts
+- **No external dashboards** to wrestle with.
+- **Host-runner sidecar** safely exposes host capabilities to the container without giving the panel itself privileged access.
+- **JSON file IPC** between the host hardware collector and the panel ensures that even if a GPU hot-plug causes a momentary freeze, the web panel stays completely responsive.
+- **Continuous hardware polling** allows the UI to dynamically respond when an OCuLink/Thunderbolt eGPU is connected or disconnected.
 
 ---
 
@@ -76,11 +47,10 @@ The control panel consists of **three Docker services** plus **one host-side scr
 
 - Linux host with **Docker** + **Docker Compose v2** installed
 - **systemd** (any modern distro)
-- `lm_sensors` package for CPU/RAM/NVMe temps (`sudo apt install lm-sensors` / `dnf install lm_sensors` etc.)
+- `lm_sensors` package for CPU/RAM/NVMe temps (`sudo apt install lm-sensors`)
 - A non-root user with sudo access
-- Optional but recommended: **passwordless sudo** for `fail2ban-client` (only the metrics script uses it)
 
-> 💡 The example uses `sotohome` as the user, IP `192.168.178.139`, timezone `Europe/Berlin`. **Replace these with your own values** wherever you see them.
+> 💡 The example uses `sotohome` as the user, a **Radeon 780M iGPU**, and a **RX 9070 XT eGPU**. Replace variables and paths with your own where necessary.
 
 ---
 
@@ -91,26 +61,6 @@ Create the full directory tree:
 ```bash
 mkdir -p ~/docker/homepage/{panel/templates,panel/static,data,custom-metrics}
 cd ~/docker/homepage
-```
-
-Final structure:
-
-```
-~/docker/homepage/
-├── docker-compose.yml
-├── metrics-collector.sh
-├── custom-metrics/
-│   └── data.json              ← written by the metrics service
-├── data/
-│   └── commands.json          ← edit to add quick actions
-└── panel/
-    ├── Dockerfile
-    ├── app.py
-    ├── templates/
-    │   └── index.html
-    └── static/
-        ├── style.css
-        └── app.js
 ```
 
 ---
@@ -135,8 +85,6 @@ services:
       - ./data:/data
       - ./custom-metrics:/metrics:ro
 
-  # Privileged sidecar that lets the panel execute host commands.
-  # Effectively runs as root on the host — keep your panel access trusted.
   host-runner:
     image: alpine:latest
     container_name: host-runner
@@ -144,33 +92,20 @@ services:
     privileged: true
     pid: host
     network_mode: host
-    command: ["sleep", "infinity"]
+    command:["sleep", "infinity"]
 ```
-
-### 🔧 Replace before saving
-
-| Value | Where | Example |
-|---|---|---|
-| `Europe/Berlin` | `TZ` env var | Your timezone (e.g. `America/New_York`) |
-
-### Notes
-
-- The **panel** container has read-only access to the metrics JSON and **read-write** to `data/` (so it can persist `commands.json` edits made via the UI in the future).
-- The Docker socket is mounted so the panel can list, start, stop, and `exec` into containers.
-- **`host-runner`** does nothing on its own — it just sits idle, exposing PID 1's namespaces. The panel calls `docker exec host-runner nsenter ...` to run commands on the host.
-- ⚠ Anyone who can reach port 3000 has effectively root access to your host. Do **not** expose this port to the internet — restrict to LAN or put it behind authenticated reverse proxy.
 
 ---
 
 ## Step 3 — Host Metrics Collector
 
-This script runs on the host (not in a container) and writes a JSON snapshot to `~/docker/homepage/custom-metrics/data.json` every 2 seconds. The panel reads it via the read-only volume mount.
+This script runs on the host and writes a JSON snapshot every 2 seconds. The GPU detection happens *inside* the loop so it natively supports eGPU hot-plugging.
 
 **File:** `~/docker/homepage/metrics-collector.sh`
 
 ```bash
 #!/usr/bin/env bash
-# metrics-collector.sh — Host-side metrics for the Server Control Panel
+# metrics-collector.sh — Host-side metrics for the Server Control Panel (eGPU Support)
 set -u
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 JSON_OUT="$DIR/custom-metrics/data.json"
@@ -178,24 +113,12 @@ mkdir -p "$DIR/custom-metrics"
 REFRESH=2          # fast loop interval (seconds)
 SLOW_EVERY=15      # network/docker probes every N cycles
 
-# ── GPU detection (AMD 0x1002 / Intel 0x8086) ────────────────────────────────
-GPU_DEV=""; GPU_HWMON=""
-for c in /sys/class/drm/card*/; do
-    v=$(cat "${c}device/vendor" 2>/dev/null)
-    [[ "$v" == "0x1002" || "$v" == "0x8086" ]] && { GPU_DEV="${c}device"; break; }
-done
-[ -n "$GPU_DEV" ] && GPU_HWMON=$(find "${GPU_DEV}/hwmon" -maxdepth 2 -name temp1_input 2>/dev/null | head -1 | xargs -I{} dirname {})
-
-# ── RAPL energy meter (CPU power) ────────────────────────────────────────────
 RAPL_FILE=""
-for f in /sys/class/powercap/intel-rapl:0/energy_uj \
-         /sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj \
-         /sys/class/powercap/amd_energy:0/energy_uj \
-         /sys/class/powercap/amd-rapl:0/energy_uj; do
+for f in /sys/class/powercap/intel-rapl:0/energy_uj /sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj /sys/class/powercap/amd_energy:0/energy_uj /sys/class/powercap/amd-rapl:0/energy_uj; do
     [ -r "$f" ] && { RAPL_FILE="$f"; break; }
 done
 prev_energy=""; prev_time=$(date +%s%3N)
-if [ -n "$RAPL_FILE" ]; then
+if[ -n "$RAPL_FILE" ]; then
     prev_energy=$(cat "$RAPL_FILE" 2>/dev/null); cpu_power="0.0W"
 else
     cpu_power="n/a"
@@ -204,14 +127,13 @@ fi
 _cpustat() { awk '/^cpu /{print $2,$3,$4,$5,$6,$7,$8; exit}' /proc/stat; }
 prev_cs=$(_cpustat); cpu_pct=0
 
-# Slow-cache defaults (refreshed every SLOW_EVERY cycles)
+# Slow-cache defaults
 WAN_IP="–"; F2B="0"; NPM_ST="–"; NC_ST="–"; CERT_ST="–"; BK_ST="–"
 
 refresh_slow() {
     WAN_IP=$(curl -s --max-time 4 https://api.ipify.org 2>/dev/null); [ -z "$WAN_IP" ] && WAN_IP="unreachable"
-    F2B=$(sudo -n fail2ban-client status sshd 2>/dev/null | grep 'Currently banned' | grep -oE '[0-9]+'); [ -z "$F2B" ] && F2B="0"
-    code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 2 http://localhost:81 2>/dev/null)
-    [ "${code:-000}" != "000" ] && NPM_ST="online" || NPM_ST="offline"
+    F2B=$(sudo -n fail2ban-client status sshd 2>/dev/null | grep 'Currently banned' | grep -oE '[0-9]+');[ -z "$F2B" ] && F2B="0"
+    code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 2 http://localhost:81 2>/dev/null); [ "${code:-000}" != "000" ] && NPM_ST="online" || NPM_ST="offline"
     nr=$(docker exec nextcloud-aio-nextcloud php occ maintenance:mode 2>/dev/null)
     if   echo "$nr" | grep -qi "disabled\|not enabled"; then NC_ST="online"
     elif echo "$nr" | grep -qi "enabled";               then NC_ST="maintenance"
@@ -221,15 +143,41 @@ refresh_slow() {
         d=$(( ( $(date -d "$ce" +%s) - $(date +%s) ) / 86400 ))
         (( d <= 30 )) && CERT_ST="renew in ${d}d" || CERT_ST="valid ${d}d"
     else CERT_ST="pending"; fi
-    bk=$(docker logs nextcloud-aio-mastercontainer 2>/dev/null | grep -i "Backup finished successfully" | tail -1 | awk '{print $1,$2}')
-    [ -n "$bk" ] && BK_ST="$bk" || BK_ST="never"
+    bk=$(docker logs nextcloud-aio-mastercontainer 2>/dev/null | grep -i "Backup finished successfully" | tail -1 | awk '{print $1,$2}'); [ -n "$bk" ] && BK_ST="$bk" || BK_ST="never"
+}
+
+get_gpu_metrics() {
+    local dev=$1 hwmon=$2 prefix=$3
+    local busy="0%" freq="n/a" temp="n/a" vram="n/a" power="n/a"
+    if [ -n "$dev" ] &&[ -d "$dev" ]; then
+        local gb ghz gt vu vt vum vtm gpw
+        gb=$(cat "${dev}/gpu_busy_percent" 2>/dev/null); busy="${gb:-0}%"
+        ghz=${hwmon:+$(cat "${hwmon}/freq1_input" 2>/dev/null)}; [ -n "${ghz:-}" ] && (( ghz > 0 )) && freq="$(( ghz / 1000000 ))MHz"
+        gt=${hwmon:+$(cat "${hwmon}/temp1_input" 2>/dev/null)}[ -n "${gt:-}" ] && temp="+$(( gt / 1000 ))°C"
+        vu=$(cat "${dev}/mem_info_vram_used"  2>/dev/null)
+        vt=$(cat "${dev}/mem_info_vram_total" 2>/dev/null)
+        if[ -n "$vu" ] && [ -n "$vt" ] && (( vt > 0 )); then
+            vum=$(( vu / 1048576 )); vtm=$(( vt / 1048576 ))
+            if (( vtm >= 1024 )); then
+                vram="$(( vum/1024 )).$(( (vum%1024)*10/1024 ))/$(( vtm/1024 )).$(( (vtm%1024)*10/1024 ))GiB"
+            else
+                vram="${vum}/${vtm}MiB"
+            fi
+        fi
+        gpw=${hwmon:+$(cat "${hwmon}/power1_average" 2>/dev/null)}[ -n "${gpw:-}" ] && (( gpw > 0 )) && power="$(( gpw / 1000000 )).$(( (gpw % 1000000) / 100000 ))W"
+    fi
+    eval "${prefix}_busy=\"\$busy\""
+    eval "${prefix}_freq=\"\$freq\""
+    eval "${prefix}_temp=\"\$temp\""
+    eval "${prefix}_vram=\"\$vram\""
+    eval "${prefix}_power=\"\$power\""
 }
 
 CYCLE=0
 while true; do
-    # ── CPU power (RAPL delta) ───────────────────────────────────────────────
+    # ── CPU power / usage / clock ────────────────────────────────────────────
     cur_time=$(date +%s%3N); elapsed_ms=$(( cur_time - prev_time ))
-    if [ -n "$prev_energy" ] && [ -r "$RAPL_FILE" ]; then
+    if [ -n "$prev_energy" ] &&[ -r "$RAPL_FILE" ]; then
         cur_energy=$(cat "$RAPL_FILE" 2>/dev/null)
         delta=$(( cur_energy - prev_energy )); (( delta < 0 )) && delta=$cur_energy
         if (( elapsed_ms > 0 && delta > 0 )); then
@@ -240,7 +188,6 @@ while true; do
     fi
     prev_time=$cur_time
 
-    # ── CPU usage ────────────────────────────────────────────────────────────
     cur_cs=$(_cpustat); read -ra p <<< "$prev_cs"; read -ra c <<< "$cur_cs"
     pt=0; ct=0
     for v in "${p[@]}"; do (( pt += v )); done
@@ -249,10 +196,8 @@ while true; do
     (( dt > 0 )) && cpu_pct=$(( 100 * (dt - di) / dt )) || cpu_pct=0
     prev_cs="$cur_cs"
 
-    # ── CPU clock ────────────────────────────────────────────────────────────
     fsum=0; fn=0
-    for f in /sys/devices/system/cpu/cpufreq/policy*/scaling_cur_freq; do
-        [ -r "$f" ] || continue
+    for f in /sys/devices/system/cpu/cpufreq/policy*/scaling_cur_freq; do[ -r "$f" ] || continue
         (( fsum += $(< "$f"), fn++ ))
     done
     if (( fn > 0 )); then
@@ -260,47 +205,47 @@ while true; do
         (( mhz >= 1000 )) && cpu_freq="$(( mhz/1000 )).$(( (mhz%1000)/100 ))GHz" || cpu_freq="${mhz}MHz"
     else cpu_freq="n/a"; fi
 
-    # ── Temps ────────────────────────────────────────────────────────────────
+    # ── Temps & Memory ───────────────────────────────────────────────────────
     CPU_TEMP=$(sensors 2>/dev/null | grep -E '(Tctl|Tdie|Package id 0)' | head -1 | awk '{print $2}')
     [ -z "$CPU_TEMP" ] && CPU_TEMP=$(sensors 2>/dev/null | grep 'temp1' | head -1 | awk '{print $2}')
     RAM_TEMP=$(sensors 2>/dev/null | grep -A2 'spd5118'   | awk '/temp1/{print $2; exit}')
     NVME_TEMP=$(sensors 2>/dev/null | grep -A2 'nvme-pci' | awk '/Composite/{print $2; exit}')
-
-    # ── Memory ───────────────────────────────────────────────────────────────
     RAM_PCT=$(free   | awk '/^Mem:/{printf "%d%%", $3*100/$2}')
     RAM_USAGE=$(free -h | awk '/^Mem:/{printf "%s / %s", $3, $2}')
     SWAP_USAGE=$(free -h | awk '/^Swap:/{printf "%s / %s", $3, $2}')
 
-    # ── GPU ──────────────────────────────────────────────────────────────────
-    gpu_busy="0%"; gpu_freq="n/a"; gpu_temp="n/a"; gpu_vram="n/a"; gpu_power="n/a"
-    if [ -n "$GPU_DEV" ]; then
-        gb=$(cat "${GPU_DEV}/gpu_busy_percent" 2>/dev/null); gpu_busy="${gb:-0}%"
-        ghz=${GPU_HWMON:+$(cat "${GPU_HWMON}/freq1_input" 2>/dev/null)}
-        [ -n "${ghz:-}" ] && (( ghz > 0 )) && gpu_freq="$(( ghz / 1000000 ))MHz"
-        gt=${GPU_HWMON:+$(cat "${GPU_HWMON}/temp1_input" 2>/dev/null)}
-        [ -n "${gt:-}" ] && gpu_temp="+$(( gt / 1000 ))°C"
-        vu=$(cat "${GPU_DEV}/mem_info_vram_used"  2>/dev/null)
-        vt=$(cat "${GPU_DEV}/mem_info_vram_total" 2>/dev/null)
-        if [ -n "$vu" ] && [ -n "$vt" ] && (( vt > 0 )); then
-            vum=$(( vu / 1048576 )); vtm=$(( vt / 1048576 ))
-            if (( vtm >= 1024 )); then
-                gpu_vram="$(( vum/1024 )).$(( (vum%1024)*10/1024 ))/$(( vtm/1024 )).$(( (vtm%1024)*10/1024 ))GiB"
-            else
-                gpu_vram="${vum}/${vtm}MiB"
-            fi
+    # ── iGPU & eGPU (Hotplug detection) ──────────────────────────────────────
+    IGPU_DEV=""; IGPU_HWMON=""
+    EGPU_DEV=""; EGPU_HWMON=""
+    for card in /sys/class/drm/card*/; do
+        [ -d "${card}device" ] || continue
+        devid=$(cat "${card}device/device" 2>/dev/null)
+        if[ "$devid" == "0x1900" ]; then
+            IGPU_DEV="${card}device"
+            IGPU_HWMON=$(find "${IGPU_DEV}/hwmon" -maxdepth 2 -name temp1_input 2>/dev/null | head -1 | xargs -I{} dirname {})
+        elif[ "$devid" == "0x7550" ]; then
+            EGPU_DEV="${card}device"
+            EGPU_HWMON=$(find "${EGPU_DEV}/hwmon" -maxdepth 2 -name temp1_input 2>/dev/null | head -1 | xargs -I{} dirname {})
         fi
-        gpw=${GPU_HWMON:+$(cat "${GPU_HWMON}/power1_average" 2>/dev/null)}
-        [ -n "${gpw:-}" ] && (( gpw > 0 )) && gpu_power="$(( gpw / 1000000 )).$(( (gpw % 1000000) / 100000 ))W"
+    done
+
+    get_gpu_metrics "$IGPU_DEV" "$IGPU_HWMON" "igpu"
+    get_gpu_metrics "$EGPU_DEV" "$EGPU_HWMON" "egpu"
+
+    egpu_status="offline"
+    if[ -n "$EGPU_DEV" ] && [ -d "$EGPU_DEV" ]; then
+        egpu_status="online"
+    else
+        egpu_busy="n/a"; egpu_freq="n/a"; egpu_temp="n/a"; egpu_vram="n/a"; egpu_power="n/a"
     fi
 
-    # ── Storage ──────────────────────────────────────────────────────────────
+    # ── Miscellaneous (Storage, Session, Services) ───────────────────────────
     OS_S=$(df -h /var 2>/dev/null | awk 'NR==2{print $3" / "$2" ("$5")"}')
     DAT_RAW=$(df -h /var/srv/nextcloud-data 2>/dev/null | awk 'NR==2{print $3" / "$2" ("$5")"}')
     SSH_C=$(ss -tn state established 2>/dev/null | grep -c ":22022")
     LOAD=$(awk '{print $1", "$2", "$3}' /proc/loadavg)
     UPTIME=$(uptime -p | sed 's/up //')
 
-    # ── Display session (idle / KDE / Gamescope) ─────────────────────────────
     DISPLAY_STATE="idle"; DISPLAY_LABEL="No session"
     SEAT0=$(loginctl list-sessions --no-legend 2>/dev/null | awk '$4=="seat0"{print $1;exit}')
     if [ -n "$SEAT0" ]; then
@@ -318,7 +263,6 @@ while true; do
         fi
     fi
 
-    # ── Scheduled reboot detection ───────────────────────────────────────────
     REBOOT_SCHEDULED=""
     if [ -f /run/systemd/shutdown/scheduled ]; then
         USEC=$(awk -F= '/USEC=/{print $2}' /run/systemd/shutdown/scheduled 2>/dev/null)
@@ -328,7 +272,6 @@ while true; do
         fi
     fi
 
-    # ── Failed systemd units ─────────────────────────────────────────────────
     FAIL_RAW=$(systemctl --failed --no-legend --plain 2>/dev/null)
     FAIL_N=$(echo "$FAIL_RAW" | grep -c '.' || true)
     if (( FAIL_N > 0 )); then
@@ -344,7 +287,7 @@ while true; do
 
     (( CYCLE % SLOW_EVERY == 0 )) && refresh_slow
 
-    # ── Atomic write ─────────────────────────────────────────────────────────
+    # ── Output ───────────────────────────────────────────────────────────────
     cat <<JSON > "${JSON_OUT}.tmp"
 {
   "cpu_pct": "${cpu_pct}%",
@@ -356,11 +299,17 @@ while true; do
   "swap_usage": "${SWAP_USAGE}",
   "load_avg": "${LOAD}",
   "uptime": "${UPTIME}",
-  "gpu_busy": "${gpu_busy}",
-  "gpu_freq": "${gpu_freq}",
-  "gpu_temp": "${gpu_temp}",
-  "gpu_vram": "${gpu_vram}",
-  "gpu_power": "${gpu_power}",
+  "igpu_busy": "${igpu_busy}",
+  "igpu_freq": "${igpu_freq}",
+  "igpu_temp": "${igpu_temp}",
+  "igpu_vram": "${igpu_vram}",
+  "igpu_power": "${igpu_power}",
+  "egpu_status": "${egpu_status}",
+  "egpu_busy": "${egpu_busy}",
+  "egpu_freq": "${egpu_freq}",
+  "egpu_temp": "${egpu_temp}",
+  "egpu_vram": "${egpu_vram}",
+  "egpu_power": "${egpu_power}",
   "ram_temp": "${RAM_TEMP:-n/a}",
   "nvme_temp": "${NVME_TEMP:-n/a}",
   "os_storage": "${OS_S:-n/a}",
@@ -387,40 +336,18 @@ done
 
 ### 🔧 Replace before saving
 
-The script references **specific containers and paths from the example homelab**. Adapt these to your setup or remove the lines you don't need:
+| Value | Description |
+|---|---|
+| `0x1900` | Device ID for your specific iGPU (Radeon 780M) |
+| `0x7550` | Device ID for your specific eGPU (RX 9070 XT) |
 
-| Reference | Where | Action |
-|---|---|---|
-| `nextcloud-aio-nextcloud` | `refresh_slow()` | Replace with your Nextcloud container, or delete the block |
-| `nginx-proxy-manager` | `refresh_slow()` | Replace with your reverse-proxy container, or delete |
-| `nextcloud-aio-mastercontainer` | `refresh_slow()` | Replace or delete |
-| `/var/srv/nextcloud-data` | `DAT_RAW=...` | Path to your data volume — adjust |
-| `:22022` | `SSH_C=...` | Your SSH port (default `:22`) |
-| `localhost:81` | NPM check | Replace with your reverse-proxy admin URL |
-
-> 💡 If a container or path doesn't exist, the script gracefully shows `–` or `n/a` for that field. You can leave the references and they'll just degrade silently.
-
-### Make it executable
-
-```bash
-chmod +x ~/docker/homepage/metrics-collector.sh
-```
+Make it executable: `chmod +x ~/docker/homepage/metrics-collector.sh`
 
 ---
 
 ## Step 4 — Systemd Service
 
-Run the metrics collector as a managed background service so it survives reboots and restarts on failure.
-
 **File:** `/etc/systemd/system/homepage-metrics.service`
-
-Create with sudo:
-
-```bash
-sudo nano /etc/systemd/system/homepage-metrics.service
-```
-
-Paste:
 
 ```ini
 [Unit]
@@ -441,31 +368,15 @@ Nice=10
 WantedBy=multi-user.target
 ```
 
-### 🔧 Replace before saving
-
-| Value | Action |
-|---|---|
-| `/home/sotohome/docker/homepage` | Replace with **absolute path** to your `~/docker/homepage` (run `echo ~/docker/homepage` to print it) |
-
-### Enable and start
-
+Enable and start:
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now homepage-metrics.service
-sudo systemctl status homepage-metrics --no-pager
-```
-
-After ~3 seconds verify the JSON is being written:
-
-```bash
-cat ~/docker/homepage/custom-metrics/data.json
 ```
 
 ---
 
 ## Step 5 — Panel: Dockerfile
-
-A minimal Python image with the Docker CLI baked in (so it can talk to the mounted socket).
 
 **File:** `~/docker/homepage/panel/Dockerfile`
 
@@ -476,31 +387,19 @@ COPY app.py /app.py
 COPY templates /templates
 COPY static /static
 EXPOSE 3000
-CMD ["python", "-u", "/app.py"]
+CMD["python", "-u", "/app.py"]
 ```
-
-No edits needed.
 
 ---
 
 ## Step 6 — Panel: Python Backend
 
-The Flask app. About 130 lines of pure Python. Endpoints:
-
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `/` | GET | Serves the SPA |
-| `/api/overview` | GET | Aggregate snapshot for the Overview tab |
-| `/api/containers` | GET | List + live stats |
-| `/api/logs/<name>` | GET | Last 300 log lines |
-| `/api/action/<name>/<action>` | POST | start, stop, restart, pause, unpause, kill |
-| `/api/commands` | GET | List of quick commands |
-| `/api/commands/<id>/run` | POST | Execute a command |
-| `/api/system/restart-unit/<unit>` | POST | Restart a failed systemd unit |
-| `/api/power/reboot` | POST | Reboot now or in N minutes |
-| `/api/power/cancel` | POST | Cancel scheduled reboot |
-
 **File:** `~/docker/homepage/panel/app.py`
+
+*(No changes to the original Python file—the backend simply passes the updated JSON directly through to the UI).*
+
+<details>
+<summary>Click to view Python Code</summary>
 
 ```python
 import json, re, os, subprocess
@@ -535,8 +434,7 @@ def num(s):
     m = re.search(r'(\d+\.?\d*)', str(s or ''))
     return float(m.group(1)) if m else 0.0
 
-# Explicit namespace flags — works with both util-linux and BusyBox nsenter
-NSENTER = ['nsenter','-t','1','-m','-u','-i','-n','-p','--']
+NSENTER =['nsenter','-t','1','-m','-u','-i','-n','-p','--']
 
 def host_run(*sub, timeout=10):
     full = ['docker','exec', HOST_RUNNER] + NSENTER + list(sub)
@@ -585,7 +483,7 @@ def api_commands():
 @app.route('/api/commands/<cid>/run', methods=['POST'])
 def api_run(cid):
     if not SAFE_ID.match(cid): return jsonify(ok=False, err='invalid id'), 400
-    cmds = jload(COMMANDS, [])
+    cmds = jload(COMMANDS,[])
     cmd = next((c for c in cmds if c.get('id')==cid), None)
     if not cmd: return jsonify(ok=False, err='not found'), 404
     runner = cmd.get('runner','self'); line = cmd.get('cmd',''); timeout = int(cmd.get('timeout', 60))
@@ -594,9 +492,9 @@ def api_run(cid):
     elif runner.startswith('container:'):
         cname = runner.split(':',1)[1]
         if not SAFE_NAME.match(cname): return jsonify(ok=False, err='bad container'), 400
-        full = ['docker','exec', cname, 'sh','-c', line]
+        full =['docker','exec', cname, 'sh','-c', line]
     else:
-        full = ['sh','-c', line]
+        full =['sh','-c', line]
     try:
         r = subprocess.run(full, capture_output=True, text=True, timeout=timeout)
         return jsonify(ok=r.returncode==0, code=r.returncode, stdout=r.stdout, stderr=r.stderr)
@@ -606,11 +504,11 @@ def api_run(cid):
 @app.route('/api/overview')
 def api_overview():
     out,_,_ = docker('ps','-a','--format','{{json .}}')
-    cs = [json.loads(l) for l in out.strip().splitlines() if l.strip()]
+    cs =[json.loads(l) for l in out.strip().splitlines() if l.strip()]
     running = sum(1 for c in cs if 'running' in (c.get('State') or '').lower())
     total = len(cs)
     so,_,_ = docker('stats','--no-stream','--format','{{json .}}')
-    stats = []
+    stats =[]
     for l in so.strip().splitlines():
         if l.strip():
             try: stats.append(json.loads(l))
@@ -620,8 +518,8 @@ def api_overview():
     return jsonify({
         'containers': {'running': running, 'total': total, 'stopped': total-running},
         'metrics': jload(METRICS, {}),
-        'top_cpu': [{'name': s.get('Name',''), 'pct': num(s.get('CPUPerc')), 'raw': s.get('CPUPerc','')} for s in top_cpu],
-        'top_mem': [{'name': s.get('Name',''), 'pct': num(s.get('MemPerc')), 'raw': s.get('MemUsage','')} for s in top_mem],
+        'top_cpu':[{'name': s.get('Name',''), 'pct': num(s.get('CPUPerc')), 'raw': s.get('CPUPerc','')} for s in top_cpu],
+        'top_mem':[{'name': s.get('Name',''), 'pct': num(s.get('MemPerc')), 'raw': s.get('MemUsage','')} for s in top_mem],
     })
 
 @app.route('/api/system/restart-unit/<unit>', methods=['POST'])
@@ -651,16 +549,11 @@ def api_cancel_reboot():
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)
 ```
-
-> 💡 The `NSENTER` list uses **explicit namespace flags** (`-m -u -i -n -p`) instead of `-a` because Alpine's BusyBox `nsenter` doesn't support `-a`. This way the same code works regardless of which `nsenter` is in the host-runner image.
-
-> 🔒 All path parameters in URLs are validated against strict regex (`SAFE_NAME`, `SAFE_ID`, `SAFE_UNIT`) before any `subprocess` call — no shell injection.
+</details>
 
 ---
 
 ## Step 7 — Panel: HTML Template
-
-Pure semantic HTML — no JS frameworks. Reads from CSS class hooks; logic lives in `app.js`.
 
 **File:** `~/docker/homepage/panel/templates/index.html`
 
@@ -689,8 +582,9 @@ Pure semantic HTML — no JS frameworks. Reads from CSS class hooks; logic lives
     <div class="status-bar">
       <div class="pill" id="pill-health">● <b>—</b></div>
       <div class="pill session" id="pill-session"><span class="led"></span><b id="session-label">—</b></div>
+      <div class="pill session" id="pill-egpu"><span class="led"></span><b id="egpu-label">—</b></div>
       <div class="pill">CPU <b id="hb-cpu">—</b></div>
-      <div class="pill">GPU <b id="hb-gpu">—</b></div>
+      <div class="pill">iGPU <b id="hb-igpu">—</b></div>
       <div class="pill">RAM <b id="hb-ram">—</b></div>
       <div class="pill" id="hb-clock">—</div>
     </div>
@@ -713,7 +607,7 @@ Pure semantic HTML — no JS frameworks. Reads from CSS class hooks; logic lives
       </div>
 
       <h2 class="section-title">Hardware</h2>
-      <div class="card-grid cols-3">
+      <div class="card-grid cols-4">
         <div class="card">
           <h3>🔲 Processor</h3>
           <div class="metric"><span class="k">Usage</span><span class="v" id="hw-cpu-pct">—</span></div>
@@ -722,11 +616,18 @@ Pure semantic HTML — no JS frameworks. Reads from CSS class hooks; logic lives
           <div class="metric"><span class="k">Power</span><span class="v" id="hw-cpu-power">—</span></div>
         </div>
         <div class="card">
-          <h3>🎮 Graphics</h3>
-          <div class="metric"><span class="k">Load</span><span class="v" id="hw-gpu-busy">—</span></div>
-          <div class="metric"><span class="k">VRAM</span><span class="v" id="hw-gpu-vram">—</span></div>
-          <div class="metric"><span class="k">Temp</span><span class="v" id="hw-gpu-temp">—</span></div>
-          <div class="metric"><span class="k">Power</span><span class="v" id="hw-gpu-power">—</span></div>
+          <h3>🎮 iGPU (780M)</h3>
+          <div class="metric"><span class="k">Load</span><span class="v" id="hw-igpu-busy">—</span></div>
+          <div class="metric"><span class="k">VRAM</span><span class="v" id="hw-igpu-vram">—</span></div>
+          <div class="metric"><span class="k">Temp</span><span class="v" id="hw-igpu-temp">—</span></div>
+          <div class="metric"><span class="k">Power</span><span class="v" id="hw-igpu-power">—</span></div>
+        </div>
+        <div class="card">
+          <h3>🚀 eGPU (9070 XT)</h3>
+          <div class="metric"><span class="k">Load</span><span class="v" id="hw-egpu-busy">—</span></div>
+          <div class="metric"><span class="k">VRAM</span><span class="v" id="hw-egpu-vram">—</span></div>
+          <div class="metric"><span class="k">Temp</span><span class="v" id="hw-egpu-temp">—</span></div>
+          <div class="metric"><span class="k">Power</span><span class="v" id="hw-egpu-power">—</span></div>
         </div>
         <div class="card">
           <h3>🌡 Memory & Thermals</h3>
@@ -826,18 +727,9 @@ Pure semantic HTML — no JS frameworks. Reads from CSS class hooks; logic lives
 </html>
 ```
 
-### 🔧 Replace before saving
-
-| Element | Where | Action |
-|---|---|---|
-| `HS` (logo) | `<div class="logo">HS</div>` | Your initials, max 2-3 chars |
-| `HS Server` | `<div class="title">` | Your server name |
-
 ---
 
 ## Step 8 — Panel: Stylesheet
-
-Modern, dark, single CSS file. Custom-property based theme so colors are easy to tweak in one place.
 
 **File:** `~/docker/homepage/panel/static/style.css`
 
@@ -888,6 +780,11 @@ code{font-family:ui-monospace,"SF Mono",Menlo,monospace;background:var(--bg2);pa
 .pill.session.active{border-color:rgba(234,179,8,.35);color:var(--yl)}
 .pill.session.active .led{background:var(--yl);box-shadow:0 0 10px rgba(234,179,8,.5)}
 .pill.session.active b{color:var(--yl)}
+.pill.session.online{border-color:rgba(34,197,94,.35);color:var(--gn)}
+.pill.session.online .led{background:var(--gn);box-shadow:0 0 10px rgba(34,197,94,.6)}
+.pill.session.online b{color:var(--gn)}
+.pill.session.offline{border-color:var(--bd)}
+.pill.session.offline .led{background:var(--mu2)}
 
 /* Tabs */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--bd);margin:8px 0 24px}
@@ -909,9 +806,11 @@ code{font-family:ui-monospace,"SF Mono",Menlo,monospace;background:var(--bg2);pa
 .card:hover{border-color:var(--bd-hi)}
 .card h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);font-weight:600;margin-bottom:10px}
 .card-grid{display:grid;gap:12px}
+.card-grid.cols-4{grid-template-columns:repeat(4,1fr)}
 .card-grid.cols-3{grid-template-columns:repeat(3,1fr)}
 .card-grid.cols-2{grid-template-columns:repeat(2,1fr)}
-@media(max-width:980px){.card-grid.cols-3,.card-grid.cols-2{grid-template-columns:1fr}}
+@media(max-width:1300px){.card-grid.cols-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:980px){.card-grid.cols-4,.card-grid.cols-3,.card-grid.cols-2{grid-template-columns:1fr}}
 
 .metric{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px}
 .metric+.metric{border-top:1px solid var(--bd)}
@@ -1040,13 +939,9 @@ code{font-family:ui-monospace,"SF Mono",Menlo,monospace;background:var(--bg2);pa
 ::-webkit-scrollbar-track{background:transparent}
 ```
 
-> 💡 To re-theme, edit only the `:root{}` block. The accent color (`--ac`) propagates to active tabs, primary buttons, focused inputs, KDE LED, and progress bars.
-
 ---
 
 ## Step 9 — Panel: JavaScript App
-
-Vanilla JS. ~400 lines. State-managed with a single `App` object. No build step.
 
 **File:** `~/docker/homepage/panel/static/app.js`
 
@@ -1057,7 +952,7 @@ const pctOf = s => { const m = (s||'').toString().match(/\((\d+(?:\.\d+)?)%\)/);
 const barCls = p => p>=90?'crit':p>=75?'warn':'';
 
 const App = {
-  state: { containers: [], commands: [], overview: {}, openName: null, currentTab: 'overview' },
+  state: { containers: [], commands:[], overview: {}, openName: null, currentTab: 'overview' },
 
   init() {
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => this.switchTab(t.dataset.page)));
@@ -1103,7 +998,7 @@ const App = {
     if (healthy) {
       pill.innerHTML = `● <b>All Healthy</b>`;
     } else {
-      const parts = [];
+      const parts =[];
       if (failed) parts.push(`${failed} failed unit${failed>1?'s':''}`);
       if (stopped) parts.push(`${stopped} stopped`);
       pill.innerHTML = `⚠ <b>${parts.join(' · ')}</b>`;
@@ -1113,24 +1008,36 @@ const App = {
     $('pill-session').className = 'pill session ' + ses;
     $('session-label').textContent = m.display_label || 'Idle';
 
+    const egpuSt = m.egpu_status || 'offline';
+    $('pill-egpu').className = 'pill session ' + egpuSt;
+    $('egpu-label').textContent = egpuSt === 'online' ? 'eGPU Online' : 'eGPU Offline';
+
     $('hb-cpu').textContent = m.cpu_pct || '—';
-    $('hb-gpu').textContent = m.gpu_busy || '—';
+    $('hb-igpu').textContent = m.igpu_busy || '—';
     $('hb-ram').textContent = m.ram_pct || '—';
   },
 
   renderOverview() {
     const o = this.state.overview, m = o.metrics || {};
-    this.renderHogs('top-cpu', o.top_cpu || []);
-    this.renderHogs('top-mem', o.top_mem || []);
+    this.renderHogs('top-cpu', o.top_cpu ||[]);
+    this.renderHogs('top-mem', o.top_mem ||[]);
 
     $('hw-cpu-pct').textContent = m.cpu_pct || '—';
     $('hw-cpu-freq').textContent = m.cpu_freq || '—';
     $('hw-cpu-temp').textContent = m.cpu_temp || '—';
     $('hw-cpu-power').textContent = m.cpu_power || '—';
-    $('hw-gpu-busy').textContent = m.gpu_busy || '—';
-    $('hw-gpu-vram').textContent = m.gpu_vram || '—';
-    $('hw-gpu-temp').textContent = m.gpu_temp || '—';
-    $('hw-gpu-power').textContent = m.gpu_power || '—';
+
+    $('hw-igpu-busy').textContent = m.igpu_busy || '—';
+    $('hw-igpu-vram').textContent = m.igpu_vram || '—';
+    $('hw-igpu-temp').textContent = m.igpu_temp || '—';
+    $('hw-igpu-power').textContent = m.igpu_power || '—';
+
+    const up = m.egpu_status === 'online';
+    $('hw-egpu-busy').textContent = up ? (m.egpu_busy || '—') : 'Offline';
+    $('hw-egpu-vram').textContent = up ? (m.egpu_vram || '—') : '—';
+    $('hw-egpu-temp').textContent = up ? (m.egpu_temp || '—') : '—';
+    $('hw-egpu-power').textContent = up ? (m.egpu_power || '—') : '—';
+
     $('hw-ram-usage').textContent = m.ram_usage ? `${m.ram_usage} (${m.ram_pct||'—'})` : '—';
     $('hw-ram-temp').textContent = m.ram_temp || '—';
     $('hw-nvme-temp').textContent = m.nvme_temp || '—';
@@ -1308,7 +1215,7 @@ const App = {
 
   async loadCommands() {
     try { this.state.commands = await (await fetch('/api/commands')).json(); }
-    catch (e) { this.state.commands = []; }
+    catch (e) { this.state.commands =[]; }
     $('tab-count-cmd').textContent = this.state.commands.length;
     const list = $('cmd-list');
     if (!this.state.commands.length) { list.innerHTML = '<div class="empty" style="grid-column:1/-1">No commands defined.</div>'; return; }
@@ -1350,12 +1257,9 @@ document.addEventListener('DOMContentLoaded', () => App.init());
 
 ## Step 10 — Quick Commands
 
-The commands tab reads from a JSON file. Edit it via SSH at any time — no rebuild needed.
-
 **File:** `~/docker/homepage/data/commands.json`
 
-```json
-[
+```json[
   {
     "id": "host-status", "name": "Host Status", "icon": "📈",
     "description": "uptime · free memory · top CPU processes",
@@ -1368,58 +1272,11 @@ The commands tab reads from a JSON file. Edit it via SSH at any time — no rebu
     "runner": "host", "cmd": "systemctl --failed --no-legend"
   },
   {
-    "id": "journal-errors", "name": "Recent Errors", "icon": "📋",
-    "description": "Last 50 error-priority log lines",
-    "runner": "host", "cmd": "journalctl -p err -n 50 --no-pager"
-  },
-  {
-    "id": "disk-top10", "name": "Top 10 Largest", "icon": "💾",
-    "description": "10 largest items in /var",
-    "runner": "host", "cmd": "du -sh /var/* 2>/dev/null | sort -rh | head -10"
-  },
-  {
-    "id": "docker-prune", "name": "Docker Cleanup", "icon": "🧹",
-    "description": "Remove unused images / networks / build cache",
-    "runner": "self", "cmd": "docker system prune -af", "confirm": true
-  },
-  {
     "id": "restart-metrics", "name": "Restart Metrics", "icon": "📊",
     "description": "Restart metrics collector on host",
     "runner": "host", "cmd": "systemctl restart homepage-metrics", "confirm": true
   }
 ]
-```
-
-### Schema reference
-
-| Field | Required | Description |
-|---|---|---|
-| `id` | ✅ | Unique slug, `[A-Za-z0-9_-]+` only |
-| `name` | ✅ | Display name |
-| `icon` | – | Emoji shown on the card |
-| `description` | – | Short subtitle |
-| `runner` | – | `self` (default — runs in panel container), `host` (via host-runner), or `container:<name>` |
-| `cmd` | ✅ | Shell command to execute |
-| `confirm` | – | If `true`, shows a confirmation prompt before running |
-| `timeout` | – | Seconds before timeout (default `60`) |
-
-### Runner color codes (in the UI)
-
-- 🔵 **Blue** stripe = `self` — safe, runs inside the panel container with `docker` CLI
-- 🟣 **Purple** stripe = `container:<name>` — runs `docker exec` inside the named container
-- 🔴 **Red** stripe = `host` — runs as **root on the host** via `host-runner`
-
-### Optional: streaming/desktop launcher commands
-
-If you have host scripts like `/usr/local/bin/start-kde.sh` for Sunshine streaming workflows, add entries like:
-
-```json
-{
-  "id": "session-kde", "name": "Launch KDE Plasma", "icon": "🖥",
-  "description": "Start KDE for Sunshine streaming",
-  "runner": "host", "cmd": "/usr/local/bin/start-kde.sh",
-  "timeout": 180, "confirm": true
-}
 ```
 
 ---
@@ -1432,194 +1289,39 @@ docker compose build
 docker compose up -d
 ```
 
-Confirm both services are running:
-
-```bash
-docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-```
-
-You should see `server-panel` (port `0.0.0.0:3000`) and `host-runner` (no ports — uses host network).
-
 ---
 
 ## Step 12 — Verification
 
-### Endpoint smoke tests
+Open `http://<server-ip>:3000` (or `http://localhost:3000`).
 
-```bash
-# Should return JSON with system metrics
-curl -s http://localhost:3000/api/overview | head -c 400
+You should now see:
+- A dedicated **eGPU Indicator LED** next to the Display Session tag in the top header.
+- A **4-column Hardware grid** with the Processor, iGPU, eGPU, and Memory/Thermals.
 
-# Should return your container list
-curl -s http://localhost:3000/api/containers | head -c 200
-
-# Should return your commands
-curl -s http://localhost:3000/api/commands
-```
-
-### Browser test
-
-Open `http://<server-ip>:3000` (or `http://localhost:3000` on the host).
-
-You should see:
-
-- **Header** — brand · health pill · session LED · CPU/GPU/RAM live · clock
-- **🏠 Overview** — top consumers, hardware, storage, services, issues, power
-- **📦 Containers** — full list, filterable, expandable
-- **⚡ Commands** — your shortcut grid
-
-### Logs (if anything misbehaves)
-
-```bash
-docker logs server-panel --tail=50
-docker logs host-runner --tail=20
-sudo journalctl -u homepage-metrics --tail=30
-```
+To test the hot-plug: Physically disconnect or connect the eGPU. Within 2-4 seconds, the header LED will change, and the hardware card will flip between displaying actual metrics or gracefully displaying `Offline`.
 
 ---
 
 ## 🎨 Customization
 
-### Change theme colors
+### Browser Cache warning after changes
+Because JS and CSS files cache heavily, if you change `app.js` or `style.css` and rebuild the container, you must hard refresh your browser:
+* **Windows/Linux:** `Ctrl` + `F5`
+* **Mac:** `Cmd` + `Shift` + `R`
 
-Edit `~/docker/homepage/panel/static/style.css` — modify only the `:root{}` block. The accent (`--ac`) propagates everywhere. Reload the page; no rebuild needed.
-
-### Add a server logo / rename
-
-Edit `~/docker/homepage/panel/templates/index.html`:
-
-- `<div class="logo">HS</div>` — your initials
-- `<div class="title">HS Server</div>` — your server name
-
-Then:
-```bash
-docker compose build panel && docker compose up -d
-```
-
-### Add quick commands
-
-Just edit `~/docker/homepage/data/commands.json` — changes appear on next browser refresh of the **Commands** tab. No rebuild, no restart.
-
-### Tune metric refresh rate
-
-In `metrics-collector.sh`:
-- `REFRESH=2` — fast loop (CPU/GPU/temps)
-- `SLOW_EVERY=15` — slow probes (WAN IP, certs, NPM, Nextcloud) run every `REFRESH × SLOW_EVERY` seconds (default 30 s)
-
-After editing: `sudo systemctl restart homepage-metrics`.
-
-### Add new metric fields
-
-1. Add the field to the JSON in `metrics-collector.sh`
-2. Add a `<div class="metric"><span class="k">…</span><span class="v" id="hw-newthing">—</span></div>` in `index.html`
-3. Add `$('hw-newthing').textContent = m.new_field || '—';` in `app.js → renderOverview()`
-4. `docker compose build panel && docker compose up -d`
+### Changing Hardware Identifiers (PCI IDs)
+If you swap out your iGPU processor or upgrade the eGPU card, you just need to change the `devid` check in `metrics-collector.sh` (around line 98). Run `lspci -nn | grep -i vga` on the host to find the new `0xABCD` hardware strings.
 
 ---
 
 ## 🔧 Troubleshooting
 
-### `nsenter: unrecognized option: a`
-Already addressed — `app.py` uses explicit flags (`-m -u -i -n -p`) compatible with both util-linux and BusyBox. If you ever modify the code, do **not** revert to `-a`.
+### My eGPU shows as "Offline" even when plugged in!
+1. Verify the OCuLink or Thunderbolt connection is active at the OS level: `lspci | grep VGA`
+2. Make sure the Device ID in `metrics-collector.sh` exactly matches the ID of your eGPU (e.g., `0x7550`).
+3. If it matches but stays offline, check the systemd service logs to ensure the bash script didn't crash: `sudo journalctl -u homepage-metrics -n 50`
 
-### Permission denied writing to `config/` or `data/`
-A previous root-owned container left behind files:
-```bash
-sudo chown -R "$USER:$USER" ~/docker/homepage
-```
+### Display stays completely blank / "—"
+Ensure you hard-refreshed your browser. If Javascript crashes attempting to read a missing HTML card, it aborts the whole render sequence. 
 
-### `data.json` shows `"calc..."` or stays empty
-RAPL energy file isn't readable. The script auto-falls-back to `n/a` for `cpu_power`. Verify:
-```bash
-ls -la /sys/class/powercap/intel-rapl:0/energy_uj
-```
-If missing, your CPU may not expose RAPL. Power will show `n/a`; everything else works.
-
-### Storage progress bars all red
-Your storage values aren't using the `(NN%)` pattern. Check `df -h` output:
-```bash
-df -h /var
-```
-If your locale prints `,` instead of `.` for percentages, adjust the `pctOf()` regex in `app.js`.
-
-### Container shows running but stats are blank
-Docker stats returns nothing for paused/stopped containers. Normal behavior.
-
-### `homepage-metrics.service` keeps restarting
-Check logs:
-```bash
-sudo journalctl -u homepage-metrics -n 50 --no-pager
-```
-Most common cause: missing `lm_sensors` package or wrong `WorkingDirectory` path in the service file.
-
-### Host commands fail with "host-runner not found"
-```bash
-docker ps | grep host-runner
-```
-If absent: `docker compose up -d host-runner`.
-
-### Reboot button does nothing
-Ensure the host-runner has the correct namespaces. Test manually:
-```bash
-docker exec host-runner nsenter -t 1 -m -u -i -n -p -- shutdown -r +99 "test"
-docker exec host-runner nsenter -t 1 -m -u -i -n -p -- shutdown -c
-```
-If that works from CLI but not the panel, check `docker logs server-panel` for the actual error.
-
----
-
-## 🧹 Maintenance
-
-### Update dependencies (Flask, Alpine packages)
-
-```bash
-cd ~/docker/homepage
-docker compose pull
-docker compose build --no-cache
-docker compose up -d
-```
-
-### Backup
-
-The whole setup is portable — back up `~/docker/homepage/` and `/etc/systemd/system/homepage-metrics.service`. To restore on a new host:
-1. Copy the directory
-2. Adjust paths in the systemd unit
-3. `docker compose up -d --build`
-4. `sudo systemctl daemon-reload && sudo systemctl enable --now homepage-metrics`
-
-### Logs rotation
-
-The panel and host-runner log to Docker's default driver. To cap log size, add to `docker-compose.yml` under each service:
-```yaml
-logging:
-  driver: json-file
-  options:
-    max-size: "10m"
-    max-file: "3"
-```
-
----
-
-## 🔐 Security Notes
-
-- Port 3000 has **no authentication**. Bind it to LAN only or front it with an authenticated reverse proxy (Nginx Proxy Manager + Authelia, Caddy + basic auth, etc.).
-- The **`host-runner` sidecar** has full root access to the host. Anyone who reaches the panel UI can run arbitrary commands as root via the Commands tab. Treat panel access as equivalent to root SSH.
-- All API path parameters are validated against strict regexes before any subprocess call — no shell injection from URLs.
-- Command bodies in `commands.json` are executed verbatim — only put commands there you trust, and edit the file only via SSH.
-
----
-
-## ✅ Done
-
-You now have a fully self-hosted, single-page server admin panel with:
-
-- Live system metrics (CPU/GPU/RAM/disks/temps/load/power)
-- Display session monitoring (KDE / Gamescope / Idle)
-- Top resource consumer tracking
-- Full Docker container management (start/stop/restart/pause/kill/logs/info)
-- Custom command shortcuts editable via SSH
-- Failed-unit detection with one-click restart
-- Reboot now / scheduled reboot / cancel scheduled
-- Zero external dependencies (no Homepage, no Portainer, no Grafana)
-
-Bookmark `http://<server-ip>:3000` and enjoy.
