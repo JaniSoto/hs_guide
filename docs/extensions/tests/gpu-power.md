@@ -1,11 +1,3 @@
-
-
-
-```markdown
----
-icon: material/gpu
----
-
 # GPU Power Management (OCuLink)
 
 Fully automated eGPU on-demand power lifecycle designed to bypass OCuLink hardware limitations without requiring system reboots.
@@ -18,7 +10,8 @@ Fully automated eGPU on-demand power lifecycle designed to bypass OCuLink hardwa
     - **GPU on:** Smart plug restores power, then the OS suspends to memory. Upon waking, the BIOS is forced to perform a hardware-level PCIe initialization, seamlessly restoring the eGPU connection.
 
 !!! warning "Hardware required"
-    A **smart plug** on the eGPU PSU power cord is mandatory for full automation. Supports **Shelly Plug S**, **TP-Link Kasa**, or **manual** switching.
+    A **smart plug** on the eGPU PSU power cord is mandatory for full automation. Supports **Shelly Plug S**, **TP-Link Kasa**, or **manual** switching.  
+    Setup uses **GMKTec NucBox K8 Plus** (mini PC) and **Minisforum DEG1** (eGPU dock).
 
 ---
 
@@ -34,7 +27,7 @@ Change the **UMA Frame Buffer Size** (iGPU dedicated RAM) to **4G** or **Auto** 
 
 If you use Docker containers that require hardware acceleration (like Stremio or Nextcloud), dynamically assigned render nodes (like `/dev/dri/renderD128`) will shift when the eGPU is connected or disconnected, crashing your containers.
 
-Create a permanent symlink (`/dev/igpu`) bound exactly to the Minisforum iGPU's PCIe address.
+Create a permanent symlink (`/dev/igpu`) bound exactly to the GMKTec NucBox K8 Plus iGPU's PCIe address.
 
 ```bash
 echo 'SUBSYSTEM=="drm", KERNEL=="renderD*", KERNELS=="0000:c9:00.0", SYMLINK+="igpu"' | sudo tee /etc/udev/rules.d/99-igpu.rules
@@ -316,4 +309,3 @@ sudo chmod 440 /etc/sudoers.d/ryzenadj
 2. Launch your desired graphical session (`start-gaming.sh` or `start-kde.sh`).
 3. When finished, end the session (`stop-session.sh`).
 4. Run `gpu-off.sh` to return to low-power idle mode.
-```
