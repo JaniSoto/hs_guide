@@ -23,7 +23,7 @@
     
     
       
-        <title>Gpu power - Bazzite Home Server Guide</title>
+        <title>GPU Power Management (OCuLink) - Bazzite Home Server Guide</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#3-install-dependencies" class="md-skip">
+        <a href="#gpu-power-management-oculink" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Gpu power
+              GPU Power Management (OCuLink)
             
           </span>
         </div>
@@ -1195,12 +1195,36 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
       On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-bios-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1 — BIOS Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-pin-igpu-for-docker-containers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2 — Pin iGPU for Docker Containers
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#3-install-dependencies" class="md-nav__link">
@@ -1305,46 +1329,31 @@
   
 
 
-  <h1>Gpu power</h1>
-
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>---
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gu">icon: material/gpu</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gu">---</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gh"># GPU Power Management (OCuLink)</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>Fully automated eGPU on-demand power lifecycle designed to bypass OCuLink hardware limitations without requiring system reboots.
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>!!! abstract &quot;How this approach works&quot;
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    OCuLink provides a raw PCIe connection. Unlike Thunderbolt, the motherboard BIOS completely drops the PCIe link when external power is cut and refuses to renegotiate the link while the OS is running. 
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    To bypass this without a full reboot, we use a <span class="gs">**micro-sleep cycle (9 seconds)**</span>. 
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="k">-</span><span class="w"> </span><span class="gs">**GPU off:**</span> Standard PCIe device removal via sysfs, followed by a physical smart plug power cut.
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="k">-</span><span class="w"> </span><span class="gs">**GPU on:**</span> Smart plug restores power, then the OS suspends to memory. Upon waking, the BIOS is forced to perform a hardware-level PCIe initialization, seamlessly restoring the eGPU connection.
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>!!! warning &quot;Hardware required&quot;
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    A <span class="gs">**smart plug**</span> on the eGPU PSU power cord is mandatory for full automation. Supports <span class="gs">**Shelly Plug S**</span>, <span class="gs">**TP-Link Kasa**</span>, or <span class="gs">**manual**</span> switching.
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>---
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## 1 — BIOS Configuration</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>Change the <span class="gs">**UMA Frame Buffer Size**</span> (iGPU dedicated RAM) to <span class="gs">**4G**</span> or <span class="gs">**Auto**</span> in the BIOS. 
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="ge">*Reason:*</span> Reserving 16GB exclusively for the iGPU permanently removes that memory from the system pool. By reducing it, the OS reclaims ~12GB of RAM. The system will dynamically allocate system RAM to the iGPU if needed, while leaving plenty of memory for the external RX 9070 XT during heavy AAA gaming.
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>---
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## 2 — Pin iGPU for Docker Containers</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>If you use Docker containers that require hardware acceleration (like Stremio or Nextcloud), dynamically assigned render nodes (like <span class="sb">`/dev/dri/renderD128`</span>) will shift when the eGPU is connected or disconnected, crashing your containers.
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>Create a permanent symlink (<span class="sb">`/dev/igpu`</span>) bound exactly to the Minisforum iGPU&#39;s PCIe address.
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>```bash
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>echo &#39;SUBSYSTEM==&quot;drm&quot;, KERNEL==&quot;renderD*&quot;, KERNELS==&quot;0000:c9:00.0&quot;, SYMLINK+=&quot;igpu&quot;&#39; | sudo tee /etc/udev/rules.d/99-igpu.rules
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>sudo udevadm control --reload-rules
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>sudo udevadm trigger --subsystem-match=drm --action=add
+<h1 id="gpu-power-management-oculink">GPU Power Management (OCuLink)<a class="headerlink" href="#gpu-power-management-oculink" title="Permanent link">&para;</a></h1>
+<p>Fully automated eGPU on-demand power lifecycle designed to bypass OCuLink hardware limitations without requiring system reboots.</p>
+<div class="admonition abstract">
+<p class="admonition-title">How this approach works</p>
+<p>OCuLink provides a raw PCIe connection. Unlike Thunderbolt, the motherboard BIOS completely drops the PCIe link when external power is cut and refuses to renegotiate the link while the OS is running. </p>
+<p>To bypass this without a full reboot, we use a <strong>micro-sleep cycle (9 seconds)</strong>. 
+- <strong>GPU off:</strong> Standard PCIe device removal via sysfs, followed by a physical smart plug power cut.
+- <strong>GPU on:</strong> Smart plug restores power, then the OS suspends to memory. Upon waking, the BIOS is forced to perform a hardware-level PCIe initialization, seamlessly restoring the eGPU connection.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Hardware required</p>
+<p>A <strong>smart plug</strong> on the eGPU PSU power cord is mandatory for full automation. Supports <strong>Shelly Plug S</strong>, <strong>TP-Link Kasa</strong>, or <strong>manual</strong> switching.<br />
+Setup uses <strong>GMKTec NucBox K8 Plus</strong> (mini PC) and <strong>Minisforum DEG1</strong> (eGPU dock).</p>
+</div>
+<hr />
+<h2 id="1-bios-configuration">1 — BIOS Configuration<a class="headerlink" href="#1-bios-configuration" title="Permanent link">&para;</a></h2>
+<p>Change the <strong>UMA Frame Buffer Size</strong> (iGPU dedicated RAM) to <strong>4G</strong> or <strong>Auto</strong> in the BIOS. </p>
+<p><em>Reason:</em> Reserving 16GB exclusively for the iGPU permanently removes that memory from the system pool. By reducing it, the OS reclaims ~12GB of RAM. The system will dynamically allocate system RAM to the iGPU if needed, while leaving plenty of memory for the external RX 9070 XT during heavy AAA gaming.</p>
+<hr />
+<h2 id="2-pin-igpu-for-docker-containers">2 — Pin iGPU for Docker Containers<a class="headerlink" href="#2-pin-igpu-for-docker-containers" title="Permanent link">&para;</a></h2>
+<p>If you use Docker containers that require hardware acceleration (like Stremio or Nextcloud), dynamically assigned render nodes (like <code>/dev/dri/renderD128</code>) will shift when the eGPU is connected or disconnected, crashing your containers.</p>
+<p>Create a permanent symlink (<code>/dev/igpu</code>) bound exactly to the GMKTec NucBox K8 Plus iGPU's PCIe address.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;SUBSYSTEM==&quot;drm&quot;, KERNEL==&quot;renderD*&quot;, KERNELS==&quot;0000:c9:00.0&quot;, SYMLINK+=&quot;igpu&quot;&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/udev/rules.d/99-igpu.rules
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>sudo<span class="w"> </span>udevadm<span class="w"> </span>control<span class="w"> </span>--reload-rules
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>sudo<span class="w"> </span>udevadm<span class="w"> </span>trigger<span class="w"> </span>--subsystem-match<span class="o">=</span>drm<span class="w"> </span>--action<span class="o">=</span>add
 </span></code></pre></div>
 <p>Update your <code>docker-compose.yml</code> files to use the new permanent symlink:
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="w">    </span><span class="nt">devices</span><span class="p">:</span>
@@ -1579,8 +1588,7 @@
 1. Run <code>gpu-on.sh</code> from SSH/Terminal before launching heavy workloads or Gamescope.
 2. Launch your desired graphical session (<code>start-gaming.sh</code> or <code>start-kde.sh</code>).
 3. When finished, end the session (<code>stop-session.sh</code>).
-4. Run <code>gpu-off.sh</code> to return to low-power idle mode.
-```</p>
+4. Run <code>gpu-off.sh</code> to return to low-power idle mode.</p>
 
 
 
