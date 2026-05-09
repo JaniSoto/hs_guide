@@ -1,33 +1,45 @@
 # GPU Power Management (OCuLink)
 
-Fully automated eGPU on-demand power lifecycle. Bypass OCuLink hardware limits without reboot.
+Fully automated eGPU on-demand power lifecycle. Bypasses OCuLink hardware limits without rebooting. Achieves max power savings at idle and max performance for gaming.
 
-!!! abstract "How approach works"
-    OCuLink use raw PCIe. Motherboard BIOS drop link when power cut. BIOS refuse renegotiate while OS run. 
+!!! abstract "The OCuLink Hardware Curse & Our Solution"
+    **The Problem:** OCuLink provides a raw PCIe connection. Unlike Thunderbolt, the GMKTec NucBox motherboard BIOS completely drops the PCIe link when external power is cut. If the PC boots without the eGPU on, the BIOS disables the PCIe port entirely. The OS cannot re-enable it while running.
     
-    Bypass use micro-sleep cycle (9s).
-    - **GPU off:** OS remove PCIe device → smart plug cut power.
-    - **GPU on:** Smart plug restore power → OS suspend → BIOS hardware init → OS wake → eGPU ready.
+    **The Solution:** 
+    1. **Boot trick:** We force the eGPU to turn ON right before shutting down/rebooting. The BIOS sees it during POST and allocates the PCIe lanes. A startup script then immediately turns it OFF once Linux loads to save power.
+    2. **Hot-plug trick:** To switch the eGPU on later, we turn on the smart plug, then force the OS into a 9-second micro-sleep. Waking up forces the BIOS to rescan the hardware, seamlessly restoring the eGPU connection without a full reboot.
 
-!!! warning "Hardware required"
-    Smart plug on eGPU PSU cord mandatory. Support **Shelly Plug S**, **TP-Link Kasa**, or **manual** switch.  
-    Setup built for **GMKTec NucBox K8 Plus** (mini PC) and **Minisforum DEG1** (eGPU dock).
-
----
-
-## 1 — BIOS Configuration
-
-Set **UMA Frame Buffer Size** to **4G** or **Auto** in BIOS.
-
-*Reason:* 16GB UMA lock memory from system pool. 4G free ~12GB RAM for OS. Linux auto-share RAM to iGPU if needed. AAA games on eGPU get max system RAM.
+!!! warning "Hardware specific"
+    Built for **GMKTec NucBox K8 Plus** (mini PC) and **Minisforum DEG1** (eGPU dock) using an **AMD Radeon RX 9070 XT**.
+    Requires a **Shelly Plug Gen3** on the eGPU PSU power cord for automation.
 
 ---
 
-## 2 — Pin iGPU for Docker Containers
+## 1 — BIOS & Physical Setup
 
-Dynamic nodes (`renderD128`, `renderD129`) shift on reboot/eGPU switch. Break Docker containers (Stremio, Nextcloud).
+### 1.1 BIOS Settings
+Change **UMA Frame Buffer Size** to **4G** or **Auto**.  
+*Why:* Setting it to 16GB permanently locks 16GB of system RAM exclusively for the iGPU. Lowering it frees ~12GB of RAM for the OS. Linux will dynamically share RAM with the iGPU for Docker/desktop tasks, leaving maximum system RAM available for heavy AAA gaming on the eGPU.
 
-Create permanent symlink (`/dev/igpu`) pinned to exact HawkPoint iGPU hardware ID (`0x1900`). Survive reboots forever.
+### 1.2 Shelly Plug Setup
+1. Assign a static IP via your router (e.g., `192.168.178.140`).
+2. Open the Shelly Web UI. Go to Settings and set **Power On Default** to **ON**.  
+*Why:* If your house loses power, the plug will boot ON when power returns. This ensures the server boots with the eGPU powered, satisfying the BIOS requirement.
+
+---
+
+## 2 — OS Kernel & Udev Fixes
+
+### 2.1 Enable GPU Tuning
+By default, the Linux kernel locks AMD voltage controls. Enable the overdrive feature mask so we can undervolt natively without third-party apps like LACT.
+
+```bash
+rpm-ostree kargs --append-if-missing="amdgpu.ppfeaturemask=0xffffffff"
+```
+
+### 2.2 Pin iGPU for Docker
+Dynamic nodes (`renderD128`, `renderD129`) shift whenever the eGPU connects or the system reboots. If Docker containers (Stremio, Nextcloud) map to a shifting node, they will crash. 
+We create a permanent symlink (`/dev/igpu`) locked to the exact HawkPoint iGPU hardware ID (`0x1900`).
 
 ```bash
 echo 'ACTION=="add|change", SUBSYSTEM=="drm", KERNEL=="renderD*", ATTRS{device}=="0x1900", SYMLINK+="igpu"' | sudo tee /etc/udev/rules.d/99-igpu.rules
@@ -35,31 +47,22 @@ sudo udevadm control --reload-rules
 sudo udevadm trigger --subsystem-match=drm
 ```
 
-Update `docker-compose.yml` files:
+Update your `docker-compose.yml` files to use the permanent path:
 ```yaml
     devices:
       - "/dev/igpu:/dev/dri/renderD128"
 ```
 
----
-
-## 3 — Install Dependencies
-
-Install LACT (GPU tune) and Ryzenadj (CPU TDP scale).
-
+Reboot the system to apply the kernel arg.
 ```bash
-flatpak install flathub io.github.ilya_zlobintsev.LACT
-sudo systemctl enable --now lact
-
-rpm-ostree install ryzenadj
 systemctl reboot
 ```
 
 ---
 
-## 4 — Core Structure & Configuration
+## 3 — Core Structure & Configuration
 
-Create directory and config file.
+Create the script directory and configuration file.
 
 ```bash
 sudo mkdir -p /opt/gpu-power
@@ -67,17 +70,12 @@ sudo nano /opt/gpu-power/config
 ```
 
 ```bash
+# eGPU PCIe Address
 EGPU_PCI="0000:03:00.0"
-PLUG_TYPE="manual"          
-PLUG_IP="192.168.1.50"
 
-CPU_IDLE_STAPM=35000
-CPU_IDLE_SLOW=38000
-CPU_IDLE_FAST=42000
-
-CPU_GAMING_STAPM=65000
-CPU_GAMING_SLOW=68000
-CPU_GAMING_FAST=75000
+# Shelly Gen3 Configuration
+PLUG_TYPE="shelly"          
+PLUG_IP="192.168.178.140"
 ```
 
 ```bash
@@ -86,9 +84,9 @@ sudo chmod 640 /opt/gpu-power/config
 
 ---
 
-## 5 — Core Library Script
+## 4 — Core Library Script
 
-Shared logic. Hardware state, plug control, GPU tuning.
+This holds the shared logic: Shelly Gen3 API calls, hardware detection, CPU `tuned-adm` profiling, and direct `sysfs` GPU tuning.
 
 ```bash
 sudo nano /opt/gpu-power/gpu-power-lib.sh
@@ -109,26 +107,20 @@ die()  { echo "[gpu-power] ERROR: $*" >&2; exit 1; }
 plug_on() {
     log "Powering ON eGPU..."
     case "${PLUG_TYPE}" in
-        shelly) curl -m 3 -sf "http://${PLUG_IP}/relay/0?turn=on" > /dev/null || true ;;
-        kasa)   kasa --host "${PLUG_IP}" on > /dev/null 2>&1 || true ;;
-        manual) log ">>> TURN ON eGPU NOW (Waiting 5s) <<<"; sleep 5 ;;
+        shelly) curl -m 3 -sf "http://${PLUG_IP}/rpc/Switch.Set?id=0&on=true" > /dev/null || true ;;
     esac
 }
 
 plug_off() {
     log "Powering OFF eGPU..."
     case "${PLUG_TYPE}" in
-        shelly) curl -m 3 -sf "http://${PLUG_IP}/relay/0?turn=off" > /dev/null || true ;;
-        kasa)   kasa --host "${PLUG_IP}" off > /dev/null 2>&1 || true ;;
-        manual) log ">>> TURN OFF eGPU NOW (Waiting 5s) <<<"; sleep 5 ;;
+        shelly) curl -m 3 -sf "http://${PLUG_IP}/rpc/Switch.Set?id=0&on=false" > /dev/null || true ;;
     esac
 }
 
 plug_state() {
     case "${PLUG_TYPE}" in
-        shelly) curl -m 2 -sf "http://${PLUG_IP}/relay/0" 2>/dev/null | grep -q '"ison":true' && echo "on" || echo "off" ;;
-        kasa)   kasa --host "${PLUG_IP}" state 2>/dev/null | grep -qi "is on" && echo "on" || echo "off" ;;
-        manual) echo "unknown" ;;
+        shelly) curl -m 2 -sf "http://${PLUG_IP}/rpc/Switch.GetStatus?id=0" 2>/dev/null | grep -q '"output":true' && echo "on" || echo "off" ;;
     esac
 }
 
@@ -147,38 +139,40 @@ egpu_is_online() {
 }
 
 set_cpu_tdp_idle() {
-    log "CPU TDP → Idle"
-    sudo ryzenadj --stapm-limit="${CPU_IDLE_STAPM}" --slow-limit="${CPU_IDLE_SLOW}" --fast-limit="${CPU_IDLE_FAST}" >/dev/null 2>&1 || true
+    log "CPU Profile → Bazzite Power Save"
+    sudo tuned-adm profile powersave-bazzite >/dev/null 2>&1 || true
 }
 
 set_cpu_tdp_gaming() {
-    log "CPU TDP → Performance"
-    sudo ryzenadj --stapm-limit="${CPU_GAMING_STAPM}" --slow-limit="${CPU_GAMING_SLOW}" --fast-limit="${CPU_GAMING_FAST}" >/dev/null 2>&1 || true
+    log "CPU Profile → Performance"
+    sudo tuned-adm profile throughput-performance >/dev/null 2>&1 || true
 }
 
 apply_gpu_settings() {
     local drm_dev="$(egpu_drm_path)" || return 1
     
+    # Apply 290W Power Limit
     local hwmon_path="${drm_dev}/hwmon/$(ls "${drm_dev}/hwmon/" | head -n 1)"
     if [[ -n "${hwmon_path}" && -f "${hwmon_path}/power1_cap" ]]; then
         echo 290000000 | tee "${hwmon_path}/power1_cap" > /dev/null 2>&1
     fi
 
+    # Apply -70mV Undervolt
     local od_path="${drm_dev}/pp_od_clk_voltage"
     if [[ -f "${od_path}" ]]; then
         echo "vo -70" | tee "${od_path}" > /dev/null 2>&1 || true
         echo "c" | tee "${od_path}" > /dev/null 2>&1 || true
     fi
-    log "GPU tuning applied"
+    log "GPU tuning applied (-70mV, 290W)"
 }
 ```
 
 ---
 
-## 6 — Control Scripts
+## 5 — Control Scripts
 
-### Turn ON (`gpu-on.sh`)
-Restore power, force 9s micro-sleep for PCIe sync, trigger udev, apply GPU tune, boost CPU TDP.
+### 5.1 Turn ON (`gpu-on.sh`)
+Restores power, waits 5s for PSU capacitors to charge, executes the 9s micro-sleep, triggers udev to remap devices, tunes the GPU, and boosts the CPU profile.
 
 ```bash
 sudo nano /opt/gpu-power/gpu-on.sh
@@ -200,6 +194,7 @@ if egpu_is_online; then
 fi
 
 plug_on
+sleep 5 # Allow PSU and GPU firmware to boot
 
 log "Suspending system for 9s to force OCuLink PCIe training..."
 systemctl unmask sleep.target suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
@@ -217,13 +212,12 @@ egpu_is_online || { echo "ERROR: eGPU did not appear after wake"; exit 1; }
 
 apply_gpu_settings
 set_cpu_tdp_gaming
-rm -f /run/gpu-idle-timer.pid
 
-echo -e "\n✓ eGPU online. CPU at performance TDP."
+echo -e "\n✓ eGPU online. CPU at performance profile."
 ```
 
-### Turn OFF (`gpu-off.sh`)
-Unbind AMD driver, remove PCIe device, cut smart plug power, drop CPU TDP, enforce sleep mask.
+### 5.2 Turn OFF (`gpu-off.sh`)
+Unbinds the AMD driver to prevent kernel panic, removes the PCIe device, cuts smart plug power, drops CPU to powersave, and enforces sleep masks.
 
 ```bash
 sudo nano /opt/gpu-power/gpu-off.sh
@@ -249,8 +243,6 @@ if [[ "${1:-}" != "--force" ]]; then
     [[ -n "$active" ]] && { echo "ERROR: Graphical session active. Use --force to override."; exit 1; }
 fi
 
-systemctl stop lact 2>/dev/null || true
-
 if [[ -e "/sys/bus/pci/devices/${EGPU_PCI}/driver" ]]; then
     echo "${EGPU_PCI}" > /sys/bus/pci/drivers/amdgpu/unbind
     sleep 2
@@ -262,45 +254,91 @@ if [[ -e "/sys/bus/pci/devices/${EGPU_PCI}" ]]; then
 fi
 
 plug_off
-systemctl start lact 2>/dev/null || true
 set_cpu_tdp_idle
-rm -f /run/gpu-idle-timer.pid /run/gpu-idle-since
 
+# Bulletproof mask enforcement
 systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target >/dev/null 2>&1 || true
 
 udevadm trigger --subsystem-match=drm
 sleep 1
 
-echo -e "\n✓ eGPU offline. CPU at idle TDP."
+echo -e "\n✓ eGPU offline. CPU at idle profile."
+```
+
+---
+
+## 6 — Systemd Boot/Shutdown Automation
+
+*Why:* The BIOS must see the eGPU during power-on/reboot. These services automatically turn the plug ON before shutting down, and immediately turn it OFF after Linux finishes booting.
+
+```bash
+# 1. Turn ON before Reboot/Shutdown
+cat << 'EOF' | sudo tee /etc/systemd/system/egpu-reboot-on.service
+[Unit]
+Description=Turn ON eGPU before reboot/shutdown
+DefaultDependencies=no
+Before=shutdown.target halt.target reboot.target NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl -m 3 -sf "http://192.168.178.140/rpc/Switch.Set?id=0&on=true"
+TimeoutSec=5
+
+[Install]
+WantedBy=shutdown.target halt.target reboot.target
+EOF
+
+# 2. Turn OFF automatically after Boot
+cat << 'EOF' | sudo tee /etc/systemd/system/egpu-boot-off.service[Unit]
+Description=Turn OFF eGPU after boot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/gpu-power/gpu-off.sh --force
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# 3. Enable the services
+sudo systemctl daemon-reload
+sudo systemctl enable egpu-reboot-on.service
+sudo systemctl enable egpu-boot-off.service
 ```
 
 ---
 
 ## 7 — Permissions & System Integration
 
-Set executable rights. Symlink binaries. Config passwordless sudo.
+Set executable rights, symlink binaries into the environment, and configure passwordless sudo execution.
 
 ```bash
+# Set permissions
 sudo chmod 644 /opt/gpu-power/gpu-power-lib.sh
 sudo chmod 755 /opt/gpu-power/gpu-on.sh
 sudo chmod 755 /opt/gpu-power/gpu-off.sh
 
+# Create global symlinks
 sudo ln -sf /opt/gpu-power/gpu-on.sh /usr/local/bin/gpu-on.sh
 sudo ln -sf /opt/gpu-power/gpu-off.sh /usr/local/bin/gpu-off.sh
 
+# Passwordless Sudo for power scripts
 sudo tee /etc/sudoers.d/gpu-power > /dev/null << 'EOF'
 sotohome ALL=(ALL) NOPASSWD: /usr/local/bin/gpu-on.sh
 sotohome ALL=(ALL) NOPASSWD: /usr/local/bin/gpu-off.sh
 EOF
 sudo chmod 440 /etc/sudoers.d/gpu-power
 
-RYADJ_PATH="$(which ryzenadj)"
-printf "sotohome ALL=(ALL) NOPASSWD: %s\n" "$RYADJ_PATH" | sudo tee /etc/sudoers.d/ryzenadj > /dev/null
-sudo chmod 440 /etc/sudoers.d/ryzenadj
+# Passwordless Sudo for tuned-adm
+printf "sotohome ALL=(ALL) NOPASSWD: /usr/sbin/tuned-adm\n" | sudo tee /etc/sudoers.d/tuned-adm > /dev/null
+sudo chmod 440 /etc/sudoers.d/tuned-adm
 ```
 
-**Workflow:**
-1. Run `gpu-on.sh` before heavy workload.
-2. Launch graphical session (`start-gaming.sh`).
-3. End session (`stop-session.sh`).
-4. Run `gpu-off.sh` return low-power idle.
+### Standard Workflow:
+1. Run `gpu-on.sh` from SSH before launching heavy workloads.
+2. Launch your graphical session (e.g. `start-gaming.sh`).
+3. When finished, end the session (`stop-session.sh`).
+4. Run `gpu-off.sh` to return the server to its low-power idle profile.
