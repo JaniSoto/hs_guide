@@ -46,6 +46,7 @@ mkdir -p ~/.config/sunshine
 
 cat > ~/.config/sunshine/sunshine.conf << 'EOF'
 capture = kms
+encoder = vaapi
 EOF
 ```
 
