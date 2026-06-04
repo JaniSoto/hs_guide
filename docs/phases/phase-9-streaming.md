@@ -50,6 +50,9 @@ encoder = vaapi
 EOF
 ```
 
+!!! warning "Multi-GPU & eGPU Setups"
+    If both your iGPU and eGPU are connected with dummy plugs, Sunshine's KMS capture defaults to `/dev/dri/card0` (the iGPU) and will stream a black screen. Our `gpu-power-init.service` boot script automatically appends and updates the correct stable `/dev/dri/by-path/` PCIe slot path to the `adapter_name` parameter at boot.
+
 **1d — Enable login persistence and reboot:**
 
 ```bash
@@ -142,8 +145,8 @@ sudo systemctl restart docker
 By default, Sunshine runs as a *user* service, meaning it only starts *after* an active session starts. To guarantee Sunshine is always running and accessible upon boot (crucial for a headless server), we will disable the user service and install it as a system-level service.
 
 ```bash
-# Disable user services that might have been enabled by `ujust setup-sunshine`
-systemctl --user disable --now sunshine.service sunshine-kms.service 2>/dev/null || true
+# Disable user services that might have been enabled by `ujust setup-sunshine` or `brew`
+systemctl --user disable --now sunshine.service sunshine-kms.service homebrew.sunshine.service 2>/dev/null || true
 
 # Create the system service drop-in file
 sudo tee /etc/systemd/system/sunshine.service << EOF

@@ -1,13 +1,13 @@
 # GPU Power Management (OCuLink)
 
-Fully automated eGPU on-demand power lifecycle. Bypasses OCuLink hardware limits without rebooting. Achieves max power savings at idle and max performance for gaming.
+Fully automated eGPU on-demand power lifecycle. Achieves max power savings at idle and max performance for gaming using a stable reboot-based transition.
 
 !!! abstract "The OCuLink Hardware Curse & Our Solution"
     **The Problem:** OCuLink provides a raw PCIe connection. Unlike Thunderbolt, the GMKTec NucBox motherboard BIOS completely drops the PCIe link when external power is cut. If the PC boots without the eGPU on, the BIOS disables the PCIe port entirely. The OS cannot re-enable it while running.
     
-    **The Solution:** 
-    1. **Boot trick:** We force the eGPU to turn ON right before shutting down/rebooting. The BIOS sees it during POST and allocates the PCIe lanes. A startup script then immediately turns it OFF once Linux loads to save power.
-    2. **Hot-plug trick:** To switch the eGPU on later, we turn on the smart plug, then force the OS into a 9-second micro-sleep. Waking up forces the BIOS to rescan the hardware, seamlessly restoring the eGPU connection without a full reboot.
+    **The Solution:** We use a reboot-based lifecycle to ensure motherboard alignment:
+    * To turn the eGPU **ON**, we trigger the smart plug and reboot. The BIOS detects the card during POST, maps the PCIe lanes, and boots cleanly.
+    * To turn the eGPU **OFF**, we gracefully unbind the driver and remove the device from the PCIe bus to prevent kernel panics, cut the smart plug power, and reboot to return the system to its low-power idle state.
 
 !!! warning "Hardware specific"
     Built for **GMKTec NucBox K8 Plus** (mini PC) and **Minisforum DEG1** (eGPU dock) using an **AMD Radeon RX 9070 XT**.
@@ -31,7 +31,7 @@ Change **UMA Frame Buffer Size** to **4G** or **Auto**.
 ## 2 — OS Kernel & Udev Fixes
 
 ### 2.1 Enable GPU Tuning
-By default, the Linux kernel locks AMD voltage controls. Enable the overdrive feature mask so we can undervolt natively without third-party apps like LACT.
+By default, the Linux kernel locks AMD voltage controls. Enable the overdrive feature mask so we can undervolt natively.
 
 ```bash
 rpm-ostree kargs --append-if-missing="amdgpu.ppfeaturemask=0xffffffff"
@@ -70,9 +70,6 @@ sudo nano /opt/gpu-power/config
 ```
 
 ```bash
-# eGPU PCIe Address
-EGPU_PCI="0000:03:00.0"
-
 # Shelly Gen3 Configuration
 PLUG_TYPE="shelly"          
 PLUG_IP="192.168.178.140"
@@ -86,7 +83,7 @@ sudo chmod 640 /opt/gpu-power/config
 
 ## 4 — Core Library Script
 
-This holds the shared logic: Shelly Gen3 API calls, hardware detection, CPU `tuned-adm` profiling, and direct `sysfs` GPU tuning.
+This holds the shared logic: Shelly Gen3 API calls, CPU `tuned-adm` profiling, direct `sysfs` GPU tuning, and dynamic PCIe slot scanning.
 
 ```bash
 sudo nano /opt/gpu-power/gpu-power-lib.sh
@@ -124,40 +121,56 @@ plug_state() {
     esac
 }
 
-egpu_drm_path() {
-    local domain bus slot fn
-    IFS=':.' read -r domain bus slot fn <<< "${EGPU_PCI}"
-    local sysfs_addr="${domain}:${bus}:${slot}.${fn}"
-    for drm_dir in /sys/class/drm/card*/device; do
-        [[ "$(readlink -f "${drm_dir}")" == *"${sysfs_addr}"* ]] && echo "${drm_dir}" && return 0
+egpu_pci() {
+    for dev in /sys/bus/pci/devices/*; do
+        if [[ -f "$dev/vendor" && "$(cat "$dev/vendor")" == "0x1002" ]]; then
+            if [[ -f "$dev/class" && "$(cat "$dev/class")" == 0x0300* ]]; then
+                if [[ "$(cat "$dev/device")" != "0x1900" ]]; then
+                    basename "$dev"
+                    return 0
+                fi
+            fi
+        fi
     done
     return 1
 }
 
 egpu_is_online() {
-    [[ -e "/sys/bus/pci/devices/${EGPU_PCI}" ]]
+    egpu_pci >/dev/null
+}
+
+egpu_drm_path() {
+    local pci
+    pci="$(egpu_pci)" || return 1
+    for drm_dir in /sys/class/drm/card*/device; do
+        if [[ "$(readlink -f "${drm_dir}")" == *"${pci}"* ]]; then
+            echo "${drm_dir}"
+            return 0
+        fi
+    done
+    return 1
 }
 
 set_cpu_tdp_idle() {
-    log "CPU Profile → Bazzite Power Save"
+    log "CPU Profile → Bazzite Powersave"
     sudo tuned-adm profile powersave-bazzite >/dev/null 2>&1 || true
 }
 
 set_cpu_tdp_gaming() {
-    log "CPU Profile → Performance"
-    sudo tuned-adm profile throughput-performance >/dev/null 2>&1 || true
+    log "CPU Profile → Bazzite Performance"
+    sudo tuned-adm profile throughput-performance-bazzite >/dev/null 2>&1 || true
 }
 
 apply_gpu_settings() {
-    local drm_dev="$(egpu_drm_path)" || return 1
+    local drm_dev
+    drm_dev="$(egpu_drm_path)" || return 1
     
-    # Apply 290W Power Limit
-    local hwmon_path="${drm_dev}/hwmon/$(ls "${drm_dev}/hwmon/" | head -n 1)"
-    if [[ -n "${hwmon_path}" && -f "${hwmon_path}/power1_cap" ]]; then
-        echo 290000000 | tee "${hwmon_path}/power1_cap" > /dev/null 2>&1
+    local hwmon_dir
+    hwmon_dir="$(ls "${drm_dev}/hwmon/" 2>/dev/null | head -n 1)" || true
+    if [[ -n "${hwmon_dir}" && -f "${drm_dev}/hwmon/${hwmon_dir}/power1_cap" ]]; then
+        echo 290000000 | tee "${drm_dev}/hwmon/${hwmon_dir}/power1_cap" > /dev/null 2>&1
     fi
 
-    # Apply -70mV Undervolt
     local od_path="${drm_dev}/pp_od_clk_voltage"
     if [[ -f "${od_path}" ]]; then
         echo "vo -70" | tee "${od_path}" > /dev/null 2>&1 || true
@@ -171,8 +184,10 @@ apply_gpu_settings() {
 
 ## 5 — Control Scripts
 
+These are the user-facing binaries to safely toggle the physical state of the eGPU.
+
 ### 5.1 Turn ON (`gpu-on.sh`)
-Restores power, waits 5s for PSU capacitors to charge, executes the 9s micro-sleep, triggers udev to remap devices, tunes the GPU, and boosts the CPU profile.
+Powers on the smart plug to boot the eGPU and triggers an immediate reboot so the motherboard BIOS discovers and maps the card.
 
 ```bash
 sudo nano /opt/gpu-power/gpu-on.sh
@@ -186,38 +201,14 @@ set -euo pipefail
 source /opt/gpu-power/gpu-power-lib.sh
 load_config
 
-if egpu_is_online; then
-    apply_gpu_settings
-    set_cpu_tdp_gaming
-    echo "✓ eGPU already online"
-    exit 0
-fi
-
+log "Powering ON eGPU and instantly rebooting..."
 plug_on
-sleep 5 # Allow PSU and GPU firmware to boot
 
-log "Suspending system for 9s to force OCuLink PCIe training..."
-systemctl unmask sleep.target suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
-rtcwake -m mem -s 9 || true
-systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
-
-sleep 2
-echo 1 > /sys/bus/pci/rescan 2>/dev/null || true
-sleep 2
-
-udevadm trigger --subsystem-match=drm
-sleep 1
-
-egpu_is_online || { echo "ERROR: eGPU did not appear after wake"; exit 1; }
-
-apply_gpu_settings
-set_cpu_tdp_gaming
-
-echo -e "\n✓ eGPU online. CPU at performance profile."
+systemctl reboot
 ```
 
 ### 5.2 Turn OFF (`gpu-off.sh`)
-Unbinds the AMD driver to prevent kernel panic, removes the PCIe device, cuts smart plug power, drops CPU to powersave, and enforces sleep masks.
+Safely unbinds the AMD driver, removes the card from the PCIe bus, powers off the smart plug, and triggers a clean reboot to lock out the PCIe lane and return the server to its idle state.
 
 ```bash
 sudo nano /opt/gpu-power/gpu-off.sh
@@ -231,82 +222,116 @@ set -euo pipefail
 source /opt/gpu-power/gpu-power-lib.sh
 load_config
 
-if ! egpu_is_online; then
-    plug_off
-    set_cpu_tdp_idle
-    systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target >/dev/null 2>&1 || true
-    exit 0
+local_pci="$(egpu_pci || true)"
+
+# Gracefully detach the eGPU before cutting power to avoid kernel panics
+if [[ -n "${local_pci}" ]]; then
+    log "Gracefully unbinding and removing eGPU from PCIe bus..."
+    if [[ -e "/sys/bus/pci/devices/${local_pci}/driver" ]]; then
+        echo "${local_pci}" > "/sys/bus/pci/drivers/amdgpu/unbind" || true
+        sleep 1
+    fi
+    if [[ -e "/sys/bus/pci/devices/${local_pci}" ]]; then
+        echo 1 > "/sys/bus/pci/devices/${local_pci}/remove" || true
+        sleep 1
+    fi
 fi
 
-if [[ "${1:-}" != "--force" ]]; then
-    active="$(loginctl list-sessions --no-legend | awk '$2 == 1000 && $4 != "-" {print $1}' | head -n1)"
-    [[ -n "$active" ]] && { echo "ERROR: Graphical session active. Use --force to override."; exit 1; }
-fi
-
-if [[ -e "/sys/bus/pci/devices/${EGPU_PCI}/driver" ]]; then
-    echo "${EGPU_PCI}" > /sys/bus/pci/drivers/amdgpu/unbind
-    sleep 2
-fi
-
-if [[ -e "/sys/bus/pci/devices/${EGPU_PCI}" ]]; then
-    echo 1 > "/sys/bus/pci/devices/${EGPU_PCI}/remove"
-    sleep 2
-fi
-
+log "Powering OFF eGPU..."
 plug_off
-set_cpu_tdp_idle
 
-# Bulletproof mask enforcement
-systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target >/dev/null 2>&1 || true
-
-udevadm trigger --subsystem-match=drm
-sleep 1
-
-echo -e "\n✓ eGPU offline. CPU at idle profile."
+log "Rebooting system to apply changes..."
+systemctl reboot
 ```
 
 ---
 
-## 6 — Systemd Boot/Shutdown Automation
+## 6 — Systemd Boot Automation
 
-*Why:* The BIOS must see the eGPU during power-on/reboot. These services automatically turn the plug ON before shutting down, and immediately turn it OFF after Linux finishes booting.
+We use a one-shot system service to run a script at every boot. It detects if the eGPU is online, configures your CPU and GPU profiles, and automatically maps Sunshine's KMS display capture to the correct physical GPU before SDDM loads.
 
 ```bash
-# 1. Turn ON before Reboot/Shutdown
-cat << 'EOF' | sudo tee /etc/systemd/system/egpu-reboot-on.service
+# 1. Create the boot service
+cat << 'EOF' | sudo tee /etc/systemd/system/gpu-power-init.service
 [Unit]
-Description=Turn ON eGPU before reboot/shutdown
-DefaultDependencies=no
-Before=shutdown.target halt.target reboot.target NetworkManager.service
+Description=Auto-configure GPU and CPU profiles based on eGPU presence
+After=local-fs.target
+Before=sddm.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/curl -m 3 -sf "http://192.168.178.140/rpc/Switch.Set?id=0&on=true"
-TimeoutSec=5
-
-[Install]
-WantedBy=shutdown.target halt.target reboot.target
-EOF
-
-# 2. Turn OFF automatically after Boot
-cat << 'EOF' | sudo tee /etc/systemd/system/egpu-boot-off.service[Unit]
-Description=Turn OFF eGPU after boot
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-ExecStart=/opt/gpu-power/gpu-off.sh --force
 RemainAfterExit=yes
+ExecStart=/opt/gpu-power/gpu-init-boot.sh
 
 [Install]
 WantedBy=multi-user.target
 EOF
+```
 
-# 3. Enable the services
+```bash
+# 2. Create the boot-initialization script
+sudo nano /opt/gpu-power/gpu-init-boot.sh
+```
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+source /opt/gpu-power/gpu-power-lib.sh
+load_config
+
+# Helper to dynamically update Sunshine's config to target a specific GPU path
+update_sunshine_config() {
+    local target_pci="$1"
+    local conf_file="/home/sotohome/.config/sunshine/sunshine.conf"
+    local target_path="/dev/dri/by-path/pci-${target_pci}-render"
+
+    if [[ -f "${conf_file}" ]]; then
+        log "Targeting Sunshine to stable GPU path: ${target_path}"
+        if grep -q "^adapter_name" "${conf_file}"; then
+            sed -i "s|^adapter_name = .*|adapter_name = ${target_path}|" "${conf_file}"
+        else
+            echo "adapter_name = ${target_path}" >> "${conf_file}"
+        fi
+        # Ensure file ownership remains correct for the user session
+        chown sotohome:sotohome "${conf_file}"
+    else
+        log "WARNING: Sunshine configuration file not found at ${conf_file}"
+    fi
+}
+
+# Check if the eGPU physically exists on the PCIe bus at boot
+if egpu_is_online; then
+    log "eGPU detected! Configuring Performance/Gaming profiles..."
+    set_cpu_tdp_gaming
+    apply_gpu_settings
+
+    # Resolve eGPU slot dynamically and point Sunshine to it
+    EGPU_ADDR="$(egpu_pci)"
+    update_sunshine_config "${EGPU_ADDR}"
+else
+    log "eGPU not detected. Configuring Powersave/iGPU profiles..."
+    set_cpu_tdp_idle
+
+    # Resolve iGPU slot dynamically (AMD device ID 0x1900) and point Sunshine to it
+    IGPU_ADDR=""
+    for dev in /sys/bus/pci/devices/*; do
+        if [[ -f "${dev}/device" && "$(cat "${dev}/device")" == "0x1900" ]]; then
+            IGPU_ADDR="$(basename "${dev}")"
+            break
+        fi
+    done
+    # Fallback to hardcoded address if dynamic discovery fails
+    [[ -n "${IGPU_ADDR}" ]] || IGPU_ADDR="0000:c9:00.0"
+    
+    update_sunshine_config "${IGPU_ADDR}"
+fi
+```
+
+```bash
+# 3. Enable the boot service
 sudo systemctl daemon-reload
-sudo systemctl enable egpu-reboot-on.service
-sudo systemctl enable egpu-boot-off.service
+sudo systemctl enable gpu-power-init.service
 ```
 
 ---
@@ -320,6 +345,7 @@ Set executable rights, symlink binaries into the environment, and configure pass
 sudo chmod 644 /opt/gpu-power/gpu-power-lib.sh
 sudo chmod 755 /opt/gpu-power/gpu-on.sh
 sudo chmod 755 /opt/gpu-power/gpu-off.sh
+sudo chmod 755 /opt/gpu-power/gpu-init-boot.sh
 
 # Create global symlinks
 sudo ln -sf /opt/gpu-power/gpu-on.sh /usr/local/bin/gpu-on.sh
@@ -338,7 +364,7 @@ sudo chmod 440 /etc/sudoers.d/tuned-adm
 ```
 
 ### Standard Workflow:
-1. Run `gpu-on.sh` from SSH before launching heavy workloads.
-2. Launch your graphical session (e.g. `start-gaming.sh`).
+1. Run `gpu-on.sh` from SSH (or a webhook). The system will boot ON with the eGPU active.
+2. Launch your graphical session (e.g. `start-gaming.sh`). Sunshine automatically targets the eGPU.
 3. When finished, end the session (`stop-session.sh`).
-4. Run `gpu-off.sh` to return the server to its low-power idle profile.
+4. Run `gpu-off.sh`. The system will cleanly unbind, turn the plug off, and reboot into its low-power idle profile.
