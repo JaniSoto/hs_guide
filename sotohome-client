@@ -152,13 +152,7 @@ if [ "$1" == "--update" ]; then
             echo "60" ; echo "# Verifying downloaded file..."
             # Simple check to verify it starts with a bash shebang
             if head -n 1 "$TEMP_FILE" | grep -q "#!/bin/bash"; then
-                echo "80" ; echo "# Applying update to $SCRIPT_PATH..."
-                mv "$TEMP_FILE" "$SCRIPT_PATH"
-                chmod +x "$SCRIPT_PATH"
-                echo "90" ; echo "# Refreshing desktop launcher..."
-                # Run the newly updated script's install action with the silent flag
-                "$SCRIPT_PATH" --install --silent
-                echo "100" ; echo "# Update completed successfully!"
+                echo "100" ; echo "# Update verified successfully!"
             else
                 echo "error"
                 rm -f "$TEMP_FILE"
@@ -173,9 +167,19 @@ if [ "$1" == "--update" ]; then
     
     # Check the exit status of the subshell
     if [ ${PIPESTATUS[0]} -eq 0 ]; then
+        # 1. Show the single updater confirmation dialog
         zenity --info --title="SotoHome Updater" --text="SotoHome has been successfully updated!\n\nAll launcher actions have been refreshed." --timeout=5
+        
+        # 2. Safely apply the downloaded file on top of the current script
+        mv "$TEMP_FILE" "$SCRIPT_PATH" || { rm -f "$TEMP_FILE"; exit 1; }
+        chmod +x "$SCRIPT_PATH"
+        
+        # 3. Re-execute via 'exec' to run the new script's installer block silently.
+        # This completely replaces the current process space, avoiding parser crashes.
+        exec "$SCRIPT_PATH" --install --silent
     else
         zenity --error --title="SotoHome Updater" --text="Failed to download or verify the update.\n\nPlease check your internet connection or repository variables."
+        rm -f "$TEMP_FILE" 2>/dev/null
     fi
     exit 0
 fi
