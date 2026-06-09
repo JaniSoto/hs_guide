@@ -121,7 +121,7 @@ do_bitrate() {
 
 do_update() {
     local SCRIPT_PATH=$(realpath "$0")
-    local UPDATE_URL="https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/${REPO_BRANCH}/${SCRIPT_FILE_PATH}"
+    local UPDATE_URL="https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/${REPO_BRANCH}/${SCRIPT_FILE_PATH}?t=$(date +%s)"
     local TEMP_FILE=$(mktemp /tmp/sotohome_update.XXXXXX)
 
     (
