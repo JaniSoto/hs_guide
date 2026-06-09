@@ -82,7 +82,7 @@ if [ "$1" == "--install" ]; then
 Name=SotoHome
 Comment=Stream Gaming or KDE
 Exec=$SCRIPT_PATH
-Icon=network-workgroup
+Icon=applications-games
 Terminal=false
 Type=Application
 Categories=Game;Utility;
