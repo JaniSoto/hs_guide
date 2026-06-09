@@ -1,0 +1,486 @@
+#!/bin/bash
+
+# --- Duplicate Instance Prevention & Clean Takeover ---
+# This runs at the ABSOLUTE TOP of the script to instantly destroy previous runs and their prompts
+PID_FILE="/tmp/sotohome.pid"
+SCRIPT_NAME=$(basename "$0")
+
+# Only exclude --install from duplicate prevention since other flags now lead to launching the stream
+if [ "$1" != "--install" ]; then
+    if [ -f "$PID_FILE" ]; then
+        OLD_PID=$(cat "$PID_FILE" 2>/dev/null)
+        if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+            # Verify the PID belongs to this script before killing
+            if grep -q "$SCRIPT_NAME" "/proc/$OLD_PID/cmdline" 2>/dev/null; then
+                # 1. Forcefully kill all child processes (like active Zenity windows) of the old script
+                pkill -9 -P "$OLD_PID" 2>/dev/null
+                # 2. Forcefully kill the old script process itself (prevents its exit trap from running)
+                kill -9 "$OLD_PID" 2>/dev/null
+            fi
+        fi
+    fi
+    # Save our current PID
+    echo "$$" > "$PID_FILE"
+
+    # Force kill any active Moonlight streams
+    pkill -9 moonlight 2>/dev/null
+fi
+
+# --- Configuration ---
+# NOTE: VPN_NAME, APP_NAME, and SSH_ALIAS all share the value "sotohome" intentionally —
+# they refer to separate resources (VPN profile, Sunshine app, SSH host alias) that happen to share the same name.
+SERVER_IP="192.168.178.139"
+VPN_NAME="sotohome"
+APP_NAME="sotohome"         # Name of the app in Sunshine to launch
+WEBHOOK_PORT="9000"
+SSH_ALIAS="sotohome"        # Used ONLY if --admin flag is used and KDE is selected
+
+# --- Bitrate Config Loader ---
+BITRATE_FILE="$HOME/.config/sotohome_bitrate"
+mkdir -p "$HOME/.config"
+
+# Read existing bitrate or set default (20000 Kbps = 20 Mbps)
+BITRATE=$(cat "$BITRATE_FILE" 2>/dev/null)
+if [ -z "$BITRATE" ] || ! [[ "$BITRATE" =~ ^[0-9]+$ ]]; then
+    BITRATE="20000"
+    echo "$BITRATE" > "$BITRATE_FILE"
+fi
+
+# --- Dependency Check ---
+if ! command -v zenity >/dev/null 2>&1; then
+    notify-send "Dependency Missing" "Zenity is required for this script but is not installed." 2>/dev/null
+    echo "Error: Zenity is required but is not installed." >&2
+    exit 1
+fi
+
+# --- CLI Arguments Handler (For Utility Flags) ---
+
+# Handle the --install flag to generate the desktop launcher
+if [ "$1" == "--install" ]; then
+    # Dynamically find the absolute path of this script
+    SCRIPT_PATH=$(realpath "$0")
+    DESKTOP_DIR="$HOME/.local/share/applications"
+    DESKTOP_PATH="$DESKTOP_DIR/sotohome.desktop"
+
+    mkdir -p "$DESKTOP_DIR"
+
+    # Generate the .desktop file natively linking to this script's location
+    cat <<EOF > "$DESKTOP_PATH"
+[Desktop Entry]
+Name=SotoHome
+Comment=Stream Gaming or KDE
+Exec=$SCRIPT_PATH
+Icon=network-workgroup
+Terminal=false
+Type=Application
+Categories=Game;Utility;
+Actions=AdminMode;ChangeBitrate;GPUControl;
+
+[Desktop Action AdminMode]
+Name=Launch as Admin
+Exec=$SCRIPT_PATH --admin
+
+[Desktop Action ChangeBitrate]
+Name=Configure Bitrate
+Exec=$SCRIPT_PATH --bitrate
+
+[Desktop Action GPUControl]
+Name=Configure GPU Power
+Exec=$SCRIPT_PATH --gpu
+EOF
+
+    # Ensure launcher is executable
+    chmod +x "$DESKTOP_PATH"
+
+    # Force Desktop Environment database to reload the right-click menu actions immediately
+    if command -v update-desktop-database >/dev/null 2>&1; then
+        update-desktop-database "$DESKTOP_DIR" >/dev/null 2>&1
+    fi
+
+    zenity --info --title="SotoHome Installer" --text="SotoHome launcher successfully installed!\n\nYou can now find it in your system's application menu." --timeout=5
+    exit 0
+fi
+
+# Handle the --bitrate flag to change configuration and fall through
+if [ "$1" == "--bitrate" ]; then
+    CURRENT_MBPS=$((BITRATE / 1000))
+    NEW_MBPS=$(zenity --scale \
+        --title="Configure Bitrate" \
+        --text="Select Moonlight Streaming Bitrate (in Mbps):" \
+        --value="$CURRENT_MBPS" \
+        --min-value=5 \
+        --max-value=150 \
+        --step=5)
+
+    if [ -n "$NEW_MBPS" ]; then
+        NEW_KBPS=$((NEW_MBPS * 1000))
+        echo "$NEW_KBPS" > "$BITRATE_FILE"
+        BITRATE="$NEW_KBPS" # Update the variable for the immediate run
+        notify-send --app-name="SotoHome" "Bitrate successfully updated to $NEW_MBPS Mbps."
+    fi
+fi
+
+# Set flag for GPU control
+GPU_MODE=false
+if [ "$1" == "--gpu" ]; then
+    GPU_MODE=true
+fi
+
+# --- Progress Window & Pipe Setup ---
+PIPE=$(mktemp -u /tmp/sotohome.XXXXXX)
+mkfifo "$PIPE"
+
+# Start the progress dialog reading from our pipe in the background
+zenity --progress \
+       --title="SotoHome Launcher" \
+       --text="Initializing..." \
+       --percentage=0 \
+       --auto-close \
+       --no-cancel \
+       --width=400 < "$PIPE" &
+ZEN_PID=$!
+
+# Open File Descriptor 3 to write to the pipe
+exec 3> "$PIPE"
+
+update_progress() {
+    local percent="$1"
+    local text="$2"
+    if [ -n "${ZEN_PID:-}" ] && kill -0 "$ZEN_PID" 2>/dev/null; then
+        echo "$percent" >&3 2>/dev/null
+        echo "# $text" >&3 2>/dev/null
+    fi
+}
+
+# --- 1. Auto-Cleanup / VPN Trap ---
+cleanup_and_disconnect() {
+    exec 3>&- 2>/dev/null
+    if [ -n "$PIPE" ]; then
+        rm -f "$PIPE" 2>/dev/null
+    fi
+    # Remove the PID file if it matches our process ID
+    if [ -f "$PID_FILE" ] && [ "$(cat "$PID_FILE" 2>/dev/null)" == "$$" ]; then
+        rm -f "$PID_FILE" 2>/dev/null
+    fi
+    if nmcli con show --active | grep -q "$VPN_NAME"; then
+        nmcli connection down "$VPN_NAME" >/dev/null 2>&1
+    fi
+}
+trap cleanup_and_disconnect EXIT INT TERM
+
+# --- 2. Connect to VPN ---
+update_progress 10 "Activating VPN Connection..."
+if ! nmcli connection up "$VPN_NAME" >/dev/null 2>&1; then
+    zenity --error --text="Failed to connect to VPN."
+    exit 1
+fi
+
+# Wait for the server to become reachable
+update_progress 25 "Waiting for Server to Respond..."
+MAX_WAIT=15
+WAIT_COUNT=0
+while ! ping -c 1 -W 1 "$SERVER_IP" > /dev/null 2>&1; do
+    sleep 1
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+    if [ "$WAIT_COUNT" -ge "$MAX_WAIT" ]; then
+        zenity --error --text="Connected to VPN, but server $SERVER_IP is unreachable."
+        exit 1 # Trap will turn off VPN automatically
+    fi
+done
+
+# --- GPU Power State Control (If flagged) ---
+if [ "$GPU_MODE" = true ]; then
+    update_progress 35 "Awaiting GPU Configuration..."
+    GPU_ACTION=$(zenity --list \
+        --title="GPU Power Control" \
+        --text="Select GPU State (Server will reboot if state changes):" \
+        --radiolist \
+        --column="Select" --column="Action" \
+        TRUE "GPU On" \
+        FALSE "GPU Off" \
+        --width=300 --height=200)
+
+    if [ -z "$GPU_ACTION" ]; then
+        exit 0
+    fi
+
+    if [ "$GPU_ACTION" == "GPU On" ]; then
+        HOOK_PATH="gpu-on"
+    else
+        HOOK_PATH="gpu-off"
+    fi
+
+    update_progress 40 "Sending GPU command..."
+    curl -s -m 10 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/$HOOK_PATH" > /dev/null
+
+    # Wait 4 seconds to check if the server is rebooting or if the failsafe triggered
+    sleep 4
+
+    # Early Failsafe Check: If the server is still pingable, the webhook API responds,
+    # and Sunshine is listening on port 47989, it did not reboot. Skip countdown.
+    if ping -c 1 -W 1 "$SERVER_IP" >/dev/null 2>&1 && \
+       curl -s -m 2 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/check-session" >/dev/null 2>&1 && \
+       (timeout 1 bash -c "cat < /dev/null > /dev/tcp/$SERVER_IP/47989") >/dev/null 2>&1; then
+        update_progress 45 "GPU state already matched. Skipping reboot sequence..."
+        sleep 2
+    else
+        # The server is rebooting; disconnect VPN to prevent route lockup during down phase
+        update_progress 45 "Server reboot detected. Disconnecting VPN..."
+        if nmcli con show --active | grep -q "$VPN_NAME"; then
+            nmcli connection down "$VPN_NAME" >/dev/null 2>&1
+        fi
+
+        SERVER_READY=false
+        TOTAL_REBOOT_TIME=70
+        
+        for ((i=1; i<=TOTAL_REBOOT_TIME; i++)); do
+            REMAINING=$((TOTAL_REBOOT_TIME - i))
+            # Map loop progress 1..70 to Zenity scale 45..85
+            PERCENT=$(( 45 + (i * 40 / TOTAL_REBOOT_TIME) ))
+
+            # Check if Zenity is still running
+            if ! kill -0 "$ZEN_PID" 2>/dev/null; then
+                exit 1
+            fi
+
+            if [ "$i" -lt 40 ]; then
+                update_progress "$PERCENT" "Waiting for server to reboot... (Est. $REMAINING seconds remaining)"
+                sleep 1
+            else
+                update_progress "$PERCENT" "Reconnecting VPN & waiting for server response... ($REMAINING seconds remaining)"
+                
+                # Try to re-establish VPN
+                if ! nmcli con show --active | grep -q "$VPN_NAME"; then
+                    nmcli connection up "$VPN_NAME" >/dev/null 2>&1
+                fi
+
+                # Try to ping and reach both Webhook API and Sunshine Stream Service (Port 47989)
+                if ping -c 1 -W 1 "$SERVER_IP" >/dev/null 2>&1; then
+                    if curl -s -m 2 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/check-session" >/dev/null 2>&1; then
+                        if (timeout 1 bash -c "cat < /dev/null > /dev/tcp/$SERVER_IP/47989") >/dev/null 2>&1; then
+                            # Sunshine is up. Sleep 3 seconds to let display manager/GPU drivers completely settle
+                            sleep 3
+                            SERVER_READY=true
+                            break
+                        fi
+                    fi
+                fi
+                sleep 1
+            fi
+        done
+
+        if [ "$SERVER_READY" = false ]; then
+            zenity --error --text="Server failed to come online within the 70-second window."
+            exit 1
+        fi
+    fi
+
+    # Post-reboot/Post-failsafe setup: Bypass conflict checks and force a clean Gaming launch
+    TARGET_SESSION="Gaming"
+    START_NEW_SESSION=true
+fi
+
+# --- 3. Parse Target Session (--admin flag) ---
+# Skip parsing if already configured by the GPU run
+if [ "$GPU_MODE" = false ]; then
+    TARGET_SESSION="Gaming" # Default target
+
+    if [ "$1" == "--admin" ]; then
+        update_progress 40 "Awaiting Admin Session Selection..."
+        TARGET_SESSION=$(zenity --list \
+            --title="Select Session" \
+            --text="Which session would you like to start?" \
+            --radiolist \
+            --column="Select" --column="Session Type" \
+            TRUE "Gaming" \
+            FALSE "KDE" \
+            --width=300 --height=200)
+
+        # User cancelled the window
+        if [ -z "$TARGET_SESSION" ]; then
+            exit 0
+        fi
+
+        # Check for SSH alias if they picked KDE
+        if [ "$TARGET_SESSION" == "KDE" ] && [ -z "$SSH_ALIAS" ]; then
+            zenity --warning --title="Missing SSH Alias" --text="SSH_ALIAS is empty in the script.\nYou cannot start a KDE session without it.\n\nFalling back to Gaming mode."
+            TARGET_SESSION="Gaming"
+        fi
+    fi
+fi
+
+# --- Helper Functions ---
+check_session() {
+    local status
+    status=$(curl -s -m 5 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/check-session" 2>/dev/null)
+    if echo "$status" | grep -iq "KDE"; then
+        echo "KDE"
+    elif echo "$status" | grep -iq "Gaming"; then
+        echo "Gaming"
+    else
+        echo "None"
+    fi
+}
+
+verify_local_sudo() {
+    # Uses native standard GUI password prompt, or falls back to zenity piping to sudo
+    if command -v pkexec >/dev/null 2>&1; then
+        zenity --info --title="Admin Required" --text="A KDE session is running remotely.\n\nYou will now be prompted for your LOCAL system password to authorize termination." --timeout=5
+        pkexec true
+        return $?
+    else
+        local pass
+        pass=$(zenity --password --title="Local Sudo Required" --text="Enter your LOCAL system password to authorize termination:")
+        [ -n "$pass" ] && echo "$pass" | sudo -S -v >/dev/null 2>&1
+        return $?
+    fi
+}
+
+# Stops the remote session via webhook. Streams output to lock standard progress bar.
+# KDE sessions require local sudo authorization first; returns 1 if authorization fails.
+stop_remote_session() {
+    local session="$1"
+    if [ "$session" == "KDE" ]; then
+        if ! verify_local_sudo; then
+            return 1
+        fi
+    fi
+    local line
+    while read -r line; do
+        if [[ "$line" == *"Stopping Sunshine"* ]]; then
+            update_progress 73 "$line"
+        elif [[ "$line" == *"Waiting for session to close"* ]]; then
+            update_progress 76 "$line"
+        elif [[ "$line" == *"Session closed"* ]]; then
+            update_progress 80 "$line"
+        elif [[ "$line" == *"Waiting for SDDM greeter"* ]]; then
+            update_progress 82 "$line"
+        elif [[ "$line" == *"Starting Sunshine"* ]]; then
+            update_progress 84 "$line"
+        elif [[ "$line" == *"✓ Session ended"* ]]; then
+            update_progress 85 "$line"
+            break
+        fi
+    done < <(curl -sN -m 60 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/stop-session" 2>&1)
+}
+
+# Starts the remote gaming session, streaming stdout to provide precise progress bar timing.
+start_remote_gaming() {
+    local line
+    while read -r line; do
+        if [[ "$line" == *"Stopping SDDM"* ]]; then
+            update_progress 87 "$line"
+        elif [[ "$line" == *"Starting SDDM"* ]]; then
+            update_progress 90 "$line"
+        elif [[ "$line" == *"Waiting for Gamescope"* ]]; then
+            update_progress 93 "$line"
+        elif [[ "$line" == *"session detected"* ]]; then
+            update_progress 95 "$line"
+        elif [[ "$line" == *"Starting Sunshine"* ]]; then
+            update_progress 98 "$line"
+        elif [[ "$line" == *"✓ Gaming Mode"* ]]; then
+            update_progress 100 "$line"
+            break
+        fi
+    done < <(curl -sN -m 180 "http://$SERVER_IP:$WEBHOOK_PORT/hooks/start-gaming" 2>&1)
+}
+
+# Starts the remote KDE session via SSH, streaming stdout to map progress percentages dynamically.
+start_remote_kde() {
+    local line
+    while read -r line; do
+        if [[ "$line" == *"Stopping SDDM"* ]]; then
+            update_progress 87 "$line"
+        elif [[ "$line" == *"Starting SDDM"* ]]; then
+            update_progress 90 "$line"
+        elif [[ "$line" == *"Waiting for KDE"* ]]; then
+            update_progress 93 "$line"
+        elif [[ "$line" == *"is active"* ]]; then
+            update_progress 95 "$line"
+        elif [[ "$line" == *"Starting Sunshine"* ]]; then
+            update_progress 98 "$line"
+        elif [[ "$line" == *"✓ KDE Plasma"* ]]; then
+            update_progress 100 "$line"
+            break
+        fi
+    done < <(setsid -w ssh "$SSH_ALIAS" "sudo start-kde" < /dev/null 2>&1)
+}
+
+# --- 4. Conflict Resolution ---
+# Skip conflict checks if we just forced a clean Gaming run via GPU setup
+if [ "$GPU_MODE" = false ]; then
+    update_progress 55 "Checking Server Session Status..."
+    ACTIVE_SESSION=$(check_session)
+    START_NEW_SESSION=true
+
+    if [ "$ACTIVE_SESSION" != "None" ]; then
+        update_progress 65 "Handling Active Session Conflict..."
+        if zenity --question --title="Session Conflict" --text="A $ACTIVE_SESSION session is already active.\n\nDo you want to TERMINATE it and start a fresh session?\n\n(Click 'No' to keep and stream the existing session)"; then
+
+            # User wants to TERMINATE the existing session
+            update_progress 70 "Terminating remote $ACTIVE_SESSION session..."
+            if ! stop_remote_session "$ACTIVE_SESSION"; then
+                zenity --error --text="Local authorization failed. Resuming the existing session instead."
+                START_NEW_SESSION=false
+                TARGET_SESSION="$ACTIVE_SESSION"
+            fi
+        else
+            # User chose to KEEP the existing session
+            START_NEW_SESSION=false
+            TARGET_SESSION="$ACTIVE_SESSION"
+        fi
+    fi
+fi
+
+# --- 5. Start Requested Session (If needed) ---
+if [ "$START_NEW_SESSION" = true ]; then
+    if [ "$TARGET_SESSION" == "KDE" ]; then
+        update_progress 85 "Starting remote KDE session..."
+        start_remote_kde
+    else
+        # Adjust progress percentage dynamically based on if we skipped conflict resolution
+        if [ "$GPU_MODE" = true ]; then
+            update_progress 85 "Triggering remote Gaming session..."
+        else
+            update_progress 80 "Triggering remote Gaming session..."
+        fi
+        start_remote_gaming
+    fi
+else
+    update_progress 85 "Preparing to resume $TARGET_SESSION session..."
+fi
+
+# --- 6. Launch Moonlight ---
+update_progress 100 "Ready! Launching Moonlight Stream..."
+sleep 0.5
+
+# Close FD 3 and remove the pipe since we are done with the progress window
+exec 3>&-
+rm -f "$PIPE"
+
+# Start Moonlight applying your configured bitrate
+if command -v flatpak >/dev/null 2>&1 && flatpak info com.moonlight_stream.Moonlight >/dev/null 2>&1; then
+    flatpak run com.moonlight_stream.Moonlight stream --bitrate "$BITRATE" "$SERVER_IP" "$APP_NAME"
+else
+    moonlight stream --bitrate "$BITRATE" "$SERVER_IP" "$APP_NAME"
+fi
+
+# --- 7. Exit & Cleanup ---
+# Check the server state one last time to see if a session is actually running
+FINAL_SESSION=$(check_session)
+
+if [ "$FINAL_SESSION" != "None" ]; then
+    if zenity --question --title="Stream Closed" --text="Moonlight closed.\n\nDo you want to terminate the active $FINAL_SESSION session?"; then
+        # This will block and safely wait for stop-session on the server to finish before shutting off the VPN connection.
+        if stop_remote_session "$FINAL_SESSION"; then
+            notify-send --app-name=" SotoHome" "Server session terminated."
+        else
+            notify-send --app-name=" SotoHome" "Authorization failed. Server session left active."
+        fi
+    else
+        notify-send --app-name=" SotoHome" "Server session left active."
+    fi
+fi
+
+# The trap at the top will automatically turn off the VPN here.
+exit 0
