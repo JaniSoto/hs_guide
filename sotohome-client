@@ -113,7 +113,10 @@ EOF
         update-desktop-database "$DESKTOP_DIR" >/dev/null 2>&1
     fi
 
-    zenity --info --title="SotoHome Installer" --text="SotoHome launcher successfully installed!\n\nYou can now find it in your system's application menu." --timeout=5
+    # Suppress output popup if called with the '--silent' argument during updates
+    if [ "$2" != "--silent" ]; then
+        zenity --info --title="SotoHome Installer" --text="SotoHome launcher successfully installed!\n\nYou can now find it in your system's application menu." --timeout=5
+    fi
     exit 0
 fi
 
@@ -153,8 +156,8 @@ if [ "$1" == "--update" ]; then
                 mv "$TEMP_FILE" "$SCRIPT_PATH"
                 chmod +x "$SCRIPT_PATH"
                 echo "90" ; echo "# Refreshing desktop launcher..."
-                # Run the newly updated script's install action to update desktop entries
-                "$SCRIPT_PATH" --install >/dev/null 2>&1
+                # Run the newly updated script's install action with the silent flag
+                "$SCRIPT_PATH" --install --silent
                 echo "100" ; echo "# Update completed successfully!"
             else
                 echo "error"
