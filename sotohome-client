@@ -43,7 +43,7 @@ REPO_USER="JaniSoto"
 REPO_NAME="hs_guide"
 REPO_BRANCH="main"
 # Adjust the path below if the script is located in a subfolder of your repository
-SCRIPT_FILE_PATH="Games/sotohome"
+SCRIPT_FILE_PATH="sotohome-client"
 
 # --- Bitrate Config Loader ---
 
